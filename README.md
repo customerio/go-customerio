@@ -84,7 +84,7 @@ key information changes. This keeps [Customer.io](http://customer.io) up to date
 //                         should at least pass in an email, and created_at timestamp.
 //                         your interface{} should be parseable as Json by 'encoding/json'.Marshal
 
-cio.identify("5", map[string]interface{}{
+cio.Identify("5", map[string]interface{}{
   "email": "bob@example.com",
   "created_at": time.Now().Unix(),
   "first_name": "Bob",
