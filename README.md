@@ -11,7 +11,10 @@ Godoc here: [https://godoc.org/github.com/customerio/go-customerio](https://godo
 Add this line to your application's imports:
 
 ```go
+import (
+    // ...
     "github.com/customerio/go-customerio"
+)
 ```
 
 And then execute:
@@ -49,7 +52,7 @@ Create an instance of the client with your [customer.io](http://customer.io) cre
 which can be found on the [customer.io integration screen](https://manage.customer.io/integration).
 
 ```go
-    cio := customerio.NewCustomerIO("YOUR SITE ID", "YOUR API SECRET KEY")
+cio := customerio.NewCustomerIO("YOUR SITE ID", "YOUR API SECRET KEY")
 ```
 
 ### Identify logged in customers
@@ -74,19 +77,19 @@ You'll want to indentify your customers when they sign up for your app and any t
 key information changes. This keeps [Customer.io](http://customer.io) up to date with your customer information.
 
 ```go
-    // Arguments
-    // customerID (required) - a unique identifier string for this customers
-    // attributes (required) - a ```map[string]interface{}``` of information about the customer. You can pass any
-    //                         information that would be useful in your triggers. You 
-    //                         should at least pass in an email, and created_at timestamp.
-    //                         your interface{} should be parseable as Json by 'encoding/json'.Marshal
+// Arguments
+// customerID (required) - a unique identifier string for this customers
+// attributes (required) - a ```map[string]interface{}``` of information about the customer. You can pass any
+//                         information that would be useful in your triggers. You 
+//                         should at least pass in an email, and created_at timestamp.
+//                         your interface{} should be parseable as Json by 'encoding/json'.Marshal
 
-    cio.identify("5", map[string]interface{}{
-      "email": "bob@example.com",
-      "created_at": time.Now().Unix(),
-      "first_name": "Bob",
-      "plan": "basic",
-    })
+cio.identify("5", map[string]interface{}{
+  "email": "bob@example.com",
+  "created_at": time.Now().Unix(),
+  "first_name": "Bob",
+  "plan": "basic",
+})
 ```
 
 ### Deleting customers
@@ -97,12 +100,12 @@ other means (such as the javascript snippet), the customer could be
 recreated.
 
 ```go
-    // Arguments
-    // customerID (required) - a unique identifier for the customer.  This
-    //                          should be the same id you'd pass into the
-    //                          `identify` command above.
+// Arguments
+// customerID (required) - a unique identifier for the customer.  This
+//                          should be the same id you'd pass into the
+//                          `identify` command above.
 
-    cio.Delete("5")
+cio.Delete("5")
 ```
 
 ### Tracking a custom event
@@ -114,17 +117,17 @@ encourage your customers to perform an action.
 
 
 ```go
-    // Arguments
-    // customerID (required)  - the id of the customer who you want to associate with the event.
-    // name (required)        - the name of the event you want to track.
-    // attributes (optional)  - any related information you'd like to attach to this
-    //                          event, as a ```map[string]interface{}```. These attributes can be used in your triggers to control who should
-    //                         receive the triggered email. You can set any number of data values.
+// Arguments
+// customerID (required)  - the id of the customer who you want to associate with the event.
+// name (required)        - the name of the event you want to track.
+// attributes (optional)  - any related information you'd like to attach to this
+//                          event, as a ```map[string]interface{}```. These attributes can be used in your triggers to control who should
+//                         receive the triggered email. You can set any number of data values.
 
-    cio.Track("5", "purchase", map[string]interface{}{
-        "type": "socks",
-        "price": "13.99",
-    })
+cio.Track("5", "purchase", map[string]interface{}{
+    "type": "socks",
+    "price": "13.99",
+})
 ```
 
 ## Contributing
