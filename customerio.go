@@ -121,8 +121,10 @@ func (c *CustomerIO) request(method, url string, body []byte) (status int, respo
 	if err == nil {
 		defer resp.Body.Close()
 
-		responseBody = make([]byte, resp.ContentLength)
-		resp.Body.Read(responseBody)
+		if resp.ContentLength >= 0 {
+			responseBody = make([]byte, resp.ContentLength)
+			resp.Body.Read(responseBody)
+		}
 	}
 
 	return
