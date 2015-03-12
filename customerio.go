@@ -12,9 +12,10 @@ import (
 
 // CustomerIO wraps the customer.io API, see: http://customer.io/docs/api/rest.html
 type CustomerIO struct {
-	siteID string
-	apiKey string
-	host   string
+	siteID   string
+	apiKey   string
+	Host     string
+	Protocol string
 }
 
 // CustomerIOError is returned by any method that fails at the API level
@@ -30,7 +31,7 @@ func (e *CustomerIOError) Error() string {
 
 // NewCustomerIO creates a new CustomerIO object to perform requests on the supplied credentials
 func NewCustomerIO(siteID, apiKey string) *CustomerIO {
-	return &CustomerIO{siteID, apiKey, "track.customer.io"}
+	return &CustomerIO{siteID, apiKey, "track.customer.io", "https://"}
 }
 
 // Identify identifies a customer and sets their attributes
@@ -90,22 +91,12 @@ func (c *CustomerIO) auth() string {
 	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%v:%v", c.siteID, c.apiKey)))
 }
 
-// Host returns the internal value for the host
-func (c *CustomerIO) Host() string {
-	return c.host
-}
-
-// UseHost remaps the host, useful for testing purposes
-func (c *CustomerIO) UseHost(host string) {
-	c.host = host
-}
-
 func (c *CustomerIO) customerURL(customerID string) string {
-	return "https://" + path.Join(c.Host(), "api/v1", "customers", customerID)
+	return c.Protocol + path.Join(c.Host, "api/v1", "customers", customerID)
 }
 
 func (c *CustomerIO) eventURL(customerID string) string {
-	return "https://" + path.Join(c.Host(), "api/v1", "customers", customerID, "events")
+	return c.Protocol + path.Join(c.Host, "api/v1", "customers", customerID, "events")
 }
 
 func (c *CustomerIO) request(method, url string, body []byte) (status int, responseBody []byte, err error) {
