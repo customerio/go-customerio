@@ -90,8 +90,14 @@ func (c *CustomerIO) auth() string {
 	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%v:%v", c.siteID, c.apiKey)))
 }
 
+// Host returns the internal value for the host
 func (c *CustomerIO) Host() string {
 	return c.host
+}
+
+// UseHost remaps the host, useful for testing purposes
+func (c *CustomerIO) UseHost(host string) {
+	c.host = host
 }
 
 func (c *CustomerIO) customerURL(customerID string) string {
