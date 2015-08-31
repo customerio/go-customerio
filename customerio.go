@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path"
 	"strconv"
 )
@@ -99,11 +100,11 @@ func (c *CustomerIO) protocol() string {
 }
 
 func (c *CustomerIO) customerURL(customerID string) string {
-	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID)
+	return c.protocol() + path.Join(c.Host, "api/v1", "customers", url.QueryEscape(customerID))
 }
 
 func (c *CustomerIO) eventURL(customerID string) string {
-	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "events")
+	return c.protocol() + path.Join(c.Host, "api/v1", "customers", url.QueryEscape(customerID), "events")
 }
 
 func (c *CustomerIO) request(method, url string, body []byte) (status int, responseBody []byte, err error) {
