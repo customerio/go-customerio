@@ -10,7 +10,6 @@ import (
 var cio *CustomerIO
 
 func TestMain(m *testing.M) {
-
 	siteID := os.Getenv("CUSTOMERIO_SITE_ID")
 	apiKey := os.Getenv("CUSTOMERIO_API_KEY")
 
@@ -28,7 +27,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestIdentify(t *testing.T) {
-
 	attributes := map[string]interface{}{}
 
 	err := cio.Identify("golang-test-noattributes", attributes)
