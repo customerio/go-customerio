@@ -31,7 +31,12 @@ func (e *CustomerIOError) Error() string {
 
 // NewCustomerIO creates a new CustomerIO object to perform requests on the supplied credentials
 func NewCustomerIO(siteID, apiKey string) *CustomerIO {
-	return &CustomerIO{siteID, apiKey, "track.customer.io", true}
+	return &CustomerIO{
+		siteID: siteID,
+		apiKey: apiKey,
+		Host:   "track.customer.io",
+		SSL:    true,
+	}
 }
 
 // Identify identifies a customer and sets their attributes
@@ -68,7 +73,11 @@ func (c *CustomerIO) Track(customerID string, eventName string, data map[string]
 	if err != nil {
 		return err
 	} else if status != 200 {
-		return &CustomerIOError{status, c.eventURL(customerID), responseBody}
+		return &CustomerIOError{
+			status: status,
+			url:    c.eventURL(customerID),
+			body:   responseBody,
+		}
 	}
 
 	return nil
@@ -81,7 +90,11 @@ func (c *CustomerIO) Delete(customerID string) error {
 	if err != nil {
 		return err
 	} else if status != 200 {
-		return &CustomerIOError{status, c.customerURL(customerID), responseBody}
+		return &CustomerIOError{
+			status: status,
+			url:    c.customerURL(customerID),
+			body:   responseBody,
+		}
 	}
 
 	return nil
