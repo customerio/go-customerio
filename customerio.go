@@ -74,6 +74,27 @@ func (c *CustomerIO) Track(customerID string, eventName string, data map[string]
 	return nil
 }
 
+// Trigger triggers a broadcast campaign for the supplied campaign ID
+func (c *CustomerIO) Trigger(campaignID string, data map[string]interface{}) error {
+
+	body := map[string]interface{}{"data": data}
+	j, err := json.Marshal(body)
+
+	if err != nil {
+		return err
+	}
+
+	status, responseBody, err := c.request("POST", c.campaignURL(campaignID), j)
+
+	if err != nil {
+		return err
+	} else if status != 200 {
+		return &CustomerIOError{status, c.campaignURL(campaignID), responseBody}
+	}
+
+	return nil
+}
+
 // Delete deletes a customer
 func (c *CustomerIO) Delete(customerID string) error {
 	status, responseBody, err := c.request("DELETE", c.customerURL(customerID), []byte{})
@@ -100,6 +121,10 @@ func (c *CustomerIO) protocol() string {
 
 func (c *CustomerIO) customerURL(customerID string) string {
 	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID)
+}
+
+func (c *CustomerIO) campaignURL(campaignID string) string {
+	return c.protocol() + path.Join(c.Host, "api/v1", "campaigns", campaignID, "triggers")
 }
 
 func (c *CustomerIO) eventURL(customerID string) string {
