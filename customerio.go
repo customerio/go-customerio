@@ -10,12 +10,13 @@ import (
 	"strconv"
 )
 
-// CustomerIO wraps the customer.io API, see: http://customer.io/docs/api/rest.html
+// CustomerIO wraps the customer.io API, see: https://learn.customer.io/api/
 type CustomerIO struct {
-	siteID string
-	apiKey string
-	Host   string
-	SSL    bool
+	siteID  string
+	apiKey  string
+	Host    string
+	APIHost string
+	SSL     bool
 }
 
 // CustomerIOError is returned by any method that fails at the API level
@@ -31,7 +32,7 @@ func (e *CustomerIOError) Error() string {
 
 // NewCustomerIO creates a new CustomerIO object to perform requests on the supplied credentials
 func NewCustomerIO(siteID, apiKey string) *CustomerIO {
-	return &CustomerIO{siteID, apiKey, "track.customer.io", true}
+	return &CustomerIO{siteID, apiKey, "track.customer.io", "api.customer.io", true}
 }
 
 // Identify identifies a customer and sets their attributes
@@ -74,6 +75,34 @@ func (c *CustomerIO) Track(customerID string, eventName string, data map[string]
 	return nil
 }
 
+// Trigger triggers a broadcast campaign for the supplied campaign ID
+func (c *CustomerIO) Trigger(campaignID string, data map[string]interface{}) error {
+
+	body := make(map[string]interface{})
+	if recipients, ok := data["recipients"]; ok {
+		delete(data, "recipients")
+		body = map[string]interface{}{"data": data, "recipients": recipients}
+	} else {
+		body = map[string]interface{}{"data": data}
+	}
+
+	j, err := json.Marshal(body)
+
+	if err != nil {
+		return err
+	}
+
+	status, responseBody, err := c.request("POST", c.campaignURL(campaignID), j)
+
+	if err != nil {
+		return err
+	} else if status != 200 {
+		return &CustomerIOError{status, c.campaignURL(campaignID), responseBody}
+	}
+
+	return nil
+}
+
 // Delete deletes a customer
 func (c *CustomerIO) Delete(customerID string) error {
 	status, responseBody, err := c.request("DELETE", c.customerURL(customerID), []byte{})
@@ -100,6 +129,10 @@ func (c *CustomerIO) protocol() string {
 
 func (c *CustomerIO) customerURL(customerID string) string {
 	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID)
+}
+
+func (c *CustomerIO) campaignURL(campaignID string) string {
+	return c.protocol() + path.Join(c.APIHost, "/v1/api", "campaigns", campaignID, "triggers")
 }
 
 func (c *CustomerIO) eventURL(customerID string) string {

@@ -1,6 +1,6 @@
 # Customerio
 
-A golang client for the [Customer.io](http://customer.io) [event API](https://app.customer.io/api/docs/index.html).
+A golang client for the [Customer.io](https://customer.io) [REST API](https://learn.customer.io/api).
 *Tested with Go1.4*
 
 Godoc here: [https://godoc.org/github.com/customerio/go-customerio](https://godoc.org/github.com/customerio/go-customerio)
@@ -30,7 +30,7 @@ Or install it yourself:
 ### Before we get started: API client vs. JavaScript snippet
 
 It's helpful to know that everything below can also be accomplished
-through the [Customer.io JavaScript snippet](http://customer.io/docs/basic-integration.html).
+through the [Customer.io JavaScript snippet](https://learn.customer.io/developer-documentation/javascript-quick-start.html).
 
 In many cases, using the JavaScript snippet will be easier to integrate with
 your app, but there are several reasons why using the API client is useful:
@@ -44,12 +44,12 @@ your app, but there are several reasons why using the API client is useful:
 
 In the end, the decision on whether or not to use the API client or
 the JavaScript snippet should be based on what works best for you.
-You'll be able to integrate **fully** with [Customer.io](http://customer.io) with either approach.
+You'll be able to integrate **fully** with [Customer.io](https://customer.io) with either approach.
 
 ### Setup
 
-Create an instance of the client with your [customer.io](http://customer.io) credentials
-which can be found on the [customer.io integration screen](https://manage.customer.io/integration).
+Create an instance of the client with your [Customer.io](https://customer.io) credentials
+which can be found on the [Customer.io integration screen](https://fly.customer.io/account/customerio_integration).
 
 ```go
 cio := customerio.NewCustomerIO("YOUR SITE ID", "YOUR API SECRET KEY")
@@ -57,9 +57,9 @@ cio := customerio.NewCustomerIO("YOUR SITE ID", "YOUR API SECRET KEY")
 
 ### Identify logged in customers
 
-Tracking data of logged in customers is a key part of [Customer.io](http://customer.io). In order to
+Tracking data of logged in customers is a key part of [Customer.io](https://customer.io). In order to
 send triggered emails, we must know the email address of the customer.  You can
-also specify any number of customer attributes which help tailor [Customer.io](http://customer.io) to your
+also specify any number of customer attributes which help tailor [Customer.io](https://customer.io) to your
 business.
 
 Attributes you specify are useful in several ways:
@@ -74,7 +74,7 @@ set up triggers which are only sent to customers who have subscribed to a
 particular plan (e.g. "premium").
 
 You'll want to indentify your customers when they sign up for your app and any time their
-key information changes. This keeps [Customer.io](http://customer.io) up to date with your customer information.
+key information changes. This keeps [Customer.io](https://customer.io) up to date with your customer information.
 
 ```go
 // Arguments
@@ -102,15 +102,15 @@ recreated.
 ```go
 // Arguments
 // customerID (required) - a unique identifier for the customer.  This
-//                          should be the same id you'd pass into the
-//                          `identify` command above.
+//                         should be the same id you'd pass into the
+//                         `identify` command above.
 
 cio.Delete("5")
 ```
 
 ### Tracking a custom event
 
-Now that you're identifying your customers with [Customer.io](http://customer.io), you can now send events like
+Now that you're identifying your customers with [Customer.io](https://customer.io), you can now send events like
 "purchased" or "watchedIntroVideo".  These allow you to more specifically target your users
 with automated emails, and track conversions when you're sending automated emails to
 encourage your customers to perform an action.
@@ -121,12 +121,38 @@ encourage your customers to perform an action.
 // customerID (required)  - the id of the customer who you want to associate with the event.
 // name (required)        - the name of the event you want to track.
 // attributes (optional)  - any related information you'd like to attach to this
-//                          event, as a ```map[string]interface{}```. These attributes can be used in your triggers to control who should
-//                         receive the triggered email. You can set any number of data values.
+//                          event, as a ```map[string]interface{}```. These attributes
+//                          can be used in your triggers to control who should receive
+//                          the triggered email. You can set any number of data values.
 
 cio.Track("5", "purchase", map[string]interface{}{
     "type": "socks",
     "price": "13.99",
+})
+```
+
+### Trigger a broadcast campaign
+
+The trigger method is used to trigger API Triggered Broadcast campaigns in Customer.io. When sending data along with your trigger, it is required to send a key/value pair in the data map.
+
+```go
+// Arguments
+// campaignID (required)  - the id of the broadcast campaign you want to trigger.
+// attributes (optional)  - any related information you'd like to attach to this
+//                          trigger, as a ```map[string]interface{}```. These attributes
+//                          can be used in your message templates. You can set any number
+//                          of data values.
+// recipients (optional)  - override the recipient setting for your campaign.
+
+cio.Trigger("5", map[string]interface{}{
+    "title": "Roadrunner spotted in Albuquerque!",
+    "date": 1511315635,
+    "text": "We received reports of a roadrunner in your immediate area! Head to your dashboard to view more information!",
+    "recipients": map[string]interface{}{
+        "segment": map[string]interface{}{
+            "id": 7,
+        },
+    },
 })
 ```
 

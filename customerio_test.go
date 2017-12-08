@@ -87,6 +87,32 @@ func TestTrack(t *testing.T) {
 
 }
 
+func TestTrigger(t *testing.T) {
+
+	err := cio.Trigger("5", map[string]interface{}{})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	data := map[string]interface{}{
+		"title": "Roadrunner spotted in Albuquerque!",
+		"date":  1511315635,
+		"text":  "We received reports of a roadrunner in your immediate area! Head to your dashboard to view more information!",
+		"recipients": map[string]interface{}{
+			"segment": map[string]interface{}{
+				"id": 7,
+			},
+		},
+	}
+
+	err = cio.Trigger("5", data)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+}
 func TestDelete(t *testing.T) {
 	cio.Identify("golang-test-delete", map[string]interface{}{})
 
