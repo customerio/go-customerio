@@ -142,11 +142,17 @@ The trigger method is used to trigger API Triggered Broadcast campaigns in Custo
 //                          trigger, as a ```map[string]interface{}```. These attributes
 //                          can be used in your message templates. You can set any number
 //                          of data values.
+// recipients (optional)  - override the recipient setting for your campaign.
 
 cio.Trigger("5", map[string]interface{}{
     "title": "Roadrunner spotted in Albuquerque!",
     "date": 1511315635,
     "text": "We received reports of a roadrunner in your immediate area! Head to your dashboard to view more information!",
+    "recipients": map[string]interface{}{
+        "segment": map[string]interface{}{
+            "id": 7,
+        },
+    },
 })
 ```
 

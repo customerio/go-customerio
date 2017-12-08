@@ -100,7 +100,7 @@ func TestTrigger(t *testing.T) {
 		"date":  1511315635,
 		"text":  "We received reports of a roadrunner in your immediate area! Head to your dashboard to view more information!",
 		"recipients": map[string]interface{}{
-			"segments": map[string]interface{}{
+			"segment": map[string]interface{}{
 				"id": 7,
 			},
 		},
