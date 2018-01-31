@@ -87,6 +87,23 @@ func TestTrack(t *testing.T) {
 
 }
 
+func TestTrackAnonymous(t *testing.T) {
+	cio.Identify("golang-test-events", map[string]interface{}{})
+
+	err := cio.TrackAnonymous("golang@customer.io", "golang-test", map[string]interface{}{})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	err = cio.TrackAnonymous("golang@customer.io", "golang-test-data", map[string]interface{}{"value": 1, "name": "event"})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+}
+
 func TestDelete(t *testing.T) {
 	cio.Identify("golang-test-delete", map[string]interface{}{})
 

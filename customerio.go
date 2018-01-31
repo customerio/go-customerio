@@ -74,6 +74,27 @@ func (c *CustomerIO) Track(customerID string, eventName string, data map[string]
 	return nil
 }
 
+// Track sends a single event to Customer.io for the anonymous user
+func (c *CustomerIO) TrackAnonymous(recipientEmail string, eventName string, data map[string]interface{}) error {
+	data["recipient"] = recipientEmail
+	body := map[string]interface{}{"name": eventName, "data": data}
+	j, err := json.Marshal(body)
+
+	if err != nil {
+		return err
+	}
+
+	status, responseBody, err := c.request("POST", c.anonURL(), j)
+
+	if err != nil {
+		return err
+	} else if status != 200 {
+		return &CustomerIOError{status, c.anonURL(), responseBody}
+	}
+
+	return nil
+}
+
 // Delete deletes a customer
 func (c *CustomerIO) Delete(customerID string) error {
 	status, responseBody, err := c.request("DELETE", c.customerURL(customerID), []byte{})
@@ -104,6 +125,10 @@ func (c *CustomerIO) customerURL(customerID string) string {
 
 func (c *CustomerIO) eventURL(customerID string) string {
 	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "events")
+}
+
+func (c *CustomerIO) anonURL() string {
+	return c.protocol() + path.Join(c.Host, "api/v1", "events")
 }
 
 func (c *CustomerIO) request(method, url string, body []byte) (status int, responseBody []byte, err error) {
