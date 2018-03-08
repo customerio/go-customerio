@@ -140,13 +140,12 @@ customer which may not exist in your People list.
 
 ```go
 // Arguments
-// recipient email (required) - the id of the customer who you want to associate with the event.
 // name (required)            - the name of the event you want to track.
 // attributes (optional)      - any related information you'd like to attach to this
 //                              event, as a ```map[string]interface{}```. These attributes can be used in your triggers to control who should
 //                              receive the triggered email. You can set any number of data values.
 
-cio.TrackAnonymous("alex@example.com", "invite", map[string]interface{}{
+cio.TrackAnonymous("invite", map[string]interface{}{
     "first_name": "Alex",
     "source": "OldApp",
 })

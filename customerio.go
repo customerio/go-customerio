@@ -74,9 +74,8 @@ func (c *CustomerIO) Track(customerID string, eventName string, data map[string]
 	return nil
 }
 
-// Track sends a single event to Customer.io for the anonymous user
-func (c *CustomerIO) TrackAnonymous(recipientEmail string, eventName string, data map[string]interface{}) error {
-	data["recipient"] = recipientEmail
+// TrackAnonymous sends a single event to Customer.io for the anonymous user
+func (c *CustomerIO) TrackAnonymous(eventName string, data map[string]interface{}) error {
 	body := map[string]interface{}{"name": eventName, "data": data}
 	j, err := json.Marshal(body)
 
