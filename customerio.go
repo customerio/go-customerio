@@ -107,6 +107,39 @@ func (c *CustomerIO) Delete(customerID string) error {
 	return nil
 }
 
+// AddDevice adds a device for a customer
+func (c *CustomerIO) AddDevice(customerID string, deviceData map[string]interface{}) error {
+	body := map[string]interface{}{"device": deviceData}
+	j, err := json.Marshal(body)
+
+	if err != nil {
+		return err
+	}
+
+	status, responseBody, err := c.request("PUT", c.deviceURL(customerID), j)
+
+	if err != nil {
+		return err
+	} else if status != 200 {
+		return &CustomerIOError{status, c.deviceURL(customerID), responseBody}
+	}
+
+	return nil
+}
+
+// DeleteDevice deletes a device for a customer
+func (c *CustomerIO) DeleteDevice(customerID string, deviceToken string) error {
+	status, responseBody, err := c.request("DELETE", c.deleteDeviceURL(customerID, deviceToken), []byte{})
+
+	if err != nil {
+		return err
+	} else if status != 200 {
+		return &CustomerIOError{status, c.deleteDeviceURL(customerID, deviceToken), responseBody}
+	}
+
+	return nil
+}
+
 func (c *CustomerIO) auth() string {
 	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%v:%v", c.siteID, c.apiKey)))
 }
@@ -128,6 +161,14 @@ func (c *CustomerIO) eventURL(customerID string) string {
 
 func (c *CustomerIO) anonURL() string {
 	return c.protocol() + path.Join(c.Host, "api/v1", "events")
+}
+
+func (c *CustomerIO) deviceURL(customerID string) string {
+	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "devices")
+}
+
+func (c *CustomerIO) deleteDeviceURL(customerID string, deviceToken string) string {
+	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "devices", deviceToken)
 }
 
 func (c *CustomerIO) request(method, url string, body []byte) (status int, responseBody []byte, err error) {
