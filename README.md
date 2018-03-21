@@ -154,22 +154,22 @@ cio.TrackAnonymous("invite", map[string]interface{}{
 ### Adding a device to a customer
 
 In order to send push notifications, we need customer device information.
-When adding a device to a customer, the customerID is needed as well as a
-unique identifier for the device that is included in the deviceData argument.
+When adding a device to a customer, the customerID, deviceID, and platform
+are required fields.
 
 
 ```go
 // Arguments
 // customerID (required) - a unique identifier string for this customer
-// deviceData (required) - a ```map[string]interface{}``` of information about the device. You can pass any
+// deviceID (required)   - a unique identifier string for this device
+// platform (required)   - the platform of the device, currently only accepts 'ios' and 'andriod'
+// data (required) - a ```map[string]interface{}``` of information about the device. You can pass any
 //                         key/value pairs that would be useful in your triggers. We 
-//                         currently only save 'id', 'platform', and 'last_used'.
+//                         currently only save 'last_used'.
 //                         your interface{} should be parseable as Json by 'encoding/json'.Marshal
 
-cio.AddDevice("5", map[string]interface{}{
-  "id": "messaging token",
-  "platform": "android",
-  "last_used": time.Now().Unix(),
+cio.AddDevice("5", "messaging token", "android", map[string]interface{}{
+"last_used": time.Now().Unix(),
 })
 ```
 
