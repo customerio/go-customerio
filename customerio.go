@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"path"
@@ -108,8 +109,18 @@ func (c *CustomerIO) Delete(customerID string) error {
 }
 
 // AddDevice adds a device for a customer
-func (c *CustomerIO) AddDevice(customerID string, deviceData map[string]interface{}) error {
-	body := map[string]interface{}{"device": deviceData}
+func (c *CustomerIO) AddDevice(customerID string, deviceID string, platform string, data map[string]interface{}) error {
+	if customerID == "" {
+		return errors.New("customerID is a required field")
+	}
+	if deviceID == "" {
+		return errors.New("deviceID is a required field")
+	}
+
+	body := map[string]map[string]interface{}{"device": {"id": deviceID, "platform": platform}}
+	for k, v := range data {
+		body["device"][k] = v
+	}
 	j, err := json.Marshal(body)
 
 	if err != nil {
@@ -128,13 +139,13 @@ func (c *CustomerIO) AddDevice(customerID string, deviceData map[string]interfac
 }
 
 // DeleteDevice deletes a device for a customer
-func (c *CustomerIO) DeleteDevice(customerID string, deviceToken string) error {
-	status, responseBody, err := c.request("DELETE", c.deleteDeviceURL(customerID, deviceToken), []byte{})
+func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
+	status, responseBody, err := c.request("DELETE", c.deleteDeviceURL(customerID, deviceID), []byte{})
 
 	if err != nil {
 		return err
 	} else if status != 200 {
-		return &CustomerIOError{status, c.deleteDeviceURL(customerID, deviceToken), responseBody}
+		return &CustomerIOError{status, c.deleteDeviceURL(customerID, deviceID), responseBody}
 	}
 
 	return nil
@@ -167,8 +178,8 @@ func (c *CustomerIO) deviceURL(customerID string) string {
 	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "devices")
 }
 
-func (c *CustomerIO) deleteDeviceURL(customerID string, deviceToken string) string {
-	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "devices", deviceToken)
+func (c *CustomerIO) deleteDeviceURL(customerID string, deviceID string) string {
+	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "devices", deviceID)
 }
 
 func (c *CustomerIO) request(method, url string, body []byte) (status int, responseBody []byte, err error) {
