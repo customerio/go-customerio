@@ -154,7 +154,7 @@ cio.TrackAnonymous("invite", map[string]interface{}{
 ### Adding a device to a customer
 
 In order to send push notifications, we need customer device information.
-When adding a device to a customer, the customerID, deviceID, and platform
+When adding a device to a customer, the customerID, deviceID, platform, and data
 are required fields.
 
 
@@ -182,7 +182,7 @@ Deleting a device will remove it fromCustomer.io.
 // customerID (required) - the id of the customer the device you want to delete belongs to
 // deviceToken (required) - a unique identifier for the device.  This
 //                          should be the same id you'd pass into the
-//                          `addDevice` command above as part of the deviceData 
+//                          `addDevice` command above 
 
 cio.DeleteDevice("5", "messaging-token")
 ```
