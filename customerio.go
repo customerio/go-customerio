@@ -116,6 +116,9 @@ func (c *CustomerIO) AddDevice(customerID string, deviceID string, platform stri
 	if deviceID == "" {
 		return errors.New("deviceID is a required field")
 	}
+	if platform == "" {
+		return errors.New("platform is a required field")
+	}
 
 	body := map[string]map[string]interface{}{"device": {"id": deviceID, "platform": platform}}
 	for k, v := range data {

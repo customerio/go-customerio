@@ -126,14 +126,11 @@ func TestAddDevice(t *testing.T) {
 
 func TestDeleteDevice(t *testing.T) {
 	cio.Identify("golang-test-deletedevice", map[string]interface{}{})
+	defer cio.Delete("golang-test-deletedevice")
+
 	cio.AddDevice("golang-test-deletedevice", "golang-test-delete", "android", map[string]interface{}{"last_used": time.Now().Unix()})
 
 	err := cio.DeleteDevice("golang-test-deletedevice", "golang-test-delete")
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	err = cio.Delete("golang-test-deletedevice")
 	if err != nil {
 		t.Error(err.Error())
 	}
