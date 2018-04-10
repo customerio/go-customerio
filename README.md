@@ -151,6 +151,39 @@ cio.TrackAnonymous("invite", map[string]interface{}{
 })
 ```
 
+### Adding a device to a customer
+
+In order to send push notifications, we need customer device information.
+
+```go
+// Arguments
+// customerID (required) - a unique identifier string for this customer
+// deviceID (required)   - a unique identifier string for this device
+// platform (required)   - the platform of the device, currently only accepts 'ios' and 'andriod'
+// data (optional)        - a ```map[string]interface{}``` of information about the device. You can pass any
+//                         key/value pairs that would be useful in your triggers. We 
+//                         currently only save 'last_used'.
+//                         your interface{} should be parseable as Json by 'encoding/json'.Marshal
+
+cio.AddDevice("5", "messaging token", "android", map[string]interface{}{
+"last_used": time.Now().Unix(),
+})
+```
+
+### Deleting devices
+
+Deleting a device will remove it from the customers device list in Customer.io.
+
+```go
+// Arguments
+// customerID (required) - the id of the customer the device you want to delete belongs to
+// deviceToken (required) - a unique identifier for the device.  This
+//                          should be the same id you'd pass into the
+//                          `addDevice` command above 
+
+cio.DeleteDevice("5", "messaging-token")
+```
+
 ## Contributing
 
 1. Fork it
