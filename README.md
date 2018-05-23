@@ -184,6 +184,28 @@ Deleting a device will remove it from the customers device list in Customer.io.
 cio.DeleteDevice("5", "messaging-token")
 ```
 
+### Suppressing customers
+
+Suppressing a customer will delete them from Customer.io, and we will ignore all further attempts to identify or track activity for the suppressed customerID
+
+```go
+// Arguments
+// customerID (required) - the id of the customer the device you want to delete belongs to
+
+cio.Suppress("5")
+```
+
+### Unsuppressing customers
+
+Unsuppressing a customer will remove a customerID from our suppression list and we will start accepting new identify and track calls for the customer as normal
+
+```go
+// Arguments
+// customerID (required) - the id of the customer the device you want to delete belongs to
+
+cio.Unsuppress("5")
+```
+
 ## Contributing
 
 1. Fork it
