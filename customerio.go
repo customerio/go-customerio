@@ -156,6 +156,9 @@ func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
 
 // Suppress a customer
 func (c *CustomerIO) Suppress(customerID string) error {
+	if customerID == "" {
+		return errors.New("customerID is a required field")
+	}
 	status, responseBody, err := c.request("POST", c.suppressURL(customerID), []byte{})
 
 	if err != nil {
@@ -169,6 +172,9 @@ func (c *CustomerIO) Suppress(customerID string) error {
 
 // Unsuppress a customer
 func (c *CustomerIO) Unsuppress(customerID string) error {
+	if customerID == "" {
+		return errors.New("customerID is a required field")
+	}
 	status, responseBody, err := c.request("POST", c.unsuppressURL(customerID), []byte{})
 
 	if err != nil {
