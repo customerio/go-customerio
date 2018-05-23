@@ -154,6 +154,32 @@ func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
 	return nil
 }
 
+// Suppress a customer
+func (c *CustomerIO) Suppress(customerID string) error {
+	status, responseBody, err := c.request("POST", c.suppressURL(customerID), []byte{})
+
+	if err != nil {
+		return err
+	} else if status != 200 {
+		return &CustomerIOError{status, c.suppressURL(customerID), responseBody}
+	}
+
+	return nil
+}
+
+// Unsuppress a customer
+func (c *CustomerIO) Unsuppress(customerID string) error {
+	status, responseBody, err := c.request("POST", c.unsuppressURL(customerID), []byte{})
+
+	if err != nil {
+		return err
+	} else if status != 200 {
+		return &CustomerIOError{status, c.unsuppressURL(customerID), responseBody}
+	}
+
+	return nil
+}
+
 func (c *CustomerIO) auth() string {
 	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%v:%v", c.siteID, c.apiKey)))
 }
@@ -183,6 +209,14 @@ func (c *CustomerIO) deviceURL(customerID string) string {
 
 func (c *CustomerIO) deleteDeviceURL(customerID string, deviceID string) string {
 	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "devices", deviceID)
+}
+
+func (c *CustomerIO) suppressURL(customerID string) string {
+	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "suppress")
+}
+
+func (c *CustomerIO) unsuppressURL(customerID string) string {
+	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "unsuppress")
 }
 
 func (c *CustomerIO) request(method, url string, body []byte) (status int, responseBody []byte, err error) {

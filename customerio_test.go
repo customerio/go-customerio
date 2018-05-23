@@ -135,3 +135,23 @@ func TestDeleteDevice(t *testing.T) {
 		t.Error(err.Error())
 	}
 }
+
+func TestSuppress(t *testing.T) {
+	cio.Identify("golang-test-suppress", map[string]interface{}{})
+	defer cio.Delete("golang-test-suppress")
+
+	if err := cio.Suppress("golang-test-suppress"); err != nil {
+		t.Error(err.Error())
+	}
+}
+
+func TestUnsuppress(t *testing.T) {
+	cio.Identify("golang-test-unsuppress", map[string]interface{}{})
+	defer cio.Delete("golang-test-unsuppress")
+
+	cio.Suppress("golang-test-suppress")
+
+	if err := cio.Unsuppress("golang-test-unsuppress"); err != nil {
+		t.Error(err.Error())
+	}
+}
