@@ -149,7 +149,7 @@ func TestUnsuppress(t *testing.T) {
 	cio.Identify("golang-test-unsuppress", map[string]interface{}{})
 	defer cio.Delete("golang-test-unsuppress")
 
-	cio.Suppress("golang-test-suppress")
+	cio.Suppress("golang-test-unsuppress")
 
 	if err := cio.Unsuppress("golang-test-unsuppress"); err != nil {
 		t.Error(err.Error())
