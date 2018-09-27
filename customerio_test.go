@@ -2,7 +2,6 @@ package customerio
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -138,13 +137,19 @@ func TestDeleteDevice(t *testing.T) {
 }
 
 func TestStringEncoding(t *testing.T) {
-	encoded := encodeID(url.PathEscape("test path"))
-	if encoded != "test%20path" {
-		t.Errorf("got: %s, want: %s", encoded, url.PathEscape("test path"))
+	expected := "test%20path"
+	encoded := encodeID(expected)
+	if encoded != expected {
+		t.Errorf("got %s; want %s", encoded, expected)
 	}
 
 	encoded = encodeID("test path")
-	if encoded != "test%20path" {
-		t.Errorf("got: %s, want: %s", encoded, url.PathEscape("test path"))
+	if encoded != expected {
+		t.Errorf("got %s; want %s", encoded, expected)
+	}
+
+	encoded = encodeID(encodeID("test path"))
+	if encoded != expected {
+		t.Errorf("got %s; want %s", encoded, expected)
 	}
 }
