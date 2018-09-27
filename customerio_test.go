@@ -2,6 +2,7 @@ package customerio
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"testing"
 	"time"
@@ -133,5 +134,17 @@ func TestDeleteDevice(t *testing.T) {
 	err := cio.DeleteDevice("golang-test-deletedevice", "golang-test-delete")
 	if err != nil {
 		t.Error(err.Error())
+	}
+}
+
+func TestStringEncoding(t *testing.T) {
+	encoded := encodeID(url.PathEscape("test path"))
+	if encoded != "test%20path" {
+		t.Errorf("got: %s, want: %s", encoded, url.PathEscape("test path"))
+	}
+
+	encoded = encodeID("test path")
+	if encoded != "test%20path" {
+		t.Errorf("got: %s, want: %s", encoded, url.PathEscape("test path"))
 	}
 }
