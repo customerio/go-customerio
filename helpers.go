@@ -16,7 +16,7 @@ const (
 	encodeFragment
 )
 
-// From https://golang.org/src/net/url/url.go?s=7976:8008#L691
+// From https://github.com/golang/go/blob/31d19c0ba34782d16b91e9d41aa88147e858bb34/src/net/url/url.go#L710
 // validEncodedPath reports whether s is a valid encoded path.
 // It must not contain any bytes that require escaping during path encoding.
 func validEncodedPath(s string) bool {
@@ -42,7 +42,7 @@ func validEncodedPath(s string) bool {
 	return true
 }
 
-// From https://golang.org/src/net/url/url.go?s=7976:8008#L101
+// From https://github.com/golang/go/blob/31d19c0ba34782d16b91e9d41aa88147e858bb34/src/net/url/url.go#L101
 // Return true if the specified character should be escaped when
 // appearing in a URL string, according to RFC 3986.
 //
