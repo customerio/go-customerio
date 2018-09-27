@@ -1,7 +1,7 @@
 # Customerio
 
 A golang client for the [Customer.io](http://customer.io) [event API](https://app.customer.io/api/docs/index.html).
-*Tested with Go1.4*
+*Tested with Go1.10*
 
 Godoc here: [https://godoc.org/github.com/customerio/go-customerio](https://godoc.org/github.com/customerio/go-customerio)
 

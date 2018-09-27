@@ -166,11 +166,11 @@ func (c *CustomerIO) protocol() string {
 }
 
 func (c *CustomerIO) customerURL(customerID string) string {
-	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID)
+	return c.protocol() + path.Join(c.Host, "api/v1", "customers", encodeID(customerID))
 }
 
 func (c *CustomerIO) eventURL(customerID string) string {
-	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "events")
+	return c.protocol() + path.Join(c.Host, "api/v1", "customers", encodeID(customerID), "events")
 }
 
 func (c *CustomerIO) anonURL() string {
@@ -178,11 +178,11 @@ func (c *CustomerIO) anonURL() string {
 }
 
 func (c *CustomerIO) deviceURL(customerID string) string {
-	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "devices")
+	return c.protocol() + path.Join(c.Host, "api/v1", "customers", encodeID(customerID), "devices")
 }
 
 func (c *CustomerIO) deleteDeviceURL(customerID string, deviceID string) string {
-	return c.protocol() + path.Join(c.Host, "api/v1", "customers", customerID, "devices", deviceID)
+	return c.protocol() + path.Join(c.Host, "api/v1", "customers", encodeID(customerID), "devices", deviceID)
 }
 
 func (c *CustomerIO) request(method, url string, body []byte) (status int, responseBody []byte, err error) {
@@ -207,5 +207,4 @@ func (c *CustomerIO) request(method, url string, body []byte) (status int, respo
 	}
 
 	return status, responseBody, nil
-
 }

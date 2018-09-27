@@ -135,3 +135,21 @@ func TestDeleteDevice(t *testing.T) {
 		t.Error(err.Error())
 	}
 }
+
+func TestStringEncoding(t *testing.T) {
+	expected := "test%20path"
+	encoded := encodeID(expected)
+	if encoded != expected {
+		t.Errorf("got %s; want %s", encoded, expected)
+	}
+
+	encoded = encodeID("test path")
+	if encoded != expected {
+		t.Errorf("got %s; want %s", encoded, expected)
+	}
+
+	encoded = encodeID(encodeID("test path"))
+	if encoded != expected {
+		t.Errorf("got %s; want %s", encoded, expected)
+	}
+}
