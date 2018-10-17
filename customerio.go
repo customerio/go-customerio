@@ -154,6 +154,54 @@ func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
 	return nil
 }
 
+func (c *CustomerIO) AddCustomersToSegment(segmentID int, customerIDs []string) error {
+	if segmentID == 0 {
+		return errors.New("segmentID is a required field")
+	}
+	if len(customerIDs) == 0 {
+		return errors.New("customerIDs is a required field")
+	}
+
+	body := map[string]interface{}{"ids": customerIDs}
+	j, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
+	status, responseBody, err := c.request("POST", c.addCustomersToManualSegmentURL(segmentID), j)
+	if err != nil {
+		return err
+	} else if status != 200 {
+		return &CustomerIOError{status, c.addCustomersToManualSegmentURL(segmentID), responseBody}
+	}
+
+	return nil
+}
+
+func (c *CustomerIO) RemoveCustomersFromSegment(segmentID int, customerIDs []string) error {
+	if segmentID == 0 {
+		return errors.New("segmentID is a required field")
+	}
+	if len(customerIDs) == 0 {
+		return errors.New("customerIDs is a required field")
+	}
+
+	body := map[string]interface{}{"ids": customerIDs}
+	j, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
+	status, responseBody, err := c.request("POST", c.removeCustomersFromManualSegmentURL(segmentID), j)
+	if err != nil {
+		return err
+	} else if status != 200 {
+		return &CustomerIOError{status, c.removeCustomersFromManualSegmentURL(segmentID), responseBody}
+	}
+
+	return nil
+}
+
 func (c *CustomerIO) auth() string {
 	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%v:%v", c.siteID, c.apiKey)))
 }
@@ -183,6 +231,14 @@ func (c *CustomerIO) deviceURL(customerID string) string {
 
 func (c *CustomerIO) deleteDeviceURL(customerID string, deviceID string) string {
 	return c.protocol() + path.Join(c.Host, "api/v1", "customers", encodeID(customerID), "devices", deviceID)
+}
+
+func (c *CustomerIO) addCustomersToManualSegmentURL(segmentID int) string {
+	return c.protocol() + path.Join(c.Host, "api/v1/", "segments", strconv.Itoa(segmentID), "add_customers")
+}
+
+func (c *CustomerIO) removeCustomersFromManualSegmentURL(segmentID int) string {
+	return c.protocol() + path.Join(c.Host, "api/v1/", "segments", strconv.Itoa(segmentID), "remove_customers")
 }
 
 func (c *CustomerIO) request(method, url string, body []byte) (status int, responseBody []byte, err error) {
