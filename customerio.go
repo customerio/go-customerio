@@ -19,17 +19,6 @@ type CustomerIO struct {
 	SSL    bool
 }
 
-// CustomerIOError is returned by any method that fails at the API level
-type CustomerIOError struct {
-	status int
-	url    string
-	body   []byte
-}
-
-func (e *CustomerIOError) Error() string {
-	return fmt.Sprintf("%v: %v %v", e.status, e.url, string(e.body))
-}
-
 // NewCustomerIO creates a new CustomerIO object to perform requests on the supplied credentials
 func NewCustomerIO(siteID, apiKey string) *CustomerIO {
 	return &CustomerIO{siteID, apiKey, "track.customer.io", true}
@@ -37,17 +26,12 @@ func NewCustomerIO(siteID, apiKey string) *CustomerIO {
 
 // Identify identifies a customer and sets their attributes
 func (c *CustomerIO) Identify(customerID string, attributes map[string]interface{}) error {
-	j, err := json.Marshal(attributes)
+	attrBytes, err := json.Marshal(attributes)
+	CheckErr(err)
 
-	if err != nil {
-		return err
-	}
-
-	status, responseBody, err := c.request("PUT", c.customerURL(customerID), j)
-
-	if err != nil {
-		return err
-	} else if status != 200 {
+	status, responseBody, err := c.request("PUT", c.customerURL(customerID), attrBytes)
+	CheckErr(err)
+	if status != http.StatusOK {
 		return &CustomerIOError{status, c.customerURL(customerID), responseBody}
 	}
 
@@ -56,19 +40,13 @@ func (c *CustomerIO) Identify(customerID string, attributes map[string]interface
 
 // Track sends a single event to Customer.io for the supplied user
 func (c *CustomerIO) Track(customerID string, eventName string, data map[string]interface{}) error {
-
 	body := map[string]interface{}{"name": eventName, "data": data}
-	j, err := json.Marshal(body)
+	byts, err := json.Marshal(body)
+	CheckErr(err)
 
-	if err != nil {
-		return err
-	}
-
-	status, responseBody, err := c.request("POST", c.eventURL(customerID), j)
-
-	if err != nil {
-		return err
-	} else if status != 200 {
+	status, responseBody, err := c.request("POST", c.eventURL(customerID), byts)
+	CheckErr(err)
+	if status != http.StatusOK {
 		return &CustomerIOError{status, c.eventURL(customerID), responseBody}
 	}
 
@@ -78,17 +56,12 @@ func (c *CustomerIO) Track(customerID string, eventName string, data map[string]
 // TrackAnonymous sends a single event to Customer.io for the anonymous user
 func (c *CustomerIO) TrackAnonymous(eventName string, data map[string]interface{}) error {
 	body := map[string]interface{}{"name": eventName, "data": data}
-	j, err := json.Marshal(body)
+	byts, err := json.Marshal(body)
+	CheckErr(err)
 
-	if err != nil {
-		return err
-	}
-
-	status, responseBody, err := c.request("POST", c.anonURL(), j)
-
-	if err != nil {
-		return err
-	} else if status != 200 {
+	status, responseBody, err := c.request("POST", c.anonURL(), byts)
+	CheckErr(err)
+	if status != http.StatusOK {
 		return &CustomerIOError{status, c.anonURL(), responseBody}
 	}
 
@@ -98,10 +71,8 @@ func (c *CustomerIO) TrackAnonymous(eventName string, data map[string]interface{
 // Delete deletes a customer
 func (c *CustomerIO) Delete(customerID string) error {
 	status, responseBody, err := c.request("DELETE", c.customerURL(customerID), []byte{})
-
-	if err != nil {
-		return err
-	} else if status != 200 {
+	CheckErr(err)
+	if status != http.StatusOK {
 		return &CustomerIOError{status, c.customerURL(customerID), responseBody}
 	}
 
@@ -124,17 +95,13 @@ func (c *CustomerIO) AddDevice(customerID string, deviceID string, platform stri
 	for k, v := range data {
 		body["device"][k] = v
 	}
-	j, err := json.Marshal(body)
 
-	if err != nil {
-		return err
-	}
+	byts, err := json.Marshal(body)
+	CheckErr(err)
 
-	status, responseBody, err := c.request("PUT", c.deviceURL(customerID), j)
-
-	if err != nil {
-		return err
-	} else if status != 200 {
+	status, responseBody, err := c.request("PUT", c.deviceURL(customerID), byts)
+	CheckErr(err)
+	if status != http.StatusOK {
 		return &CustomerIOError{status, c.deviceURL(customerID), responseBody}
 	}
 
@@ -144,10 +111,8 @@ func (c *CustomerIO) AddDevice(customerID string, deviceID string, platform stri
 // DeleteDevice deletes a device for a customer
 func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
 	status, responseBody, err := c.request("DELETE", c.deleteDeviceURL(customerID, deviceID), []byte{})
-
-	if err != nil {
-		return err
-	} else if status != 200 {
+	CheckErr(err)
+	if status != http.StatusOK {
 		return &CustomerIOError{status, c.deleteDeviceURL(customerID, deviceID), responseBody}
 	}
 
@@ -163,15 +128,13 @@ func (c *CustomerIO) AddCustomersToSegment(segmentID int, customerIDs []string) 
 	}
 
 	body := map[string]interface{}{"ids": customerIDs}
-	j, err := json.Marshal(body)
-	if err != nil {
-		return err
-	}
+	byts, err := json.Marshal(body)
+	CheckErr(err)
 
-	status, responseBody, err := c.request("POST", c.addCustomersToManualSegmentURL(segmentID), j)
-	if err != nil {
-		return err
-	} else if status != 200 {
+	status, responseBody, err := c.request("POST", c.addCustomersToManualSegmentURL(segmentID), byts)
+	CheckErr(err)
+
+	if status != http.StatusOK {
 		return &CustomerIOError{status, c.addCustomersToManualSegmentURL(segmentID), responseBody}
 	}
 
@@ -187,15 +150,13 @@ func (c *CustomerIO) RemoveCustomersFromSegment(segmentID int, customerIDs []str
 	}
 
 	body := map[string]interface{}{"ids": customerIDs}
-	j, err := json.Marshal(body)
-	if err != nil {
-		return err
-	}
+	byts, err := json.Marshal(body)
+	CheckErr(err)
 
-	status, responseBody, err := c.request("POST", c.removeCustomersFromManualSegmentURL(segmentID), j)
+	status, responseBody, err := c.request("POST", c.removeCustomersFromManualSegmentURL(segmentID), byts)
 	if err != nil {
 		return err
-	} else if status != 200 {
+	} else if status != http.StatusOK {
 		return &CustomerIOError{status, c.removeCustomersFromManualSegmentURL(segmentID), responseBody}
 	}
 
@@ -242,7 +203,6 @@ func (c *CustomerIO) removeCustomersFromManualSegmentURL(segmentID int) string {
 }
 
 func (c *CustomerIO) request(method, url string, body []byte) (status int, responseBody []byte, err error) {
-
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	if err != nil {
 		return 0, nil, err
