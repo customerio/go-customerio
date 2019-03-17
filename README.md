@@ -1,4 +1,5 @@
 # Customerio
+# go-customerio [![CircleCI](https://circleci.com/gh/customerio/go-customerio/tree/master.svg?style=svg)](https://circleci.com/gh/customerio/go-customerio/tree/master)
 
 A golang client for the [Customer.io](http://customer.io) [event API](https://app.customer.io/api/docs/index.html).
 *Tested with Go1.10*
