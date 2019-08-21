@@ -62,6 +62,8 @@ func (c *CustomerIO) Track(customerID string, eventName string, data map[string]
 
 	if err != nil {
 		return err
+	} else if len(j) > 56000 {
+		return errors.New("event body size limited to 56000")
 	}
 
 	status, responseBody, err := c.request("POST", c.eventURL(customerID), j)
@@ -82,6 +84,8 @@ func (c *CustomerIO) TrackAnonymous(eventName string, data map[string]interface{
 
 	if err != nil {
 		return err
+	} else if len(j) > 56000 {
+		return errors.New("event body size limited to 56000")
 	}
 
 	status, responseBody, err := c.request("POST", c.anonURL(), j)
