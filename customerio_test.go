@@ -2,6 +2,7 @@ package customerio
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -151,5 +152,24 @@ func TestStringEncoding(t *testing.T) {
 	encoded = encodeID(encodeID("test path"))
 	if encoded != expected {
 		t.Errorf("got %s; want %s", encoded, expected)
+	}
+}
+
+func TestCustomClient(t *testing.T) {
+	expected := time.Second * 10
+	siteID := os.Getenv("CUSTOMERIO_SITE_ID")
+	apiKey := os.Getenv("CUSTOMERIO_API_KEY")
+
+	if siteID == "" || apiKey == "" {
+		t.Error("Must set CUSTOMERIO_SITE_ID and CUSTOMERIO_API_KEY environment variables to test this library")
+	}
+
+	customCIO := NewCustomerIO(siteID, apiKey)
+	customCIO.Client = &http.Client{
+		Timeout: time.Second * 10,
+	}
+
+	if customCIO.Client.Timeout != expected {
+		t.Errorf("got %v; want %v", customCIO.Client.Timeout, expected)
 	}
 }
