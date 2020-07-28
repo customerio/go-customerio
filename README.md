@@ -56,6 +56,26 @@ which can be found on the [customer.io integration screen](https://manage.custom
 cio := customerio.NewCustomerIO("YOUR SITE ID", "YOUR API SECRET KEY")
 ```
 
+#### Using a custom http.Client
+
+By default the go-customerio library provides a minimal HTTP client:
+```go
+var DefaultClient = &http.Client{
+	Transport: &http.Transport{
+		MaxIdleConnsPerHost: 100,
+	},
+}
+```
+You can customize this client if your use case requires setting different values (such as a timeout):
+```go
+customClient := customerio.DefaultClient{
+  Timeout: time.Second * 5,
+}
+
+cio := customerio.NewCustomerIO("YOUR SITE ID", "YOUR API SECRET KEY")
+cio.Client = customClient
+```
+
 ### Identify logged in customers
 
 Tracking data of logged in customers is a key part of [Customer.io](http://customer.io). In order to
