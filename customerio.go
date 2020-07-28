@@ -17,7 +17,7 @@ type CustomerIO struct {
 	apiKey string
 	Host   string
 	SSL    bool
-	client *http.Client
+	Client *http.Client
 }
 
 // CustomerIOError is returned by any method that fails at the API level
@@ -31,15 +31,15 @@ func (e *CustomerIOError) Error() string {
 	return fmt.Sprintf("%v: %v %v", e.status, e.url, string(e.body))
 }
 
+var DefaultClient = &http.Client{
+	Transport: &http.Transport{
+		MaxIdleConnsPerHost: 100,
+	},
+}
+
 // NewCustomerIO creates a new CustomerIO object to perform requests on the supplied credentials
 func NewCustomerIO(siteID, apiKey string) *CustomerIO {
-	tr := &http.Transport{
-		MaxIdleConnsPerHost: 100,
-	}
-	client := &http.Client{
-		Transport: tr,
-	}
-	return &CustomerIO{siteID, apiKey, "track.customer.io", true, client}
+	return &CustomerIO{siteID, apiKey, "track.customer.io", true, DefaultClient}
 }
 
 // Identify identifies a customer and sets their attributes
@@ -258,7 +258,7 @@ func (c *CustomerIO) request(method, url string, body []byte) (status int, respo
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Content-Length", strconv.Itoa(len(body)))
 
-	resp, err := c.client.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return 0, nil, err
 	}
