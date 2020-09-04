@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"path"
 	"strconv"
@@ -249,7 +250,6 @@ func (c *CustomerIO) removeCustomersFromManualSegmentURL(segmentID int) string {
 }
 
 func (c *CustomerIO) request(method, url string, body []byte) (status int, responseBody []byte, err error) {
-
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	if err != nil {
 		return 0, nil, err
@@ -263,10 +263,11 @@ func (c *CustomerIO) request(method, url string, body []byte) (status int, respo
 		return 0, nil, err
 	}
 	defer resp.Body.Close()
+
 	status = resp.StatusCode
-	if resp.ContentLength >= 0 {
-		responseBody = make([]byte, resp.ContentLength)
-		resp.Body.Read(responseBody)
+	responseBody , err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, nil, err
 	}
 
 	return status, responseBody, nil
