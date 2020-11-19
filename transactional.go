@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -28,14 +29,12 @@ type TransactionalResponse struct {
 }
 
 type TransactionalError struct {
-	Meta struct {
-		Err string `json:"error"`
-	} `json:"meta"`
-	Status int `json:"-"`
+	Err    string
+	Status int
 }
 
 func (e *TransactionalError) Error() string {
-	return e.Meta.Err
+	return e.Err
 }
 
 func (c *TransactionalAPIClient) SendEmail(e Email) (*TransactionalResponse, error) {
@@ -57,17 +56,31 @@ func (c *TransactionalAPIClient) SendEmail(e Email) (*TransactionalResponse, err
 		return nil, err
 	}
 
-	d := json.NewDecoder(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
 	if resp.StatusCode != 200 {
-		var e TransactionalError
-		if err := d.Decode(&e); err != nil {
-			return nil, err
+		var meta struct {
+			Meta struct {
+				Err string `json:"error"`
+			} `json:"meta"`
 		}
-		return nil, &e
+		if err := json.Unmarshal(body, &meta); err != nil {
+			return nil, &TransactionalError{
+				Status: resp.StatusCode,
+				Err:    string(body),
+			}
+		}
+		return nil, &TransactionalError{
+			Status: resp.StatusCode,
+			Err:    meta.Meta.Err,
+		}
 	}
 
 	var result TransactionalResponse
-	if err := d.Decode(&result); err != nil {
+	if err := json.Unmarshal(body, &result); err != nil {
 		return nil, err
 	}
 
