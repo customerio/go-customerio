@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-// CustomerIO wraps the customer.io API, see: http://customer.io/docs/api/rest.html
+// CustomerIO wraps the customer.io track API, see: http://customer.io/docs/api/rest.html
 type CustomerIO struct {
 	siteID string
 	apiKey string
@@ -265,7 +265,7 @@ func (c *CustomerIO) request(method, url string, body []byte) (status int, respo
 	defer resp.Body.Close()
 
 	status = resp.StatusCode
-	responseBody , err = ioutil.ReadAll(resp.Body)
+	responseBody, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return 0, nil, err
 	}
