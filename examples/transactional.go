@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	client := customerio.NewTransactionalClient("<your-key-here>")
+	client := customerio.NewAPIClient("<your-key-here>")
 
 	email := customerio.Email{
 		CustomerID: "customer_1",
