@@ -29,7 +29,7 @@ func (c *APIClient) SendEmail(e Email) (*TransactionalResponse, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s/v1/send/email", c.Host), bytes.NewBuffer(b))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/v1/send/email", c.URL), bytes.NewBuffer(b))
 	if err != nil {
 		return nil, err
 	}
