@@ -32,6 +32,10 @@ func (e *CustomerIOError) Error() string {
 	return fmt.Sprintf("%v: %v %v", e.status, e.url, string(e.body))
 }
 
+func NewTrackClient(siteID, apiKey string) *CustomerIO {
+	return NewCustomerIO(siteID, apiKey)
+}
+
 // NewCustomerIO creates a new CustomerIO object to perform requests on the supplied credentials
 func NewCustomerIO(siteID, apiKey string) *CustomerIO {
 	tr := &http.Transport{

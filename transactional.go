@@ -8,20 +8,6 @@ import (
 	"net/http"
 )
 
-type TransactionalAPIClient struct {
-	Key    string
-	Host   string
-	Client *http.Client
-}
-
-func NewTransactionalClient(key string) *TransactionalAPIClient {
-	return &TransactionalAPIClient{
-		Key:    key,
-		Client: http.DefaultClient,
-		Host:   "api.customer.io",
-	}
-}
-
 type TransactionalResponse struct {
 	Recipient  string `json:"recipient"`
 	DeliveryID string `json:"delivery_id"`
@@ -37,7 +23,7 @@ func (e *TransactionalError) Error() string {
 	return e.Err
 }
 
-func (c *TransactionalAPIClient) SendEmail(e Email) (*TransactionalResponse, error) {
+func (c *APIClient) SendEmail(e Email) (*TransactionalResponse, error) {
 	b, err := json.Marshal(e)
 	if err != nil {
 		return nil, err
@@ -55,6 +41,7 @@ func (c *TransactionalAPIClient) SendEmail(e Email) (*TransactionalResponse, err
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
