@@ -2,6 +2,8 @@ package customerio_test
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -12,7 +14,36 @@ import (
 )
 
 func TestSendEmail(t *testing.T) {
+
+	emailRequest := &customerio.SendEmailRequest{
+		CustomerID: "customer_1",
+		To:         "customer@example.com",
+		From:       "business@example.com",
+		Subject:    "hello, {{ trigger.name }}",
+		Body:       "hello from the Customer.io {{ trigger.client }} client",
+		MessageData: map[string]interface{}{
+			"client": "Go",
+			"name":   "gopher",
+		},
+	}
+
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+
+		b, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			t.Error(err)
+		}
+		defer req.Body.Close()
+
+		var body customerio.SendEmailRequest
+		if err := json.Unmarshal(b, &body); err != nil {
+			t.Error(err)
+		}
+
+		if !reflect.DeepEqual(&body, emailRequest) {
+			t.Errorf("Request differed, want: %#v, got: %#v", emailRequest, body)
+		}
+
 		w.Write([]byte(`{
 			"delivery_id": "ABCDEFG",
 			"queued_at": 1500111111,
@@ -24,17 +55,7 @@ func TestSendEmail(t *testing.T) {
 	api := customerio.NewAPIClient("myKey")
 	api.URL = srv.URL
 
-	resp, err := api.SendEmail(context.Background(), &customerio.SendEmailRequest{
-		CustomerID: "customer_1",
-		To:         "customer@example.com",
-		From:       "business@example.com",
-		Subject:    "hello, {{ trigger.name }}",
-		Body:       "hello from the Customer.io {{ trigger.client }} client",
-		MessageData: map[string]interface{}{
-			"client": "Go",
-			"name":   "gopher",
-		},
-	})
+	resp, err := api.SendEmail(context.Background(), emailRequest)
 	if err != nil {
 		t.Error(err)
 	}
