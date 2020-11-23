@@ -2,12 +2,14 @@ package customerio
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"io"
 )
 
-type Email struct {
+type SendEmailRequest struct {
 	TransactionalMessageID  int                    `json:"transactional_message_id,omitempty"`
 	CustomerID              string                 `json:"customer_id"`
 	To                      string                 `json:"to,omitempty"`
@@ -33,7 +35,7 @@ type Email struct {
 
 var ErrAttachmentExists = errors.New("attachment with this name already exists")
 
-func (e *Email) Attach(name string, value io.Reader) error {
+func (e *SendEmailRequest) Attach(name string, value io.Reader) error {
 	if e.Attachments == nil {
 		e.Attachments = make(map[string]string)
 	}
@@ -49,4 +51,41 @@ func (e *Email) Attach(name string, value io.Reader) error {
 
 	e.Attachments[name] = string(buf.Bytes())
 	return nil
+}
+
+type SendEmailResponse struct {
+	TransactionalResponse
+}
+
+func (c *APIClient) SendEmail(ctx context.Context, req *SendEmailRequest) (*SendEmailResponse, error) {
+
+	resp, body, err := c.doRequest(ctx, "POST", "/v1/send/email", req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		var meta struct {
+			Meta struct {
+				Err string `json:"error"`
+			} `json:"meta"`
+		}
+		if err := json.Unmarshal(body, &meta); err != nil {
+			return nil, &TransactionalError{
+				Status: resp.StatusCode,
+				Err:    string(body),
+			}
+		}
+		return nil, &TransactionalError{
+			Status: resp.StatusCode,
+			Err:    meta.Meta.Err,
+		}
+	}
+
+	var result SendEmailResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }

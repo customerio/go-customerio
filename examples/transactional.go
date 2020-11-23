@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/customerio/go-customerio"
@@ -8,17 +9,23 @@ import (
 
 func main() {
 
-	client := customerio.NewAPIClient("<your-key-here>")
+	ctx := context.Background()
 
-	email := customerio.Email{
+	client := customerio.NewAPIClient("<your api key>")
+
+	email := customerio.SendEmailRequest{
 		CustomerID: "customer_1",
 		To:         "customer@example.com",
 		From:       "business@example.com",
-		Subject:    "hello world",
-		Body:       "hello from the Customer.io Go Client",
+		Subject:    "hello, {{ trigger.name }}",
+		Body:       "hello from the Customer.io {{ trigger.client }} client",
+		MessageData: map[string]interface{}{
+			"client": "Go",
+			"name":   "gopher",
+		},
 	}
 
-	resp, err := client.SendEmail(email)
+	resp, err := client.SendEmail(ctx, &email)
 	if err != nil {
 		panic(err)
 	}
