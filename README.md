@@ -53,7 +53,7 @@ Create an instance of the client with your [customer.io](http://customer.io) cre
 which can be found on the [customer.io integration screen](https://manage.customer.io/integration).
 
 ```go
-cio := customerio.NewCustomerIO("YOUR SITE ID", "YOUR API SECRET KEY")
+track := customerio.NewTrackClient("YOUR SITE ID", "YOUR API SECRET KEY")
 ```
 
 ### Identify logged in customers
@@ -85,7 +85,7 @@ key information changes. This keeps [Customer.io](http://customer.io) up to date
 //                         should at least pass in an email, and created_at timestamp.
 //                         your interface{} should be parseable as Json by 'encoding/json'.Marshal
 
-cio.Identify("5", map[string]interface{}{
+track.Identify("5", map[string]interface{}{
   "email": "bob@example.com",
   "created_at": time.Now().Unix(),
   "first_name": "Bob",
@@ -106,7 +106,7 @@ recreated.
 //                          should be the same id you'd pass into the
 //                          `identify` command above.
 
-cio.Delete("5")
+track.Delete("5")
 ```
 
 ### Tracking a custom event
@@ -124,7 +124,7 @@ encourage your customers to perform an action.
 //                          event, as a ```map[string]interface{}```. These attributes can be used in your triggers to control who should
 //                         receive the triggered email. You can set any number of data values.
 
-cio.Track("5", "purchase", map[string]interface{}{
+track.Track("5", "purchase", map[string]interface{}{
     "type": "socks",
     "price": "13.99",
 })
@@ -144,7 +144,7 @@ customer which may not exist in your People list.
 //                              event, as a ```map[string]interface{}```. These attributes can be used in your triggers to control who should
 //                              receive the triggered email. You can set any number of data values.
 
-cio.TrackAnonymous("invite", map[string]interface{}{
+track.TrackAnonymous("invite", map[string]interface{}{
     "first_name": "Alex",
     "source": "OldApp",
 })
@@ -164,7 +164,7 @@ In order to send push notifications, we need customer device information.
 //                         currently only save 'last_used'.
 //                         your interface{} should be parseable as Json by 'encoding/json'.Marshal
 
-cio.AddDevice("5", "messaging token", "android", map[string]interface{}{
+track.AddDevice("5", "messaging token", "android", map[string]interface{}{
 "last_used": time.Now().Unix(),
 })
 ````
@@ -180,7 +180,7 @@ Deleting a device will remove it from the customers device list in Customer.io.
 //                          should be the same id you'd pass into the
 //                          `addDevice` command above
 
-cio.DeleteDevice("5", "messaging-token")
+track.DeleteDevice("5", "messaging-token")
 ```
 
 ### Managing manual segments
@@ -197,8 +197,8 @@ segment.
 // segmentID (required)   - the id of the manual segment which is being modified
 // ids (required)         - a list of customer ids to add or remove from the segment
 
-cio.AddCustomersToSegment(3, []string["c1","c2","c3"])
-cio.RemoveCustomersFromSegment(3, []string["c1","c2","c3"])
+track.AddCustomersToSegment(3, []string["c1","c2","c3"])
+track.RemoveCustomersFromSegment(3, []string["c1","c2","c3"])
 ```
 
 ## Contributing
