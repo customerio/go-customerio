@@ -14,6 +14,8 @@ type APIClient struct {
 	Client *http.Client
 }
 
+// NewAPIClient prepares a client for use with the Customer.io API, see: https://customer.io/docs/api/#apicoreintroduction
+// using an App API Key from https://fly.customer.io/settings/api_credentials?keyType=app
 func NewAPIClient(key string) *APIClient {
 	return &APIClient{
 		Key:    key,

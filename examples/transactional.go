@@ -11,9 +11,9 @@ func main() {
 
 	ctx := context.Background()
 
-	client := customerio.NewAPIClient("<your api key>")
+	client := customerio.NewAPIClient("<your-key-here>")
 
-	email := customerio.SendEmailRequest{
+	req := customerio.SendEmailRequest{
 		CustomerID: "customer_1",
 		To:         "customer@example.com",
 		From:       "business@example.com",
@@ -25,7 +25,7 @@ func main() {
 		},
 	}
 
-	resp, err := client.SendEmail(ctx, &email)
+	resp, err := client.SendEmail(ctx, &req)
 	if err != nil {
 		panic(err)
 	}

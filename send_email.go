@@ -57,6 +57,7 @@ type SendEmailResponse struct {
 	TransactionalResponse
 }
 
+// SendEmail sends a single transactional email using the Customer.io transactional API
 func (c *APIClient) SendEmail(ctx context.Context, req *SendEmailRequest) (*SendEmailResponse, error) {
 
 	resp, body, err := c.doRequest(ctx, "POST", "/v1/send/email", req)

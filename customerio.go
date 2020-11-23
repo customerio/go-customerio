@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-// CustomerIO wraps the customer.io track API, see: http://customer.io/docs/api/rest.html
+// CustomerIO wraps the customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
 type CustomerIO struct {
 	siteID string
 	apiKey string
@@ -32,11 +32,14 @@ func (e *CustomerIOError) Error() string {
 	return fmt.Sprintf("%v: %v %v", e.status, e.url, string(e.body))
 }
 
+// NewTrackClient prepares a client for use with the Customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
+// using a Tracking Site ID and API Key pair from https://fly.customer.io/settings/api_credentials
 func NewTrackClient(siteID, apiKey string) *CustomerIO {
 	return NewCustomerIO(siteID, apiKey)
 }
 
-// NewCustomerIO creates a new CustomerIO object to perform requests on the supplied credentials
+// NewCustomerIO prepares a client for use with the Customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
+// deprecated in favour of NewTrackClient
 func NewCustomerIO(siteID, apiKey string) *CustomerIO {
 	tr := &http.Transport{
 		MaxIdleConnsPerHost: 100,
