@@ -1,31 +1,30 @@
 package customerio
 
 import (
-	"fmt"
-	"os"
 	"testing"
 	"time"
 )
 
 var cio *CustomerIO
 
+/*
 func TestMain(m *testing.M) {
 
-	siteID := os.Getenv("CUSTOMERIO_SITE_ID")
-	apiKey := os.Getenv("CUSTOMERIO_API_KEY")
+			siteID := os.Getenv("CUSTOMERIO_SITE_ID")
+			apiKey := os.Getenv("CUSTOMERIO_API_KEY")
 
-	var exitCode int
+			var exitCode int
 
-	if siteID != "" && apiKey != "" {
-		cio = NewCustomerIO(siteID, apiKey)
-		exitCode = m.Run()
-	} else {
-		exitCode = 1
-		fmt.Println("Must set CUSTOMERIO_SITE_ID and CUSTOMERIO_API_KEY environment variables to test this library")
-	}
-
-	os.Exit(exitCode)
+			if siteID != "" && apiKey != "" {
+				cio = NewCustomerIO(siteID, apiKey)
+				exitCode = m.Run()
+			} else {
+				exitCode = 1
+				fmt.Println("Must set CUSTOMERIO_SITE_ID and CUSTOMERIO_API_KEY environment variables to test this library")
+			}
+		os.Exit(exitCode)
 }
+*/
 
 func TestIdentify(t *testing.T) {
 

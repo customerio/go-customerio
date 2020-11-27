@@ -5,10 +5,14 @@ import (
 	"time"
 )
 
+// TransactionalResponse  is a response to the send of a transactional message.
 type TransactionalResponse struct {
-	Recipient  string    `json:"recipient"`
-	DeliveryID string    `json:"delivery_id"`
-	QueuedAt   time.Time `json:"queued_at"`
+	// Recipient is the recipient of the message.
+	Recipient string `json:"recipient"`
+	// DeliveryID is a unique id for the given message.
+	DeliveryID string `json:"delivery_id"`
+	// QueuedAt is when the message was queued.
+	QueuedAt time.Time `json:"queued_at"`
 }
 
 func (t *TransactionalResponse) UnmarshalJSON(b []byte) error {
@@ -26,9 +30,12 @@ func (t *TransactionalResponse) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// TransactionalError is returned if a transactional message fails to send.
 type TransactionalError struct {
-	Err    string
-	Status int
+	// Err is a more specific error message.
+	Err string
+	// StatusCode is the http status code for the error.
+	StatusCode int
 }
 
 func (e *TransactionalError) Error() string {

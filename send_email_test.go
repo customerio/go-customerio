@@ -14,7 +14,6 @@ import (
 )
 
 func TestSendEmail(t *testing.T) {
-
 	emailRequest := &customerio.SendEmailRequest{
 		CustomerID: "customer_1",
 		To:         "customer@example.com",
@@ -28,7 +27,6 @@ func TestSendEmail(t *testing.T) {
 	}
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
 		b, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			t.Error(err)
