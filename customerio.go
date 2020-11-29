@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"path"
+	"net/url"
 	"strconv"
 )
 
@@ -41,86 +41,67 @@ func NewTrackClient(siteID, apiKey string) *CustomerIO {
 // NewCustomerIO prepares a client for use with the Customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
 // deprecated in favour of NewTrackClient
 func NewCustomerIO(siteID, apiKey string) *CustomerIO {
-	tr := &http.Transport{
-		MaxIdleConnsPerHost: 100,
-	}
 	client := &http.Client{
-		Transport: tr,
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost: 100,
+		},
 	}
-	return &CustomerIO{siteID, apiKey, "track.customer.io", true, client}
+	return &CustomerIO{
+		siteID: siteID,
+		apiKey: apiKey,
+		Host:   "track.customer.io",
+		SSL:    true,
+		client: client,
+	}
 }
 
 // Identify identifies a customer and sets their attributes
 func (c *CustomerIO) Identify(customerID string, attributes map[string]interface{}) error {
-	j, err := json.Marshal(attributes)
-
-	if err != nil {
-		return err
+	if customerID == "" {
+		return errors.New("customerID is a required field")
 	}
-
-	status, responseBody, err := c.request("PUT", c.customerURL(customerID), j)
-
-	if err != nil {
-		return err
-	} else if status != 200 {
-		return &CustomerIOError{status, c.customerURL(customerID), responseBody}
-	}
-
-	return nil
+	return c.request("PUT",
+		fmt.Sprintf("%s://%s/api/v1/customers/%s", c.protocol(), c.Host, url.PathEscape(customerID)),
+		attributes)
 }
 
 // Track sends a single event to Customer.io for the supplied user
 func (c *CustomerIO) Track(customerID string, eventName string, data map[string]interface{}) error {
-
-	body := map[string]interface{}{"name": eventName, "data": data}
-	j, err := json.Marshal(body)
-
-	if err != nil {
-		return err
+	if customerID == "" {
+		return errors.New("customerID is a required field")
 	}
-
-	status, responseBody, err := c.request("POST", c.eventURL(customerID), j)
-
-	if err != nil {
-		return err
-	} else if status != 200 {
-		return &CustomerIOError{status, c.eventURL(customerID), responseBody}
+	if eventName == "" {
+		return errors.New("eventName is a required field")
 	}
-
-	return nil
+	return c.request("POST",
+		fmt.Sprintf("%s://%s/api/v1/customers/%s/events", c.protocol(), c.Host, url.PathEscape(customerID)),
+		map[string]interface{}{
+			"name": eventName,
+			"data": data,
+		})
 }
 
 // TrackAnonymous sends a single event to Customer.io for the anonymous user
 func (c *CustomerIO) TrackAnonymous(eventName string, data map[string]interface{}) error {
-	body := map[string]interface{}{"name": eventName, "data": data}
-	j, err := json.Marshal(body)
-
-	if err != nil {
-		return err
+	if eventName == "" {
+		return errors.New("eventName is a required field")
 	}
-
-	status, responseBody, err := c.request("POST", c.anonURL(), j)
-
-	if err != nil {
-		return err
-	} else if status != 200 {
-		return &CustomerIOError{status, c.anonURL(), responseBody}
-	}
-
-	return nil
+	return c.request("POST",
+		fmt.Sprintf("%s://%s/api/v1/events", c.protocol(), c.Host),
+		map[string]interface{}{
+			"name": eventName,
+			"data": data,
+		})
 }
 
 // Delete deletes a customer
 func (c *CustomerIO) Delete(customerID string) error {
-	status, responseBody, err := c.request("DELETE", c.customerURL(customerID), []byte{})
-
-	if err != nil {
-		return err
-	} else if status != 200 {
-		return &CustomerIOError{status, c.customerURL(customerID), responseBody}
+	if customerID == "" {
+		return errors.New("customerID is a required field")
 	}
-
-	return nil
+	return c.request("DELETE",
+		fmt.Sprintf("%s://%s/api/v1/customers/%s", c.protocol(), c.Host, url.PathEscape(customerID)),
+		nil)
 }
 
 // AddDevice adds a device for a customer
@@ -135,38 +116,31 @@ func (c *CustomerIO) AddDevice(customerID string, deviceID string, platform stri
 		return errors.New("platform is a required field")
 	}
 
-	body := map[string]map[string]interface{}{"device": {"id": deviceID, "platform": platform}}
+	body := map[string]map[string]interface{}{
+		"device": {
+			"id":       deviceID,
+			"platform": platform,
+		},
+	}
 	for k, v := range data {
 		body["device"][k] = v
 	}
-	j, err := json.Marshal(body)
-
-	if err != nil {
-		return err
-	}
-
-	status, responseBody, err := c.request("PUT", c.deviceURL(customerID), j)
-
-	if err != nil {
-		return err
-	} else if status != 200 {
-		return &CustomerIOError{status, c.deviceURL(customerID), responseBody}
-	}
-
-	return nil
+	return c.request("PUT",
+		fmt.Sprintf("%s://%s/api/v1/customers/%s/devices", c.protocol(), c.Host, url.PathEscape(customerID)),
+		body)
 }
 
 // DeleteDevice deletes a device for a customer
 func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
-	status, responseBody, err := c.request("DELETE", c.deleteDeviceURL(customerID, deviceID), []byte{})
-
-	if err != nil {
-		return err
-	} else if status != 200 {
-		return &CustomerIOError{status, c.deleteDeviceURL(customerID, deviceID), responseBody}
+	if customerID == "" {
+		return errors.New("customerID is a required field")
 	}
-
-	return nil
+	if deviceID == "" {
+		return errors.New("deviceID is a required field")
+	}
+	return c.request("DELETE",
+		fmt.Sprintf("%s://%s/api/v1/customers/%s/devices/%s", c.protocol(), c.Host, url.PathEscape(customerID), url.PathEscape(deviceID)),
+		nil)
 }
 
 func (c *CustomerIO) AddCustomersToSegment(segmentID int, customerIDs []string) error {
@@ -177,20 +151,11 @@ func (c *CustomerIO) AddCustomersToSegment(segmentID int, customerIDs []string) 
 		return errors.New("customerIDs is a required field")
 	}
 
-	body := map[string]interface{}{"ids": customerIDs}
-	j, err := json.Marshal(body)
-	if err != nil {
-		return err
-	}
-
-	status, responseBody, err := c.request("POST", c.addCustomersToManualSegmentURL(segmentID), j)
-	if err != nil {
-		return err
-	} else if status != 200 {
-		return &CustomerIOError{status, c.addCustomersToManualSegmentURL(segmentID), responseBody}
-	}
-
-	return nil
+	return c.request("POST",
+		fmt.Sprintf("%s://%s/api/v1/segments/%d/add_customers", c.protocol(), c.Host, segmentID),
+		map[string]interface{}{
+			"ids": customerIDs,
+		})
 }
 
 func (c *CustomerIO) RemoveCustomersFromSegment(segmentID int, customerIDs []string) error {
@@ -201,20 +166,11 @@ func (c *CustomerIO) RemoveCustomersFromSegment(segmentID int, customerIDs []str
 		return errors.New("customerIDs is a required field")
 	}
 
-	body := map[string]interface{}{"ids": customerIDs}
-	j, err := json.Marshal(body)
-	if err != nil {
-		return err
-	}
-
-	status, responseBody, err := c.request("POST", c.removeCustomersFromManualSegmentURL(segmentID), j)
-	if err != nil {
-		return err
-	} else if status != 200 {
-		return &CustomerIOError{status, c.removeCustomersFromManualSegmentURL(segmentID), responseBody}
-	}
-
-	return nil
+	return c.request("POST",
+		fmt.Sprintf("%s://%s/api/v1/segments/%d/remove_customers", c.protocol(), c.Host, segmentID),
+		map[string]interface{}{
+			"ids": customerIDs,
+		})
 }
 
 func (c *CustomerIO) auth() string {
@@ -223,59 +179,54 @@ func (c *CustomerIO) auth() string {
 
 func (c *CustomerIO) protocol() string {
 	if !c.SSL {
-		return "http://"
+		return "http"
 	}
-	return "https://"
+	return "https"
 }
 
-func (c *CustomerIO) customerURL(customerID string) string {
-	return c.protocol() + path.Join(c.Host, "api/v1", "customers", encodeID(customerID))
-}
+func (c *CustomerIO) request(method, url string, body interface{}) error {
+	var req *http.Request
+	if body != nil {
+		j, err := json.Marshal(body)
+		if err != nil {
+			return err
+		}
 
-func (c *CustomerIO) eventURL(customerID string) string {
-	return c.protocol() + path.Join(c.Host, "api/v1", "customers", encodeID(customerID), "events")
-}
+		req, err = http.NewRequest(method, url, bytes.NewBuffer(j))
+		if err != nil {
+			return err
+		}
 
-func (c *CustomerIO) anonURL() string {
-	return c.protocol() + path.Join(c.Host, "api/v1", "events")
-}
-
-func (c *CustomerIO) deviceURL(customerID string) string {
-	return c.protocol() + path.Join(c.Host, "api/v1", "customers", encodeID(customerID), "devices")
-}
-
-func (c *CustomerIO) deleteDeviceURL(customerID string, deviceID string) string {
-	return c.protocol() + path.Join(c.Host, "api/v1", "customers", encodeID(customerID), "devices", deviceID)
-}
-
-func (c *CustomerIO) addCustomersToManualSegmentURL(segmentID int) string {
-	return c.protocol() + path.Join(c.Host, "api/v1/", "segments", strconv.Itoa(segmentID), "add_customers")
-}
-
-func (c *CustomerIO) removeCustomersFromManualSegmentURL(segmentID int) string {
-	return c.protocol() + path.Join(c.Host, "api/v1/", "segments", strconv.Itoa(segmentID), "remove_customers")
-}
-
-func (c *CustomerIO) request(method, url string, body []byte) (status int, responseBody []byte, err error) {
-	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
-	if err != nil {
-		return 0, nil, err
+		req.Header.Add("Content-Type", "application/json")
+		req.Header.Add("Content-Length", strconv.Itoa(len(j)))
+	} else {
+		var err error
+		req, err = http.NewRequest(method, url, nil)
+		if err != nil {
+			return err
+		}
 	}
+
 	req.Header.Add("Authorization", fmt.Sprintf("Basic %v", c.auth()))
-	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Content-Length", strconv.Itoa(len(body)))
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return 0, nil, err
+		return err
 	}
 	defer resp.Body.Close()
 
-	status = resp.StatusCode
-	responseBody, err = ioutil.ReadAll(resp.Body)
+	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return 0, nil, err
+		return err
 	}
 
-	return status, responseBody, nil
+	if resp.StatusCode != http.StatusOK {
+		return &CustomerIOError{
+			status: resp.StatusCode,
+			url:    url,
+			body:   responseBody,
+		}
+	}
+
+	return nil
 }
