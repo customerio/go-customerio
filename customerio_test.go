@@ -51,6 +51,15 @@ func runCases(t *testing.T, cases []testCase, do func(c testCase) error) {
 		})
 	}
 }
+func checkParamError(t *testing.T, err error, param string) {
+	pe, ok := err.(customerio.ParamError)
+	if !ok {
+		t.Error("expected ParamError")
+	}
+	if pe.Param != param {
+		t.Errorf("expected %s got %s", param, pe.Param)
+	}
+}
 
 func TestIdentify(t *testing.T) {
 	attributes := map[string]interface{}{
@@ -58,6 +67,8 @@ func TestIdentify(t *testing.T) {
 	}
 	if err := cio.Identify("", attributes); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "customerID")
 	}
 
 	runCases(t,
@@ -84,9 +95,13 @@ func TestTrack(t *testing.T) {
 	}
 	if err := cio.Track("", "test", data); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "customerID")
 	}
 	if err := cio.Track("1", "", data); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "eventName")
 	}
 
 	runCases(t,
@@ -121,6 +136,8 @@ func TestTrackAnonymous(t *testing.T) {
 func TestDelete(t *testing.T) {
 	if err := cio.Delete(""); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "customerID")
 	}
 	runCases(t,
 		[]testCase{
@@ -136,12 +153,18 @@ func TestDelete(t *testing.T) {
 func TestAddDevice(t *testing.T) {
 	if err := cio.AddDevice("", "d1", "ios", nil); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "customerID")
 	}
 	if err := cio.AddDevice("1", "", "ios", nil); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "deviceID")
 	}
 	if err := cio.AddDevice("1", "d1", "", nil); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "platform")
 	}
 
 	body := map[string]map[string]interface{}{
@@ -167,9 +190,13 @@ func TestAddDevice(t *testing.T) {
 func TestDeleteDevice(t *testing.T) {
 	if err := cio.DeleteDevice("", "d1"); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "customerID")
 	}
 	if err := cio.DeleteDevice("1", ""); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "deviceID")
 	}
 	runCases(t,
 		[]testCase{
@@ -193,9 +220,13 @@ func TestAddCustomersToSegment(t *testing.T) {
 	ids := []string{"1", "2", "3"}
 	if err := cio.AddCustomersToSegment(0, ids); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "segmentID")
 	}
 	if err := cio.AddCustomersToSegment(1, nil); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "customerIDs")
 	}
 	body := map[string]interface{}{
 		"ids": ids,
@@ -210,9 +241,13 @@ func TestRemoveCustomersFromSegment(t *testing.T) {
 	ids := []string{"1", "2", "3"}
 	if err := cio.RemoveCustomersFromSegment(0, ids); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "segmentID")
 	}
 	if err := cio.RemoveCustomersFromSegment(1, nil); err == nil {
 		t.Error("expected error")
+	} else {
+		checkParamError(t, err, "customerIDs")
 	}
 	body := map[string]interface{}{
 		"ids": ids,

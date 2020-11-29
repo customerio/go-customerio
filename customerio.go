@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -32,6 +31,13 @@ func (e *CustomerIOError) Error() string {
 	return fmt.Sprintf("%v: %v %v", e.status, e.url, string(e.body))
 }
 
+// ParamError is an error returned if a parameter to the track API is invalid.
+type ParamError struct {
+	Param string // Param is the name of the parameter.
+}
+
+func (e ParamError) Error() string { return e.Param + ": missing" }
+
 // NewTrackClient prepares a client for use with the Customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
 // using a Tracking Site ID and API Key pair from https://fly.customer.io/settings/api_credentials
 func NewTrackClient(siteID, apiKey string) *CustomerIO {
@@ -58,7 +64,7 @@ func NewCustomerIO(siteID, apiKey string) *CustomerIO {
 // Identify identifies a customer and sets their attributes
 func (c *CustomerIO) Identify(customerID string, attributes map[string]interface{}) error {
 	if customerID == "" {
-		return errors.New("customerID is a required field")
+		return ParamError{Param: "customerID"}
 	}
 	return c.request("PUT",
 		fmt.Sprintf("%s://%s/api/v1/customers/%s", c.protocol(), c.Host, url.PathEscape(customerID)),
@@ -68,10 +74,10 @@ func (c *CustomerIO) Identify(customerID string, attributes map[string]interface
 // Track sends a single event to Customer.io for the supplied user
 func (c *CustomerIO) Track(customerID string, eventName string, data map[string]interface{}) error {
 	if customerID == "" {
-		return errors.New("customerID is a required field")
+		return ParamError{Param: "customerID"}
 	}
 	if eventName == "" {
-		return errors.New("eventName is a required field")
+		return ParamError{Param: "eventName"}
 	}
 	return c.request("POST",
 		fmt.Sprintf("%s://%s/api/v1/customers/%s/events", c.protocol(), c.Host, url.PathEscape(customerID)),
@@ -84,7 +90,7 @@ func (c *CustomerIO) Track(customerID string, eventName string, data map[string]
 // TrackAnonymous sends a single event to Customer.io for the anonymous user
 func (c *CustomerIO) TrackAnonymous(eventName string, data map[string]interface{}) error {
 	if eventName == "" {
-		return errors.New("eventName is a required field")
+		return ParamError{Param: "eventName"}
 	}
 	return c.request("POST",
 		fmt.Sprintf("%s://%s/api/v1/events", c.protocol(), c.Host),
@@ -97,7 +103,7 @@ func (c *CustomerIO) TrackAnonymous(eventName string, data map[string]interface{
 // Delete deletes a customer
 func (c *CustomerIO) Delete(customerID string) error {
 	if customerID == "" {
-		return errors.New("customerID is a required field")
+		return ParamError{Param: "customerID"}
 	}
 	return c.request("DELETE",
 		fmt.Sprintf("%s://%s/api/v1/customers/%s", c.protocol(), c.Host, url.PathEscape(customerID)),
@@ -107,13 +113,13 @@ func (c *CustomerIO) Delete(customerID string) error {
 // AddDevice adds a device for a customer
 func (c *CustomerIO) AddDevice(customerID string, deviceID string, platform string, data map[string]interface{}) error {
 	if customerID == "" {
-		return errors.New("customerID is a required field")
+		return ParamError{Param: "customerID"}
 	}
 	if deviceID == "" {
-		return errors.New("deviceID is a required field")
+		return ParamError{Param: "deviceID"}
 	}
 	if platform == "" {
-		return errors.New("platform is a required field")
+		return ParamError{Param: "platform"}
 	}
 
 	body := map[string]map[string]interface{}{
@@ -133,10 +139,10 @@ func (c *CustomerIO) AddDevice(customerID string, deviceID string, platform stri
 // DeleteDevice deletes a device for a customer
 func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
 	if customerID == "" {
-		return errors.New("customerID is a required field")
+		return ParamError{Param: "customerID"}
 	}
 	if deviceID == "" {
-		return errors.New("deviceID is a required field")
+		return ParamError{Param: "deviceID"}
 	}
 	return c.request("DELETE",
 		fmt.Sprintf("%s://%s/api/v1/customers/%s/devices/%s", c.protocol(), c.Host, url.PathEscape(customerID), url.PathEscape(deviceID)),
@@ -145,10 +151,10 @@ func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
 
 func (c *CustomerIO) AddCustomersToSegment(segmentID int, customerIDs []string) error {
 	if segmentID == 0 {
-		return errors.New("segmentID is a required field")
+		return ParamError{Param: "segmentID"}
 	}
 	if len(customerIDs) == 0 {
-		return errors.New("customerIDs is a required field")
+		return ParamError{Param: "customerIDs"}
 	}
 
 	return c.request("POST",
@@ -160,10 +166,10 @@ func (c *CustomerIO) AddCustomersToSegment(segmentID int, customerIDs []string) 
 
 func (c *CustomerIO) RemoveCustomersFromSegment(segmentID int, customerIDs []string) error {
 	if segmentID == 0 {
-		return errors.New("segmentID is a required field")
+		return ParamError{Param: "segmentID"}
 	}
 	if len(customerIDs) == 0 {
-		return errors.New("customerIDs is a required field")
+		return ParamError{Param: "customerIDs"}
 	}
 
 	return c.request("POST",
