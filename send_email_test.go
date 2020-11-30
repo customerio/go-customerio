@@ -46,8 +46,7 @@ func TestSendEmail(t *testing.T) {
 
 		w.Write([]byte(`{
 			"delivery_id": "ABCDEFG",
-			"queued_at": 1500111111,
-			"recipient": "12345"
+			"queued_at": 1500111111
 		  }`))
 	}))
 	defer srv.Close()
@@ -64,7 +63,6 @@ func TestSendEmail(t *testing.T) {
 		TransactionalResponse: customerio.TransactionalResponse{
 			DeliveryID: "ABCDEFG",
 			QueuedAt:   time.Unix(1500111111, 0),
-			Recipient:  "12345",
 		},
 	}
 
