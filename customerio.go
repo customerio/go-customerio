@@ -149,8 +149,8 @@ func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
 		nil)
 }
 
-func (c *CustomerIO) AddCustomersToSegment(segmentID int, customerIDs []string) error {
-	if segmentID == 0 {
+func (c *CustomerIO) AddCustomersToSegment(segmentID string, customerIDs []string) error {
+	if len(segmentID) == 0 {
 		return ParamError{Param: "segmentID"}
 	}
 	if len(customerIDs) == 0 {
@@ -158,14 +158,14 @@ func (c *CustomerIO) AddCustomersToSegment(segmentID int, customerIDs []string) 
 	}
 
 	return c.request("POST",
-		fmt.Sprintf("%s://%s/api/v1/segments/%d/add_customers", c.protocol(), c.Host, segmentID),
+		fmt.Sprintf("%s://%s/api/v1/segments/%s/add_customers", c.protocol(), c.Host, url.PathEscape(segmentID)),
 		map[string]interface{}{
 			"ids": customerIDs,
 		})
 }
 
-func (c *CustomerIO) RemoveCustomersFromSegment(segmentID int, customerIDs []string) error {
-	if segmentID == 0 {
+func (c *CustomerIO) RemoveCustomersFromSegment(segmentID string, customerIDs []string) error {
+	if len(segmentID) == 0 {
 		return ParamError{Param: "segmentID"}
 	}
 	if len(customerIDs) == 0 {
@@ -173,7 +173,7 @@ func (c *CustomerIO) RemoveCustomersFromSegment(segmentID int, customerIDs []str
 	}
 
 	return c.request("POST",
-		fmt.Sprintf("%s://%s/api/v1/segments/%d/remove_customers", c.protocol(), c.Host, segmentID),
+		fmt.Sprintf("%s://%s/api/v1/segments/%s/remove_customers", c.protocol(), c.Host, url.PathEscape(segmentID)),
 		map[string]interface{}{
 			"ids": customerIDs,
 		})

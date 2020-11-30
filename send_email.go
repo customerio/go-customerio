@@ -12,14 +12,14 @@ import (
 
 type SendEmailRequest struct {
 	MessageData             map[string]interface{} `json:"message_data,omitempty"`
-	TransactionalMessageID  int                    `json:"transactional_message_id,omitempty"`
-	CustomerID              string                 `json:"customer_id"`
+	TransactionalMessageID  string                 `json:"transactional_message_id,omitempty"`
+	Identifiers             map[string]string      `json:"identifiers"`
 	Headers                 map[string]string      `json:"headers,omitempty"`
 	From                    string                 `json:"from,omitempty"`
-	FromID                  int                    `json:"from_id,omitempty"`
+	FromID                  string                 `json:"from_id,omitempty"`
 	To                      string                 `json:"to,omitempty"`
 	ReplyTo                 string                 `json:"reply_to,omitempty"`
-	ReplyToID               int                    `json:"reply_to_id,omitempty"`
+	ReplyToID               string                 `json:"reply_to_id,omitempty"`
 	BCC                     string                 `json:"bcc,omitempty"`
 	Subject                 string                 `json:"subject,omitempty"`
 	Preheader               string                 `json:"preheader,omitempty"`

@@ -15,11 +15,13 @@ import (
 
 func TestSendEmail(t *testing.T) {
 	emailRequest := &customerio.SendEmailRequest{
-		CustomerID: "customer_1",
-		To:         "customer@example.com",
-		From:       "business@example.com",
-		Subject:    "hello, {{ trigger.name }}",
-		Body:       "hello from the Customer.io {{ trigger.client }} client",
+		Identifiers: map[string]string{
+			"id": "customer_1",
+		},
+		To:      "customer@example.com",
+		From:    "business@example.com",
+		Subject: "hello, {{ trigger.name }}",
+		Body:    "hello from the Customer.io {{ trigger.client }} client",
 		MessageData: map[string]interface{}{
 			"client": "Go",
 			"name":   "gopher",
@@ -81,11 +83,13 @@ func TestSendEmailError(t *testing.T) {
 	api.URL = srv.URL
 
 	resp, err := api.SendEmail(context.Background(), &customerio.SendEmailRequest{
-		CustomerID: "customer_1",
-		To:         "customer@example.com",
-		From:       "business@example.com",
-		Subject:    "hello, {{ trigger.name }}",
-		Body:       "hello from the Customer.io {{ trigger.client }} client",
+		Identifiers: map[string]string{
+			"id": "customer_1",
+		},
+		To:      "customer@example.com",
+		From:    "business@example.com",
+		Subject: "hello, {{ trigger.name }}",
+		Body:    "hello from the Customer.io {{ trigger.client }} client",
 		MessageData: map[string]interface{}{
 			"client": "Go",
 			"name":   "gopher",

@@ -197,8 +197,8 @@ segment.
 // segmentID (required)   - the id of the manual segment which is being modified
 // ids (required)         - a list of customer ids to add or remove from the segment
 
-track.AddCustomersToSegment(3, []string["c1","c2","c3"])
-track.RemoveCustomersFromSegment(3, []string["c1","c2","c3"])
+track.AddCustomersToSegment("3", []string{"c1","c2","c3"})
+track.RemoveCustomersFromSegment("3", []string{"c1","c2","c3"})
 ```
 
 ## Contributing
