@@ -14,11 +14,13 @@ func main() {
 	client := customerio.NewAPIClient("<your-key-here>")
 
 	req := customerio.SendEmailRequest{
-		CustomerID: "customer_1",
-		To:         "customer@example.com",
-		From:       "business@example.com",
-		Subject:    "hello, {{ trigger.name }}",
-		Body:       "hello from the Customer.io {{ trigger.client }} client",
+		Identifiers: map[string]string{
+			"id": "customer_1",
+		},
+		To:      "customer@example.com",
+		From:    "business@example.com",
+		Subject: "hello, {{ trigger.name }}",
+		Body:    "hello from the Customer.io {{ trigger.client }} client",
 		MessageData: map[string]interface{}{
 			"client": "Go",
 			"name":   "gopher",

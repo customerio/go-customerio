@@ -149,36 +149,6 @@ func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
 		nil)
 }
 
-func (c *CustomerIO) AddCustomersToSegment(segmentID string, customerIDs []string) error {
-	if len(segmentID) == 0 {
-		return ParamError{Param: "segmentID"}
-	}
-	if len(customerIDs) == 0 {
-		return ParamError{Param: "customerIDs"}
-	}
-
-	return c.request("POST",
-		fmt.Sprintf("%s://%s/api/v1/segments/%s/add_customers", c.protocol(), c.Host, url.PathEscape(segmentID)),
-		map[string]interface{}{
-			"ids": customerIDs,
-		})
-}
-
-func (c *CustomerIO) RemoveCustomersFromSegment(segmentID string, customerIDs []string) error {
-	if len(segmentID) == 0 {
-		return ParamError{Param: "segmentID"}
-	}
-	if len(customerIDs) == 0 {
-		return ParamError{Param: "customerIDs"}
-	}
-
-	return c.request("POST",
-		fmt.Sprintf("%s://%s/api/v1/segments/%s/remove_customers", c.protocol(), c.Host, url.PathEscape(segmentID)),
-		map[string]interface{}{
-			"ids": customerIDs,
-		})
-}
-
 func (c *CustomerIO) auth() string {
 	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%v:%v", c.siteID, c.apiKey)))
 }

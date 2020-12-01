@@ -216,58 +216,6 @@ func TestDeleteDevice(t *testing.T) {
 		})
 }
 
-func TestAddCustomersToSegment(t *testing.T) {
-	ids := []string{"1", "2", "3"}
-	if err := cio.AddCustomersToSegment("", ids); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "segmentID")
-	}
-	if err := cio.AddCustomersToSegment("1", nil); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "customerIDs")
-	}
-	body := map[string]interface{}{
-		"ids": ids,
-	}
-	runCases(t,
-		[]testCase{
-			{"1", "POST", "/api/v1/segments/1/add_customers", body},
-			{"1 ", "POST", "/api/v1/segments/1%20/add_customers", nil},
-			{"1/", "POST", "/api/v1/segments/1%2F/add_customers", nil},
-		},
-		func(c testCase) error {
-			return cio.AddCustomersToSegment(c.id, ids)
-		})
-}
-
-func TestRemoveCustomersFromSegment(t *testing.T) {
-	ids := []string{"1", "2", "3"}
-	if err := cio.RemoveCustomersFromSegment("", ids); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "segmentID")
-	}
-	if err := cio.RemoveCustomersFromSegment("1", nil); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "customerIDs")
-	}
-	body := map[string]interface{}{
-		"ids": ids,
-	}
-	runCases(t,
-		[]testCase{
-			{"1", "POST", "/api/v1/segments/1/remove_customers", body},
-			{"1 ", "POST", "/api/v1/segments/1%20/remove_customers", nil},
-			{"1/", "POST", "/api/v1/segments/1%2F/remove_customers", nil},
-		},
-		func(c testCase) error {
-			return cio.RemoveCustomersFromSegment(c.id, ids)
-		})
-}
-
 var (
 	expectedMethod string
 	expectedPath   string

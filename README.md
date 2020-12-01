@@ -183,24 +183,6 @@ Deleting a device will remove it from the customers device list in Customer.io.
 track.DeleteDevice("5", "messaging-token")
 ```
 
-### Managing manual segments
-
-Manual segments are segments where you control the membership by uploading CSVs
-or by calling API methods, bypassing our data-driven logic engine and giving
-you full control over who is in the segment and who isn't.
-
-Note: The segment must already exist, these calls will not create a new
-segment.
-
-```go
-// Arguments
-// segmentID (required)   - the id of the manual segment which is being modified
-// ids (required)         - a list of customer ids to add or remove from the segment
-
-track.AddCustomersToSegment("3", []string{"c1","c2","c3"})
-track.RemoveCustomersFromSegment("3", []string{"c1","c2","c3"})
-```
-
 ## Contributing
 
 1. Fork it
