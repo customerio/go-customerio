@@ -74,7 +74,7 @@ Attributes you specify are useful in several ways:
   set up triggers which are only sent to customers who have subscribed to a
   particular plan (e.g. "premium").
 
-You'll want to indentify your customers when they sign up for your app and any time their
+You'll want to identify your customers when they sign up for your app and any time their
 key information changes. This keeps [Customer.io](http://customer.io) up to date with your customer information.
 
 ````go
@@ -181,6 +181,47 @@ Deleting a device will remove it from the customers device list in Customer.io.
 //                          `addDevice` command above
 
 track.DeleteDevice("5", "messaging-token")
+```
+
+### Send Transactional Messages
+
+To use the Customer.io [Transactional API](https://customer.io/docs/transactional-api), create an instance of the API client using an [app key](https://customer.io/docs/managing-credentials#app-api-keys).
+
+Create a `SendEmailRequest` instance, and then use `SendEmail` referencing this instance to send a transactional message. [Learn more about transactional messages and optional `SendEmailRequest` properties](https://customer.io/docs/transactional-api).
+
+
+```go
+import "github.com/customerio/go-customerio"
+
+client := customerio.NewAPIClient("");
+
+// TransactionalMessageId — the ID of the transactional message you want to send
+// To                     — the email address of your recipients 
+// Identifiers            — contains the id of your recipient. If the id does not exist, Customer.io creates it.
+// MessageData            — contains properties that you want reference in your message using liquid.
+
+request := customerio.SendEmailRequest{
+  To: "",
+  TransactionalMessageID: "3",
+  MessageData: map[string]interface{}{
+    "name": "",
+    "items": map[string]interface{}{
+      "name": "",
+      "price": "",
+    },
+    "products": []interface{}{},
+  },
+  Identifiers: map[string]interface{}{
+    "id": "",
+  },
+}
+
+body, err := client.SendEmail(context.Background(), &request)
+if err != nil {
+  log.Fatal(err.StatusCode, err.Err)
+}
+
+fmt.Println(body)
 ```
 
 ## Contributing
