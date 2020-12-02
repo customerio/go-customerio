@@ -211,14 +211,14 @@ request := customerio.SendEmailRequest{
     },
     "products": []interface{}{},
   },
-  Identifiers: map[string]interface{}{
+  Identifiers: map[string]string{
     "id": "example1",
   },
 }
 
 body, err := client.SendEmail(context.Background(), &request)
 if err != nil {
-  log.Fatal(err.StatusCode, err.Err)
+  fmt.Println(err)
 }
 
 fmt.Println(body)
