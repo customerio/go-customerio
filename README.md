@@ -193,7 +193,7 @@ Create a `SendEmailRequest` instance, and then use `SendEmail` referencing this 
 ```go
 import "github.com/customerio/go-customerio"
 
-client := customerio.NewAPIClient("");
+client := customerio.NewAPIClient("<extapikey>");
 
 // TransactionalMessageId — the ID of the transactional message you want to send
 // To                     — the email address of your recipients 
@@ -212,7 +212,7 @@ request := customerio.SendEmailRequest{
     "products": []interface{}{},
   },
   Identifiers: map[string]interface{}{
-    "id": "",
+    "id": "example1",
   },
 }
 

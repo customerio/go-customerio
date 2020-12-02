@@ -16,10 +16,8 @@ type SendEmailRequest struct {
 	Identifiers             map[string]string      `json:"identifiers"`
 	Headers                 map[string]string      `json:"headers,omitempty"`
 	From                    string                 `json:"from,omitempty"`
-	FromID                  string                 `json:"from_id,omitempty"`
 	To                      string                 `json:"to,omitempty"`
 	ReplyTo                 string                 `json:"reply_to,omitempty"`
-	ReplyToID               string                 `json:"reply_to_id,omitempty"`
 	BCC                     string                 `json:"bcc,omitempty"`
 	Subject                 string                 `json:"subject,omitempty"`
 	Preheader               string                 `json:"preheader,omitempty"`

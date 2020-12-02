@@ -29,6 +29,7 @@ func TestMain(m *testing.M) {
 
 	cio = customerio.NewCustomerIO("siteid", "apikey")
 	cio.Host = u.Host
+	// Definitely not recommended for production usage!
 	cio.SSL = false
 
 	os.Exit(m.Run())
@@ -52,6 +53,10 @@ func runCases(t *testing.T, cases []testCase, do func(c testCase) error) {
 	}
 }
 func checkParamError(t *testing.T, err error, param string) {
+	if err == nil {
+		t.Error("expected error")
+		return
+	}
 	pe, ok := err.(customerio.ParamError)
 	if !ok {
 		t.Error("expected ParamError")
@@ -65,11 +70,8 @@ func TestIdentify(t *testing.T) {
 	attributes := map[string]interface{}{
 		"a": "1",
 	}
-	if err := cio.Identify("", attributes); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "customerID")
-	}
+	err := cio.Identify("", attributes)
+	checkParamError(t, err, "customerID")
 
 	runCases(t,
 		[]testCase{
@@ -93,16 +95,10 @@ func TestTrack(t *testing.T) {
 			"a": "1",
 		},
 	}
-	if err := cio.Track("", "test", data); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "customerID")
-	}
-	if err := cio.Track("1", "", data); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "eventName")
-	}
+	err := cio.Track("", "test", data)
+	checkParamError(t, err, "customerID")
+	err = cio.Track("1", "", data)
+	checkParamError(t, err, "eventName")
 
 	runCases(t,
 		[]testCase{
@@ -134,11 +130,8 @@ func TestTrackAnonymous(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
-	if err := cio.Delete(""); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "customerID")
-	}
+	err := cio.Delete("")
+	checkParamError(t, err, "customerID")
 	runCases(t,
 		[]testCase{
 			{"1", "DELETE", "/api/v1/customers/1", nil},
@@ -151,21 +144,12 @@ func TestDelete(t *testing.T) {
 }
 
 func TestAddDevice(t *testing.T) {
-	if err := cio.AddDevice("", "d1", "ios", nil); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "customerID")
-	}
-	if err := cio.AddDevice("1", "", "ios", nil); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "deviceID")
-	}
-	if err := cio.AddDevice("1", "d1", "", nil); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "platform")
-	}
+	err := cio.AddDevice("", "d1", "ios", nil)
+	checkParamError(t, err, "customerID")
+	err = cio.AddDevice("1", "", "ios", nil)
+	checkParamError(t, err, "deviceID")
+	err = cio.AddDevice("1", "d1", "", nil)
+	checkParamError(t, err, "platform")
 
 	body := map[string]map[string]interface{}{
 		"device": {
@@ -188,16 +172,12 @@ func TestAddDevice(t *testing.T) {
 }
 
 func TestDeleteDevice(t *testing.T) {
-	if err := cio.DeleteDevice("", "d1"); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "customerID")
-	}
-	if err := cio.DeleteDevice("1", ""); err == nil {
-		t.Error("expected error")
-	} else {
-		checkParamError(t, err, "deviceID")
-	}
+	err := cio.DeleteDevice("", "d1")
+	checkParamError(t, err, "customerID")
+
+	err = cio.DeleteDevice("1", "")
+	checkParamError(t, err, "deviceID")
+
 	runCases(t,
 		[]testCase{
 			{"1", "DELETE", "/api/v1/customers/1/devices/d1", nil},
