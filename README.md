@@ -77,7 +77,7 @@ Attributes you specify are useful in several ways:
 You'll want to identify your customers when they sign up for your app and any time their
 key information changes. This keeps [Customer.io](http://customer.io) up to date with your customer information.
 
-````go
+```go
 // Arguments
 // customerID (required) - a unique identifier string for this customers
 // attributes (required) - a ```map[string]interface{}``` of information about the customer. You can pass any
@@ -91,7 +91,7 @@ track.Identify("5", map[string]interface{}{
   "first_name": "Bob",
   "plan": "basic",
 })
-````
+```
 
 ### Deleting customers
 
@@ -116,7 +116,7 @@ Now that you're identifying your customers with [Customer.io](http://customer.io
 with automated emails, and track conversions when you're sending automated emails to
 encourage your customers to perform an action.
 
-````go
+```go
 // Arguments
 // customerID (required)  - the id of the customer who you want to associate with the event.
 // name (required)        - the name of the event you want to track.
@@ -128,7 +128,7 @@ track.Track("5", "purchase", map[string]interface{}{
     "type": "socks",
     "price": "13.99",
 })
-````
+```
 
 ### Tracking an anonymous event
 
@@ -137,7 +137,7 @@ events](https://learn.customer.io/recipes/anonymous-invite-emails.html) are
 also supported. These are ideal for when you need to track an event for a
 customer which may not exist in your People list.
 
-````go
+```go
 // Arguments
 // name (required)            - the name of the event you want to track.
 // attributes (optional)      - any related information you'd like to attach to this
@@ -148,13 +148,13 @@ track.TrackAnonymous("invite", map[string]interface{}{
     "first_name": "Alex",
     "source": "OldApp",
 })
-````
+```
 
 ### Adding a device to a customer
 
 In order to send push notifications, we need customer device information.
 
-````go
+```go
 // Arguments
 // customerID (required) - a unique identifier string for this customer
 // deviceID (required)   - a unique identifier string for this device
@@ -167,7 +167,7 @@ In order to send push notifications, we need customer device information.
 track.AddDevice("5", "messaging token", "android", map[string]interface{}{
 "last_used": time.Now().Unix(),
 })
-````
+```
 
 ### Deleting devices
 
@@ -189,6 +189,7 @@ To use the Customer.io [Transactional API](https://customer.io/docs/transactiona
 
 Create a `SendEmailRequest` instance, and then use `SendEmail` referencing this instance to send a transactional message. [Learn more about transactional messages and optional `SendEmailRequest` properties](https://customer.io/docs/transactional-api).
 
+You can also send base64-encoded attachments with your transactional message. Use `Attach` to encode your attachments.
 
 ```go
 import "github.com/customerio/go-customerio"
@@ -199,15 +200,16 @@ client := customerio.NewAPIClient("<extapikey>");
 // To                     — the email address of your recipients 
 // Identifiers            — contains the id of your recipient. If the id does not exist, Customer.io creates it.
 // MessageData            — contains properties that you want reference in your message using liquid.
+// Attach                 — a helper that base64-encodes attachments to your message.
 
 request := customerio.SendEmailRequest{
-  To: "",
+  To: "person@example.com",
   TransactionalMessageID: "3",
   MessageData: map[string]interface{}{
-    "name": "",
+    "name": "Person",
     "items": map[string]interface{}{
-      "name": "",
-      "price": "",
+      "name": "shoes",
+      "price": "59.99",
     },
     "products": []interface{}{},
   },
@@ -215,6 +217,12 @@ request := customerio.SendEmailRequest{
     "id": "example1",
   },
 }
+
+f, err := os.Open("receipt.pdf")
+if err != nil {
+  fmt.Println(err)
+}
+request.Attach("solution", f)
 
 body, err := client.SendEmail(context.Background(), &request)
 if err != nil {
