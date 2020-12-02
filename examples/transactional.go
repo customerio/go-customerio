@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/customerio/go-customerio"
 )
@@ -25,6 +26,16 @@ func main() {
 			"client": "Go",
 			"name":   "gopher",
 		},
+	}
+
+	f, err := os.Open("<path to file>")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	if err := req.Attach("sample.pdf", f); err != nil {
+		panic(err)
 	}
 
 	resp, err := client.SendEmail(ctx, &req)
