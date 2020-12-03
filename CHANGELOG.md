@@ -9,4 +9,6 @@
 
 ### Changed
 - ID fields in requests are url escaped
+- Improved validations for required fields
+- Updated `CustomerIO` struct to use a URL field instead of separate Host and SSL fields
 - Improved test suite
