@@ -187,20 +187,20 @@ track.DeleteDevice("5", "messaging-token")
 
 To use the Customer.io [Transactional API](https://customer.io/docs/transactional-api), create an instance of the API client using an [app key](https://customer.io/docs/managing-credentials#app-api-keys).
 
-Create a `SendEmailRequest` instance, and then use `SendEmail` referencing this instance to send a transactional message. [Learn more about transactional messages and optional `SendEmailRequest` properties](https://customer.io/docs/transactional-api).
+Create a `SendEmailRequest` instance, and then use `SendEmail` to send your message. [Learn more about transactional messages and optional `SendEmailRequest` properties](https://customer.io/docs/transactional-api).
 
-You can also send base64-encoded attachments with your transactional message. Use `Attach` to encode your attachments.
+You can also send attachments with your message. Use `Attach` to encode attachments.
 
 ```go
 import "github.com/customerio/go-customerio"
 
 client := customerio.NewAPIClient("<extapikey>");
 
-// TransactionalMessageId — the ID of the transactional message you want to send
-// To                     — the email address of your recipients 
+// TransactionalMessageId — the ID of the transactional message you want to send.
+// To                     — the email address of your recipients.
 // Identifiers            — contains the id of your recipient. If the id does not exist, Customer.io creates it.
 // MessageData            — contains properties that you want reference in your message using liquid.
-// Attach                 — a helper that base64-encodes attachments to your message.
+// Attach                 — a helper that encodes attachments to your message.
 
 request := customerio.SendEmailRequest{
   To: "person@example.com",
@@ -218,11 +218,13 @@ request := customerio.SendEmailRequest{
   },
 }
 
+// (optional) attach a file to your message.
 f, err := os.Open("receipt.pdf")
 if err != nil {
   fmt.Println(err)
 }
-request.Attach("solution", f)
+request.Attach("reciept.pdf", f) 
+// or request.Attach("receipt", f)
 
 body, err := client.SendEmail(context.Background(), &request)
 if err != nil {
