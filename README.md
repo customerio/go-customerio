@@ -223,8 +223,7 @@ f, err := os.Open("receipt.pdf")
 if err != nil {
   fmt.Println(err)
 }
-request.Attach("reciept.pdf", f) 
-// or request.Attach("receipt", f)
+request.Attach("receipt.pdf", f)
 
 body, err := client.SendEmail(context.Background(), &request)
 if err != nil {
