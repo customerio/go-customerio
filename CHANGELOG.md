@@ -9,3 +9,4 @@
 
 ### Changed
 - ID fields in requests are url escaped
+- Improved test suite
