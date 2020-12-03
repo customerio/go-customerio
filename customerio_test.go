@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -22,13 +21,9 @@ var cio *customerio.CustomerIO
 func TestMain(m *testing.M) {
 	srv := httptest.NewServer(http.HandlerFunc(handler))
 	defer srv.Close()
-	u, err := url.Parse(srv.URL)
-	if err != nil {
-		panic(err)
-	}
 
 	cio = customerio.NewCustomerIO("siteid", "apikey")
-	cio.Host = u.Host
+	cio.URL = srv.URL
 	// Definitely not recommended for production usage!
 	cio.SSL = false
 

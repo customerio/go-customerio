@@ -15,8 +15,7 @@ import (
 type CustomerIO struct {
 	siteID string
 	apiKey string
-	Host   string
-	SSL    bool
+	URL    string
 	client *http.Client
 }
 
@@ -55,8 +54,7 @@ func NewCustomerIO(siteID, apiKey string) *CustomerIO {
 	return &CustomerIO{
 		siteID: siteID,
 		apiKey: apiKey,
-		Host:   "track.customer.io",
-		SSL:    true,
+		URL:    "https://track.customer.io",
 		client: client,
 	}
 }
@@ -67,7 +65,7 @@ func (c *CustomerIO) Identify(customerID string, attributes map[string]interface
 		return ParamError{Param: "customerID"}
 	}
 	return c.request("PUT",
-		fmt.Sprintf("%s://%s/api/v1/customers/%s", c.protocol(), c.Host, url.PathEscape(customerID)),
+		fmt.Sprintf("%s/api/v1/customers/%s", c.URL, url.PathEscape(customerID)),
 		attributes)
 }
 
@@ -80,7 +78,7 @@ func (c *CustomerIO) Track(customerID string, eventName string, data map[string]
 		return ParamError{Param: "eventName"}
 	}
 	return c.request("POST",
-		fmt.Sprintf("%s://%s/api/v1/customers/%s/events", c.protocol(), c.Host, url.PathEscape(customerID)),
+		fmt.Sprintf("%s/api/v1/customers/%s/events", c.URL, url.PathEscape(customerID)),
 		map[string]interface{}{
 			"name": eventName,
 			"data": data,
@@ -93,7 +91,7 @@ func (c *CustomerIO) TrackAnonymous(eventName string, data map[string]interface{
 		return ParamError{Param: "eventName"}
 	}
 	return c.request("POST",
-		fmt.Sprintf("%s://%s/api/v1/events", c.protocol(), c.Host),
+		fmt.Sprintf("%s/api/v1/events", c.URL),
 		map[string]interface{}{
 			"name": eventName,
 			"data": data,
@@ -106,7 +104,7 @@ func (c *CustomerIO) Delete(customerID string) error {
 		return ParamError{Param: "customerID"}
 	}
 	return c.request("DELETE",
-		fmt.Sprintf("%s://%s/api/v1/customers/%s", c.protocol(), c.Host, url.PathEscape(customerID)),
+		fmt.Sprintf("%s/api/v1/customers/%s", c.URL, url.PathEscape(customerID)),
 		nil)
 }
 
@@ -132,7 +130,7 @@ func (c *CustomerIO) AddDevice(customerID string, deviceID string, platform stri
 		body["device"][k] = v
 	}
 	return c.request("PUT",
-		fmt.Sprintf("%s://%s/api/v1/customers/%s/devices", c.protocol(), c.Host, url.PathEscape(customerID)),
+		fmt.Sprintf("%s/api/v1/customers/%s/devices", c.URL, url.PathEscape(customerID)),
 		body)
 }
 
@@ -145,19 +143,12 @@ func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
 		return ParamError{Param: "deviceID"}
 	}
 	return c.request("DELETE",
-		fmt.Sprintf("%s://%s/api/v1/customers/%s/devices/%s", c.protocol(), c.Host, url.PathEscape(customerID), url.PathEscape(deviceID)),
+		fmt.Sprintf("%s/api/v1/customers/%s/devices/%s", c.URL, url.PathEscape(customerID), url.PathEscape(deviceID)),
 		nil)
 }
 
 func (c *CustomerIO) auth() string {
 	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%v:%v", c.siteID, c.apiKey)))
-}
-
-func (c *CustomerIO) protocol() string {
-	if !c.SSL {
-		return "http"
-	}
-	return "https"
 }
 
 func (c *CustomerIO) request(method, url string, body interface{}) error {
