@@ -16,7 +16,7 @@ type CustomerIO struct {
 	siteID string
 	apiKey string
 	URL    string
-	client *http.Client
+	Client *http.Client
 }
 
 // CustomerIOError is returned by any method that fails at the API level
@@ -55,7 +55,7 @@ func NewCustomerIO(siteID, apiKey string) *CustomerIO {
 		siteID: siteID,
 		apiKey: apiKey,
 		URL:    "https://track.customer.io",
-		client: client,
+		Client: client,
 	}
 }
 
@@ -176,7 +176,7 @@ func (c *CustomerIO) request(method, url string, body interface{}) error {
 
 	req.Header.Add("Authorization", fmt.Sprintf("Basic %v", c.auth()))
 
-	resp, err := c.client.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return err
 	}
