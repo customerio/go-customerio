@@ -24,8 +24,6 @@ func TestMain(m *testing.M) {
 
 	cio = customerio.NewCustomerIO("siteid", "apikey")
 	cio.URL = srv.URL
-	// Definitely not recommended for production usage!
-	cio.SSL = false
 
 	os.Exit(m.Run())
 }
