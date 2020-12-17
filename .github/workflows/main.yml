@@ -1,0 +1,22 @@
+name: build
+
+on: [ push ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        go: [ '1.10', '1.11', '1.12' ]
+    env:
+      TEST_RESULTS: /tmp/test-results
+    name: Go ${{ matrix.go }} test
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - run: go env
+      - run: mkdir -pv $TEST_RESULTS
+      - run: go version
