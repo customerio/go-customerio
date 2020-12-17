@@ -20,7 +20,6 @@ jobs:
       - run: go env
       - run: mkdir -pv $TEST_RESULTS
       - name: Setup gotestsum
-        uses: autero1/action-gotestsum@v0.1.0
-        with:
-          gotestsum_version: 0.6.0
+        run: |
+          curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v0.6.0/gotestsum_0.6.0_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum
       - run: gotestsum --junitfile ${TEST_RESULTS}/unit-tests.xml -- -timeout 5m -p 1 ./...
