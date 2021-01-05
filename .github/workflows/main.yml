@@ -1,0 +1,29 @@
+name: build
+
+on: [ push ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: [ '1.10', '1.11', '1.12' ]
+    env:
+      TEST_RESULTS: /tmp/test-results
+    name: Go ${{ matrix.go }} test
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: src/github.com/customerio/go-customerio
+      - name: setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - run: go env
+      - run: mkdir -pv $TEST_RESULTS
+      - name: Setup gotestsum
+        run: |
+          curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v0.6.0/gotestsum_0.6.0_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum
+      - run: | 
+          export GOPATH="${GOPATH}:${GITHUB_WORKSPACE}"
+          gotestsum --junitfile ${TEST_RESULTS}/unit-tests.xml -- -timeout 5m -p 1 ./...
