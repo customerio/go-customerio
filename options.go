@@ -7,36 +7,29 @@ type option struct {
 	track func(*CustomerIO)
 }
 
-type region int
+type region struct {
+	apiURL   string
+	trackURL string
+}
 
-const (
-	Region_US region = 0
-	Region_EU region = 1
-
-	apiURL_US = "https://api.customer.io"
-	apiURL_EU = "https://api-eu.customer.io"
-
-	trackURL_US = "https://track.customer.io"
-	trackURL_EU = "https://track-eu.customer.io"
+var (
+	RegionUS = region{
+		apiURL:   "https://api.customer.io",
+		trackURL: "https://track.customer.io",
+	}
+	RegionEU = region{
+		apiURL:   "https://api-eu.customer.io",
+		trackURL: "https://track-eu.customer.io",
+	}
 )
 
 func WithRegion(r region) option {
 	return option{
 		api: func(a *APIClient) {
-			switch r {
-			case Region_US:
-				a.URL = apiURL_US
-			case Region_EU:
-				a.URL = apiURL_EU
-			}
+			a.URL = r.apiURL
 		},
 		track: func(c *CustomerIO) {
-			switch r {
-			case Region_US:
-				c.URL = trackURL_US
-			case Region_EU:
-				c.URL = trackURL_EU
-			}
+			c.URL = r.trackURL
 		},
 	}
 }
@@ -48,18 +41,6 @@ func WithHTTPClient(client *http.Client) option {
 		},
 		track: func(c *CustomerIO) {
 			c.Client = client
-		},
-	}
-}
-
-// WithURL
-func WithURL(url string) option {
-	return option{
-		api: func(a *APIClient) {
-			a.URL = url
-		},
-		track: func(c *CustomerIO) {
-			c.URL = url
 		},
 	}
 }
