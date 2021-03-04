@@ -12,7 +12,7 @@ func main() {
 
 	ctx := context.Background()
 
-	client := customerio.NewAPIClient("<your-key-here>")
+	client := customerio.NewAPIClient("<your-key-here>", customerio.WithRegion(customerio.RegionUS))
 
 	req := customerio.SendEmailRequest{
 		Identifiers: map[string]string{
