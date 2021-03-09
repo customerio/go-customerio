@@ -16,12 +16,17 @@ type APIClient struct {
 
 // NewAPIClient prepares a client for use with the Customer.io API, see: https://customer.io/docs/api/#apicoreintroduction
 // using an App API Key from https://fly.customer.io/settings/api_credentials?keyType=app
-func NewAPIClient(key string) *APIClient {
-	return &APIClient{
+func NewAPIClient(key string, opts ...option) *APIClient {
+	client := &APIClient{
 		Key:    key,
 		Client: http.DefaultClient,
 		URL:    "https://api.customer.io",
 	}
+
+	for _, opt := range opts {
+		opt.api(client)
+	}
+	return client
 }
 
 func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, body interface{}) ([]byte, int, error) {
@@ -30,7 +35,7 @@ func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, bod
 		return nil, 0, err
 	}
 
-	req, err := http.NewRequest("POST", c.URL+requestPath, bytes.NewBuffer(b))
+	req, err := http.NewRequest(verb, c.URL+requestPath, bytes.NewBuffer(b))
 	if err != nil {
 		return nil, 0, err
 	}

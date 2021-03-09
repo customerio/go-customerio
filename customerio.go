@@ -39,24 +39,30 @@ func (e ParamError) Error() string { return e.Param + ": missing" }
 
 // NewTrackClient prepares a client for use with the Customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
 // using a Tracking Site ID and API Key pair from https://fly.customer.io/settings/api_credentials
-func NewTrackClient(siteID, apiKey string) *CustomerIO {
-	return NewCustomerIO(siteID, apiKey)
-}
-
-// NewCustomerIO prepares a client for use with the Customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
-// deprecated in favour of NewTrackClient
-func NewCustomerIO(siteID, apiKey string) *CustomerIO {
+func NewTrackClient(siteID, apiKey string, opts ...option) *CustomerIO {
 	client := &http.Client{
 		Transport: &http.Transport{
 			MaxIdleConnsPerHost: 100,
 		},
 	}
-	return &CustomerIO{
+	c := &CustomerIO{
 		siteID: siteID,
 		apiKey: apiKey,
 		URL:    "https://track.customer.io",
 		Client: client,
 	}
+
+	for _, opt := range opts {
+		opt.track(c)
+	}
+
+	return c
+}
+
+// NewCustomerIO prepares a client for use with the Customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
+// deprecated in favour of NewTrackClient
+func NewCustomerIO(siteID, apiKey string) *CustomerIO {
+	return NewTrackClient(siteID, apiKey)
 }
 
 // Identify identifies a customer and sets their attributes
