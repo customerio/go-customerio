@@ -49,12 +49,13 @@ You'll be able to integrate **fully** with [Customer.io](http://customer.io) wit
 
 ### Setup
 
-Create an instance of the client with your [customer.io](http://customer.io) credentials
-which can be found on the [customer.io integration screen](https://manage.customer.io/integration).
+Create an instance of the client with your [Customer.io credentials](https://fly.customer.io/settings/api_credentials).
 
 ```go
-track := customerio.NewTrackClient("YOUR SITE ID", "YOUR API SECRET KEY")
+track := customerio.NewTrackClient("YOUR SITE ID", "YOUR API SECRET KEY", customerio.WithRegion(customerio.RegionUS))
 ```
+
+Your account region—`RegionUS` or `RegionEU`—is optional. If you do not specify your region, we assume that your account is based in the US (`RegionUS`). If your account is based in the EU and you do not provide the correct region, we'll route requests from the US to `RegionEU` accordingly, however this may cause data to be logged in the US. 
 
 ### Identify logged in customers
 
@@ -194,7 +195,7 @@ You can also send attachments with your message. Use `Attach` to encode attachme
 ```go
 import "github.com/customerio/go-customerio"
 
-client := customerio.NewAPIClient("<extapikey>");
+client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customerio.RegionUS));
 
 // TransactionalMessageId — the ID of the transactional message you want to send.
 // To                     — the email address of your recipients.
