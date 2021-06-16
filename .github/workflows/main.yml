@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.15', '1.16.4' ]
+        go: [ '1.15', '1.16' ]
     env:
       TEST_RESULTS: /tmp/test-results
     name: Go ${{ matrix.go }} test
