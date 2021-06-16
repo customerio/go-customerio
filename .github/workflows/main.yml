@@ -7,14 +7,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.15', '1.16' ]
+        go: [ '1.15', '1.16.4' ]
     env:
       TEST_RESULTS: /tmp/test-results
     name: Go ${{ matrix.go }} test
     steps:
       - uses: actions/checkout@v2
-        with:
-          path: src/github.com/customerio/go-customerio
       - name: setup go
         uses: actions/setup-go@v2
         with:
