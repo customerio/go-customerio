@@ -8,28 +8,28 @@ type option struct {
 }
 
 type region struct {
-	apiURL   string
-	trackURL string
+	ApiURL   string
+	TrackURL string
 }
 
 var (
 	RegionUS = region{
-		apiURL:   "https://api.customer.io",
-		trackURL: "https://track.customer.io",
+		ApiURL:   "https://api.customer.io",
+		TrackURL: "https://track.customer.io",
 	}
 	RegionEU = region{
-		apiURL:   "https://api-eu.customer.io",
-		trackURL: "https://track-eu.customer.io",
+		ApiURL:   "https://api-eu.customer.io",
+		TrackURL: "https://track-eu.customer.io",
 	}
 )
 
 func WithRegion(r region) option {
 	return option{
 		api: func(a *APIClient) {
-			a.URL = r.apiURL
+			a.URL = r.ApiURL
 		},
 		track: func(c *CustomerIO) {
-			c.URL = r.trackURL
+			c.URL = r.TrackURL
 		},
 	}
 }
