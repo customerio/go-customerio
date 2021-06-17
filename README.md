@@ -3,7 +3,7 @@
 # go-customerio [![CircleCI](https://circleci.com/gh/customerio/go-customerio/tree/master.svg?style=svg)](https://circleci.com/gh/customerio/go-customerio/tree/master)
 
 A golang client for the [Customer.io](http://customer.io) [event API](https://app.customer.io/api/docs/index.html).
-_Tested with Go1.12_
+_Tested with Go1.16_
 
 Godoc here: [https://godoc.org/github.com/customerio/go-customerio](https://godoc.org/github.com/customerio/go-customerio)
 
@@ -14,7 +14,7 @@ Add this line to your application's imports:
 ```go
 import (
     // ...
-    "github.com/customerio/go-customerio"
+    "github.com/customerio/go-customerio/v2"
 )
 ```
 
@@ -24,7 +24,7 @@ And then execute:
 
 Or install it yourself:
 
-    $ go get "github.com/customerio/go-customerio"
+    $ go get github.com/customerio/go-customerio
 
 ## Usage
 

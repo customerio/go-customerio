@@ -1,25 +1,27 @@
-package customerio
+package customerio_test
 
 import (
 	"net/http"
 	"reflect"
 	"testing"
+
+	"github.com/customerio/go-customerio/v2"
 )
 
 func TestAPIOptions(t *testing.T) {
 
-	client := NewAPIClient("mykey")
-	if client.URL != RegionUS.apiURL {
-		t.Errorf("wrong default url. got: %s, want: %s", client.URL, RegionUS.apiURL)
+	client := customerio.NewAPIClient("mykey")
+	if client.URL != customerio.RegionUS.ApiURL {
+		t.Errorf("wrong default url. got: %s, want: %s", client.URL, customerio.RegionUS.ApiURL)
 	}
 
-	client = NewAPIClient("mykey", WithRegion(RegionEU))
-	if client.URL != RegionEU.apiURL {
-		t.Errorf("wrong url. got: %s, want: %s", client.URL, RegionEU.apiURL)
+	client = customerio.NewAPIClient("mykey", customerio.WithRegion(customerio.RegionEU))
+	if client.URL != customerio.RegionEU.ApiURL {
+		t.Errorf("wrong url. got: %s, want: %s", client.URL, customerio.RegionEU.ApiURL)
 	}
 
 	hc := &http.Client{}
-	client = NewAPIClient("mykey", WithHTTPClient(hc))
+	client = customerio.NewAPIClient("mykey", customerio.WithHTTPClient(hc))
 	if !reflect.DeepEqual(client.Client, hc) {
 		t.Errorf("wrong http client. got: %#v, want: %#v", client.Client, hc)
 	}
@@ -27,18 +29,18 @@ func TestAPIOptions(t *testing.T) {
 
 func TestTrackOptions(t *testing.T) {
 
-	client := NewTrackClient("site_id", "api_key")
-	if client.URL != RegionUS.trackURL {
-		t.Errorf("wrong default url. got: %s, want: %s", client.URL, RegionUS.trackURL)
+	client := customerio.NewTrackClient("site_id", "api_key")
+	if client.URL != customerio.RegionUS.TrackURL {
+		t.Errorf("wrong default url. got: %s, want: %s", client.URL, customerio.RegionUS.TrackURL)
 	}
 
-	client = NewTrackClient("site_id", "api_key", WithRegion(RegionEU))
-	if client.URL != RegionEU.trackURL {
-		t.Errorf("wrong url. got: %s, want: %s", client.URL, RegionEU.trackURL)
+	client = customerio.NewTrackClient("site_id", "api_key", customerio.WithRegion(customerio.RegionEU))
+	if client.URL != customerio.RegionEU.TrackURL {
+		t.Errorf("wrong url. got: %s, want: %s", client.URL, customerio.RegionEU.TrackURL)
 	}
 
 	hc := &http.Client{}
-	client = NewTrackClient("site_id", "api_key", WithHTTPClient(hc))
+	client = customerio.NewTrackClient("site_id", "api_key", customerio.WithHTTPClient(hc))
 	if !reflect.DeepEqual(client.Client, hc) {
 		t.Errorf("wrong http client. got: %#v, want: %#v", client.Client, hc)
 	}

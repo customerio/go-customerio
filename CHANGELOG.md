@@ -1,6 +1,13 @@
 # Changelog
 
-## March 24, 2021
+## June 16, 2021 v2.2.0
+
+### Added
+- Modules support
+- Updated license date
+- Upgraded version support
+
+## March 24, 2021 v2.1.0
 ### Added
 - Support for EU region
 - Allow using custom `*http.Client`
@@ -8,7 +15,7 @@
 ### Changed
 - `customerio.NewAPIClient` and `customerio.NewTrackClient`  have a new variadic parameter for options in order to choose US/EU region and/or customer HTTP client.
 
-## December 3, 2020
+## December 3, 2020 v2.0.0
 ### Added
 - Support for transactional api
 
