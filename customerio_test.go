@@ -110,14 +110,15 @@ func TestTrackAnonymous(t *testing.T) {
 	}
 
 	body := map[string]interface{}{
-		"name": "test",
+		"name":         "test",
+		"anonymous_id": "anon123",
 		"data": map[string]interface{}{
 			"a": "1",
 		},
 	}
 
 	expect("POST", "/api/v1/events", body)
-	if err := cio.TrackAnonymous("test", data); err != nil {
+	if err := cio.TrackAnonymous("anon123", "test", data); err != nil {
 		t.Error(err.Error())
 	}
 }

@@ -92,15 +92,19 @@ func (c *CustomerIO) Track(customerID string, eventName string, data map[string]
 }
 
 // TrackAnonymous sends a single event to Customer.io for the anonymous user
-func (c *CustomerIO) TrackAnonymous(eventName string, data map[string]interface{}) error {
+func (c *CustomerIO) TrackAnonymous(anonymousID, eventName string, data map[string]interface{}) error {
+	if anonymousID == "" {
+		return ParamError{Param: "anonymousID"}
+	}
 	if eventName == "" {
 		return ParamError{Param: "eventName"}
 	}
 	return c.request("POST",
 		fmt.Sprintf("%s/api/v1/events", c.URL),
 		map[string]interface{}{
-			"name": eventName,
-			"data": data,
+			"name":         eventName,
+			"anonymous_id": anonymousID,
+			"data":         data,
 		})
 }
 
