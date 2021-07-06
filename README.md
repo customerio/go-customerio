@@ -133,19 +133,17 @@ track.Track("5", "purchase", map[string]interface{}{
 
 ### Tracking an anonymous event
 
-[Anonymous
-events](https://learn.customer.io/recipes/anonymous-invite-emails.html) are
-also supported. These are ideal for when you need to track an event for a
-customer which may not exist in your People list.
+You can also send anonymous events representing people you haven't identified. An anonymous event requires an `anonymous_id` representing the unknown person and an event `name`. When you identify a person, you can set their `anonymous_id` attribute. If [event merging](https://customer.io/docs/anonymous-events/#turn-on-merging) is turned on in your workspace, and the attribute matches the `anonymous_id` in one or more events that were logged within the last 30 days, we associate those events with the person.
 
 ```go
 // Arguments
+// anonymous_id (required)    - an identifier representing an unknown person.
 // name (required)            - the name of the event you want to track.
 // attributes (optional)      - any related information you'd like to attach to this
 //                              event, as a ```map[string]interface{}```. These attributes can be used in your triggers to control who should
 //                              receive the triggered email. You can set any number of data values.
 
-track.TrackAnonymous("invite", map[string]interface{}{
+track.TrackAnonymous("anonymous_id", "invite", map[string]interface{}{
     "first_name": "Alex",
     "source": "OldApp",
 })
