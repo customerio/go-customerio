@@ -14,7 +14,7 @@ Add this line to your application's imports:
 ```go
 import (
     // ...
-    "github.com/customerio/go-customerio/v2"
+    "github.com/customerio/go-customerio/v3"
 )
 ```
 
