@@ -1,3 +1,3 @@
-module github.com/customerio/go-customerio/v2
+module github.com/customerio/go-customerio/v3
 
 go 1.16
