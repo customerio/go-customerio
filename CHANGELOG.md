@@ -1,8 +1,8 @@
 # Changelog
 
 ## July 6, 2021 v3.0.0
-### Changed
-- Adding new method for sending a merge customers request. More details in [API Documentation]()
+### Added
+- Adding new method for sending a merge customers request. More details in [API Documentation](https://customer.io/docs/api/#operation/merge)
 
 ## July 6, 2021 v3.0.0
 ### Changed
