@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 // CustomerIO wraps the customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
@@ -206,4 +207,49 @@ func (c *CustomerIO) request(method, url string, body interface{}) error {
 	}
 
 	return nil
+}
+
+const (
+	// Identifier Types
+	IdentifierTypeID    = "id"
+	IdentifierTypeEmail = "email"
+	IdentifierTypeCioID = "cio_id"
+)
+
+// MergeCustomers sends a request to Customer.io to merge two customer profiles together.
+func (c *CustomerIO) MergeCustomers(primaryIDType, primaryID, secondaryIDType, secondaryID string) error {
+	if !isValidIDType(primaryIDType) {
+		return ParamError{Param: "primaryIDType"}
+	}
+	if strings.TrimSpace(primaryID) == "" {
+		return ParamError{Param: "primaryID"}
+	}
+
+	if !isValidIDType(secondaryIDType) {
+		return ParamError{Param: "secondaryIDType"}
+	}
+	if strings.TrimSpace(secondaryID) == "" {
+		return ParamError{Param: "secondaryID"}
+	}
+
+	return c.request("POST",
+		fmt.Sprintf("%s/api/v1/merge_customers", c.URL),
+		map[string]interface{}{
+			"primary": map[string]string{
+				primaryIDType: primaryID,
+			},
+			"secondary": map[string]string{
+				secondaryIDType: secondaryID,
+			},
+		})
+}
+
+func isValidIDType(input string) bool {
+	input = strings.TrimSpace(input)
+	if input == IdentifierTypeID ||
+		input == IdentifierTypeEmail ||
+		input == IdentifierTypeCioID {
+		return true
+	}
+	return false
 }

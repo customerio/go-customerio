@@ -2,6 +2,10 @@
 
 ## July 6, 2021 v3.0.0
 ### Changed
+- Adding new method for sending a merge customers request. More details in [API Documentation]()
+
+## July 6, 2021 v3.0.0
+### Changed
 - `trackAnonymous` now requires an `anonymous_id` parameter and will no longer trigger campaigns. If you previously used anonymous events to trigger campaigns, you can still do so [directly through the API](https://customer.io/docs/api/#operation/trackAnonymous). We now refer to anonymous events that trigger campaigns as ["invite events"](https://customer.io/docs/anonymous-events/#anonymous-or-invite). 
 
 ## June 16, 2021 v2.2.0

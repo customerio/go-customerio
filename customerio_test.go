@@ -270,3 +270,33 @@ func expect(method, path string, body interface{}) {
 	expectedPath = path
 	expectedBody = body
 }
+
+func TestMergeCustomers(t *testing.T) {
+	err1 := cio.MergeCustomers("", "id1", "id", "id2")
+	checkParamError(t, err1, "primaryIDType")
+
+	err2 := cio.MergeCustomers("id", "", "id", "id2")
+	checkParamError(t, err2, "primaryID")
+
+	err3 := cio.MergeCustomers("id", "id1", "", "id2")
+	checkParamError(t, err3, "secondaryIDType")
+
+	err4 := cio.MergeCustomers("id", "id1", "id", "")
+	checkParamError(t, err4, "secondaryID")
+
+	runCases(t,
+		[]testCase{
+			{"1", "POST", "/api/v1/merge_customers", `{"primary":{"email":"cool.person@company.com"},"secondary":{"email":"cperson@gmail.com"}}`},
+			{"2", "POST", "/api/v1/merge_customers", `{"primary":{"id":"cool.person@company.com"},"secondary":{"cio_id":"person2"}}`},
+			{"3", "POST", "/api/v1/merge_customers", `{"primary":{"cio_id":"CIO123"},"secondary":{"id":"person1"}}`},
+		},
+		func(c testCase) error {
+			if c.id == "1" {
+				return cio.MergeCustomers("email", "cool.person@company.com", "email", "cperson@gmail.com")
+			} else if c.id == "2" {
+				return cio.MergeCustomers("id", "cool.person@company.com", "cio_id", "person2")
+			} else {
+				return cio.MergeCustomers("cio_id", "CIO123", "id", "person1")
+			}
+		})
+}
