@@ -1,6 +1,6 @@
 # Changelog
 
-## July 6, 2021 v3.0.0
+## July 6, 2021 v3.1.0
 ### Added
 - Added new method to merge duplicate customers. More details in [API Documentation](https://customer.io/docs/api/#operation/merge)
 

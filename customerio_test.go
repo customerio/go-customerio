@@ -272,17 +272,41 @@ func expect(method, path string, body interface{}) {
 }
 
 func TestMergeCustomers(t *testing.T) {
-	err1 := cio.MergeCustomers("", "id1", "id", "id2")
-	checkParamError(t, err1, "primaryIDType")
+	err1 := cio.MergeCustomers(customerio.Identifier{
+		Type:  "",
+		Value: "id1",
+	}, customerio.Identifier{
+		Type:  "id",
+		Value: "id2",
+	})
+	checkParamError(t, err1, "primary")
 
-	err2 := cio.MergeCustomers("id", "", "id", "id2")
-	checkParamError(t, err2, "primaryID")
+	err2 := cio.MergeCustomers(customerio.Identifier{
+		Type:  "id",
+		Value: "",
+	}, customerio.Identifier{
+		Type:  "id",
+		Value: "id2",
+	})
+	checkParamError(t, err2, "primary")
 
-	err3 := cio.MergeCustomers("id", "id1", "", "id2")
-	checkParamError(t, err3, "secondaryIDType")
+	err3 := cio.MergeCustomers(customerio.Identifier{
+		Type:  "email",
+		Value: "id1",
+	}, customerio.Identifier{
+		Type:  "",
+		Value: "id2",
+	})
+	checkParamError(t, err3, "secondary")
 
-	err4 := cio.MergeCustomers("id", "id1", "id", "")
-	checkParamError(t, err4, "secondaryID")
+	err4 := cio.MergeCustomers(customerio.Identifier{
+		Type:  "cio_id",
+		Value: "id1",
+	}, customerio.Identifier{
+		Type:  "email",
+		Value: "",
+	})
+	checkParamError(t, err4, "secondary")
 
 	runCases(t,
 		[]testCase{
@@ -292,11 +316,29 @@ func TestMergeCustomers(t *testing.T) {
 		},
 		func(c testCase) error {
 			if c.id == "1" {
-				return cio.MergeCustomers("email", "cool.person@company.com", "email", "cperson@gmail.com")
+				return cio.MergeCustomers(customerio.Identifier{
+					Type:  "email",
+					Value: "cool.person@company.com",
+				}, customerio.Identifier{
+					Type:  "email",
+					Value: "cperson@gmail.com",
+				})
 			} else if c.id == "2" {
-				return cio.MergeCustomers("id", "cool.person@company.com", "cio_id", "person2")
+				return cio.MergeCustomers(customerio.Identifier{
+					Type:  "id",
+					Value: "cool.person@company.com",
+				}, customerio.Identifier{
+					Type:  "cio_id",
+					Value: "person2",
+				})
 			} else {
-				return cio.MergeCustomers("cio_id", "CIO123", "id", "person1")
+				return cio.MergeCustomers(customerio.Identifier{
+					Type:  customerio.IdentifierTypeCioID,
+					Value: "CIO123",
+				}, customerio.Identifier{
+					Type:  customerio.IdentifierTypeID,
+					Value: "person1",
+				})
 			}
 		})
 }

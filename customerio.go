@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -209,47 +210,52 @@ func (c *CustomerIO) request(method, url string, body interface{}) error {
 	return nil
 }
 
+type IdentifierType string
+
 const (
-	// Identifier Types
-	IdentifierTypeID    = "id"
-	IdentifierTypeEmail = "email"
-	IdentifierTypeCioID = "cio_id"
+	IdentifierTypeID    IdentifierType = "id"
+	IdentifierTypeEmail IdentifierType = "email"
+	IdentifierTypeCioID IdentifierType = "cio_id"
 )
 
-// MergeCustomers sends a request to Customer.io to merge two customer profiles together.
-func (c *CustomerIO) MergeCustomers(primaryIDType, primaryID, secondaryIDType, secondaryID string) error {
-	if !isValidIDType(primaryIDType) {
-		return ParamError{Param: "primaryIDType"}
+type Identifier struct {
+	Type  IdentifierType
+	Value string
+}
+
+func (id Identifier) kv() map[string]string {
+	return map[string]string{
+		string(id.Type): id.Value,
 	}
-	if strings.TrimSpace(primaryID) == "" {
-		return ParamError{Param: "primaryID"}
+}
+
+func (id Identifier) validate() error {
+	if !(id.Type == IdentifierTypeID ||
+		id.Type == IdentifierTypeEmail ||
+		id.Type == IdentifierTypeCioID) {
+		return errors.New("invalid id type")
 	}
 
-	if !isValidIDType(secondaryIDType) {
-		return ParamError{Param: "secondaryIDType"}
+	if strings.TrimSpace(id.Value) == "" {
+		return errors.New("invalid id")
 	}
-	if strings.TrimSpace(secondaryID) == "" {
-		return ParamError{Param: "secondaryID"}
+
+	return nil
+}
+
+// MergeCustomers sends a request to Customer.io to merge two customer profiles together.
+func (c *CustomerIO) MergeCustomers(primary Identifier, secondary Identifier) error {
+	if primary.validate() != nil {
+		return ParamError{Param: "primary"}
+	}
+	if secondary.validate() != nil {
+		return ParamError{Param: "secondary"}
 	}
 
 	return c.request("POST",
 		fmt.Sprintf("%s/api/v1/merge_customers", c.URL),
 		map[string]interface{}{
-			"primary": map[string]string{
-				primaryIDType: primaryID,
-			},
-			"secondary": map[string]string{
-				secondaryIDType: secondaryID,
-			},
+			"primary":   primary.kv(),
+			"secondary": secondary.kv(),
 		})
-}
-
-func isValidIDType(input string) bool {
-	input = strings.TrimSpace(input)
-	if input == IdentifierTypeID ||
-		input == IdentifierTypeEmail ||
-		input == IdentifierTypeCioID {
-		return true
-	}
-	return false
 }
