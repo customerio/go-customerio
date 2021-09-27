@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 // CustomerIO wraps the customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
@@ -206,4 +208,54 @@ func (c *CustomerIO) request(method, url string, body interface{}) error {
 	}
 
 	return nil
+}
+
+type IdentifierType string
+
+const (
+	IdentifierTypeID    IdentifierType = "id"
+	IdentifierTypeEmail IdentifierType = "email"
+	IdentifierTypeCioID IdentifierType = "cio_id"
+)
+
+type Identifier struct {
+	Type  IdentifierType
+	Value string
+}
+
+func (id Identifier) kv() map[string]string {
+	return map[string]string{
+		string(id.Type): id.Value,
+	}
+}
+
+func (id Identifier) validate() error {
+	if !(id.Type == IdentifierTypeID ||
+		id.Type == IdentifierTypeEmail ||
+		id.Type == IdentifierTypeCioID) {
+		return errors.New("invalid id type")
+	}
+
+	if strings.TrimSpace(id.Value) == "" {
+		return errors.New("invalid id")
+	}
+
+	return nil
+}
+
+// MergeCustomers sends a request to Customer.io to merge two customer profiles together.
+func (c *CustomerIO) MergeCustomers(primary Identifier, secondary Identifier) error {
+	if primary.validate() != nil {
+		return ParamError{Param: "primary"}
+	}
+	if secondary.validate() != nil {
+		return ParamError{Param: "secondary"}
+	}
+
+	return c.request("POST",
+		fmt.Sprintf("%s/api/v1/merge_customers", c.URL),
+		map[string]interface{}{
+			"primary":   primary.kv(),
+			"secondary": secondary.kv(),
+		})
 }

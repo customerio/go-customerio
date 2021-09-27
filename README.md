@@ -110,6 +110,16 @@ recreated.
 track.Delete("5")
 ```
 
+### Merge Duplicate Customers
+
+When you merge two people, you pick a primary person and merge a secondary, duplicate person into it. The primary person remains after the merge and the secondary is deleted. This process is permanent: you cannot recover the secondary person.
+
+The first and third parameters represent the identifier for the primary and secondary people respectively—one of `id`, `email`, or `cio_id`. The second and fourth parameters are the identifier values for the primary and secondary people, respectively.
+
+```go
+track.MergeCustomers(customerio.IdentifierTypeEmail, "cool.person@company.com", customerio.IdentifierTypeCioID, "C123")
+```
+
 ### Tracking a custom event
 
 Now that you're identifying your customers with [Customer.io](http://customer.io), you can now send events like

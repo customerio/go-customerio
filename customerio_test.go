@@ -270,3 +270,75 @@ func expect(method, path string, body interface{}) {
 	expectedPath = path
 	expectedBody = body
 }
+
+func TestMergeCustomers(t *testing.T) {
+	err1 := cio.MergeCustomers(customerio.Identifier{
+		Type:  "",
+		Value: "id1",
+	}, customerio.Identifier{
+		Type:  "id",
+		Value: "id2",
+	})
+	checkParamError(t, err1, "primary")
+
+	err2 := cio.MergeCustomers(customerio.Identifier{
+		Type:  "id",
+		Value: "",
+	}, customerio.Identifier{
+		Type:  "id",
+		Value: "id2",
+	})
+	checkParamError(t, err2, "primary")
+
+	err3 := cio.MergeCustomers(customerio.Identifier{
+		Type:  "email",
+		Value: "id1",
+	}, customerio.Identifier{
+		Type:  "",
+		Value: "id2",
+	})
+	checkParamError(t, err3, "secondary")
+
+	err4 := cio.MergeCustomers(customerio.Identifier{
+		Type:  "cio_id",
+		Value: "id1",
+	}, customerio.Identifier{
+		Type:  "email",
+		Value: "",
+	})
+	checkParamError(t, err4, "secondary")
+
+	runCases(t,
+		[]testCase{
+			{"1", "POST", "/api/v1/merge_customers", `{"primary":{"email":"cool.person@company.com"},"secondary":{"email":"cperson@gmail.com"}}`},
+			{"2", "POST", "/api/v1/merge_customers", `{"primary":{"id":"cool.person@company.com"},"secondary":{"cio_id":"person2"}}`},
+			{"3", "POST", "/api/v1/merge_customers", `{"primary":{"cio_id":"CIO123"},"secondary":{"id":"person1"}}`},
+		},
+		func(c testCase) error {
+			if c.id == "1" {
+				return cio.MergeCustomers(customerio.Identifier{
+					Type:  "email",
+					Value: "cool.person@company.com",
+				}, customerio.Identifier{
+					Type:  "email",
+					Value: "cperson@gmail.com",
+				})
+			} else if c.id == "2" {
+				return cio.MergeCustomers(customerio.Identifier{
+					Type:  "id",
+					Value: "cool.person@company.com",
+				}, customerio.Identifier{
+					Type:  "cio_id",
+					Value: "person2",
+				})
+			} else {
+				return cio.MergeCustomers(customerio.Identifier{
+					Type:  customerio.IdentifierTypeCioID,
+					Value: "CIO123",
+				}, customerio.Identifier{
+					Type:  customerio.IdentifierTypeID,
+					Value: "person1",
+				})
+			}
+		})
+}
