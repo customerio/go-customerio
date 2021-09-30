@@ -9,18 +9,20 @@ import (
 )
 
 type APIClient struct {
-	Key    string
-	URL    string
-	Client *http.Client
+	Key       string
+	URL       string
+	UserAgent string
+	Client    *http.Client
 }
 
 // NewAPIClient prepares a client for use with the Customer.io API, see: https://customer.io/docs/api/#apicoreintroduction
 // using an App API Key from https://fly.customer.io/settings/api_credentials?keyType=app
 func NewAPIClient(key string, opts ...option) *APIClient {
 	client := &APIClient{
-		Key:    key,
-		Client: http.DefaultClient,
-		URL:    "https://api.customer.io",
+		Key:       key,
+		Client:    http.DefaultClient,
+		URL:       "https://api.customer.io",
+		UserAgent: "Customer.io Go Client/3.0",
 	}
 
 	for _, opt := range opts {
@@ -44,7 +46,7 @@ func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, bod
 
 	req.Header.Set("Authorization", "Bearer "+c.Key)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("User-Agent", "Customer.io Go Client/3.0")
+	req.Header.Add("User-Agent", c.UserAgent)
 
 	resp, err := c.Client.Do(req)
 	if err != nil {
