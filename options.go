@@ -45,7 +45,7 @@ func WithHTTPClient(client *http.Client) option {
 	}
 }
 
-func WithCustomUserAgent(ua string) option {
+func WithUserAgent(ua string) option {
 	return option{
 		api: func(a *APIClient) {
 			a.UserAgent = ua
