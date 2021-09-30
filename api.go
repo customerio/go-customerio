@@ -44,6 +44,7 @@ func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, bod
 
 	req.Header.Set("Authorization", "Bearer "+c.Key)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("User-Agent", "Customer.io Go Client/3.0")
 
 	resp, err := c.Client.Do(req)
 	if err != nil {

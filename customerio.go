@@ -176,6 +176,7 @@ func (c *CustomerIO) request(method, url string, body interface{}) error {
 			return err
 		}
 
+		req.Header.Add("User-Agent", "Customer.io Go Client/3.0")
 		req.Header.Add("Content-Type", "application/json")
 		req.Header.Add("Content-Length", strconv.Itoa(len(j)))
 	} else {
