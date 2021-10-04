@@ -13,6 +13,8 @@ import (
 	"strings"
 )
 
+const DefaultUserAgent = "Customer.io Go Client/" + Version
+
 // CustomerIO wraps the customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
 type CustomerIO struct {
 	siteID    string

@@ -22,7 +22,7 @@ func NewAPIClient(key string, opts ...option) *APIClient {
 		Key:       key,
 		Client:    http.DefaultClient,
 		URL:       "https://api.customer.io",
-		UserAgent: "Customer.io Go Client/3.0",
+		UserAgent: DefaultUserAgent,
 	}
 
 	for _, opt := range opts {
