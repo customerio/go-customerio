@@ -25,6 +25,12 @@ func TestAPIOptions(t *testing.T) {
 	if !reflect.DeepEqual(client.Client, hc) {
 		t.Errorf("wrong http client. got: %#v, want: %#v", client.Client, hc)
 	}
+
+	customUserAgent := "Customer.io"
+	client = customerio.NewAPIClient("mykey", customerio.WithUserAgent(customUserAgent))
+	if client.UserAgent != customUserAgent {
+		t.Errorf("wrong user-agent. got: %s, want: %s", client.UserAgent, customUserAgent)
+	}
 }
 
 func TestTrackOptions(t *testing.T) {
@@ -43,5 +49,11 @@ func TestTrackOptions(t *testing.T) {
 	client = customerio.NewTrackClient("site_id", "api_key", customerio.WithHTTPClient(hc))
 	if !reflect.DeepEqual(client.Client, hc) {
 		t.Errorf("wrong http client. got: %#v, want: %#v", client.Client, hc)
+	}
+
+	customUserAgent := "Customer.io"
+	client = customerio.NewTrackClient("site_id", "api_key", customerio.WithUserAgent(customUserAgent))
+	if client.UserAgent != customUserAgent {
+		t.Errorf("wrong user-agent. got: %s, want: %s", client.UserAgent, customUserAgent)
 	}
 }

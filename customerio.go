@@ -13,12 +13,15 @@ import (
 	"strings"
 )
 
+const DefaultUserAgent = "Customer.io Go Client/" + Version
+
 // CustomerIO wraps the customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
 type CustomerIO struct {
-	siteID string
-	apiKey string
-	URL    string
-	Client *http.Client
+	siteID    string
+	apiKey    string
+	URL       string
+	UserAgent string
+	Client    *http.Client
 }
 
 // CustomerIOError is returned by any method that fails at the API level
@@ -48,10 +51,11 @@ func NewTrackClient(siteID, apiKey string, opts ...option) *CustomerIO {
 		},
 	}
 	c := &CustomerIO{
-		siteID: siteID,
-		apiKey: apiKey,
-		URL:    "https://track.customer.io",
-		Client: client,
+		siteID:    siteID,
+		apiKey:    apiKey,
+		URL:       "https://track.customer.io",
+		UserAgent: DefaultUserAgent,
+		Client:    client,
 	}
 
 	for _, opt := range opts {
@@ -176,6 +180,7 @@ func (c *CustomerIO) request(method, url string, body interface{}) error {
 			return err
 		}
 
+		req.Header.Add("User-Agent", c.UserAgent)
 		req.Header.Add("Content-Type", "application/json")
 		req.Header.Add("Content-Length", strconv.Itoa(len(j)))
 	} else {

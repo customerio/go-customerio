@@ -44,3 +44,14 @@ func WithHTTPClient(client *http.Client) option {
 		},
 	}
 }
+
+func WithUserAgent(ua string) option {
+	return option{
+		api: func(a *APIClient) {
+			a.UserAgent = ua
+		},
+		track: func(c *CustomerIO) {
+			c.UserAgent = ua
+		},
+	}
+}
