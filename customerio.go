@@ -54,7 +54,7 @@ func NewTrackClient(siteID, apiKey string, opts ...option) *CustomerIO {
 		siteID:    siteID,
 		apiKey:    apiKey,
 		URL:       "https://track.customer.io",
-		UserAgent: "Customer.io Go Client/3.0",
+		UserAgent: DefaultUserAgent,
 		Client:    client,
 	}
 
