@@ -24,7 +24,7 @@ And then execute:
 
 Or install it yourself:
 
-    $ go get github.com/customerio/go-customerio
+    $ go get github.com/customerio/go-customerio/v3
 
 ## Usage
 
