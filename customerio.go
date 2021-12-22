@@ -2,6 +2,7 @@ package customerio
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -71,25 +72,30 @@ func NewCustomerIO(siteID, apiKey string) *CustomerIO {
 	return NewTrackClient(siteID, apiKey)
 }
 
-// Identify identifies a customer and sets their attributes
-func (c *CustomerIO) Identify(customerID string, attributes map[string]interface{}) error {
+// IdentifyCtx identifies a customer and sets their attributes
+func (c *CustomerIO) IdentifyCtx(ctx context.Context, customerID string, attributes map[string]interface{}) error {
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
-	return c.request("PUT",
+	return c.request(ctx, "PUT",
 		fmt.Sprintf("%s/api/v1/customers/%s", c.URL, url.PathEscape(customerID)),
 		attributes)
 }
 
-// Track sends a single event to Customer.io for the supplied user
-func (c *CustomerIO) Track(customerID string, eventName string, data map[string]interface{}) error {
+// Identify identifies a customer and sets their attributes
+func (c *CustomerIO) Identify(customerID string, attributes map[string]interface{}) error {
+	return c.IdentifyCtx(context.Background(), customerID, attributes)
+}
+
+// TrackCtx sends a single event to Customer.io for the supplied user
+func (c *CustomerIO) TrackCtx(ctx context.Context, customerID string, eventName string, data map[string]interface{}) error {
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
 	if eventName == "" {
 		return ParamError{Param: "eventName"}
 	}
-	return c.request("POST",
+	return c.request(ctx, "POST",
 		fmt.Sprintf("%s/api/v1/customers/%s/events", c.URL, url.PathEscape(customerID)),
 		map[string]interface{}{
 			"name": eventName,
@@ -97,15 +103,20 @@ func (c *CustomerIO) Track(customerID string, eventName string, data map[string]
 		})
 }
 
-// TrackAnonymous sends a single event to Customer.io for the anonymous user
-func (c *CustomerIO) TrackAnonymous(anonymousID, eventName string, data map[string]interface{}) error {
+// Track sends a single event to Customer.io for the supplied user
+func (c *CustomerIO) Track(customerID string, eventName string, data map[string]interface{}) error {
+	return c.TrackCtx(context.Background(), customerID, eventName, data)
+}
+
+// TrackAnonymousCtx sends a single event to Customer.io for the anonymous user
+func (c *CustomerIO) TrackAnonymousCtx(ctx context.Context, anonymousID, eventName string, data map[string]interface{}) error {
 	if anonymousID == "" {
 		return ParamError{Param: "anonymousID"}
 	}
 	if eventName == "" {
 		return ParamError{Param: "eventName"}
 	}
-	return c.request("POST",
+	return c.request(ctx, "POST",
 		fmt.Sprintf("%s/api/v1/events", c.URL),
 		map[string]interface{}{
 			"name":         eventName,
@@ -114,18 +125,28 @@ func (c *CustomerIO) TrackAnonymous(anonymousID, eventName string, data map[stri
 		})
 }
 
-// Delete deletes a customer
-func (c *CustomerIO) Delete(customerID string) error {
+// TrackAnonymous sends a single event to Customer.io for the anonymous user
+func (c *CustomerIO) TrackAnonymous(anonymousID, eventName string, data map[string]interface{}) error {
+	return c.TrackAnonymousCtx(context.Background(), anonymousID, eventName, data)
+}
+
+// DeleteCtx deletes a customer
+func (c *CustomerIO) DeleteCtx(ctx context.Context, customerID string) error {
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
-	return c.request("DELETE",
+	return c.request(ctx, "DELETE",
 		fmt.Sprintf("%s/api/v1/customers/%s", c.URL, url.PathEscape(customerID)),
 		nil)
 }
 
-// AddDevice adds a device for a customer
-func (c *CustomerIO) AddDevice(customerID string, deviceID string, platform string, data map[string]interface{}) error {
+// Delete deletes a customer
+func (c *CustomerIO) Delete(customerID string) error {
+	return c.DeleteCtx(context.Background(), customerID)
+}
+
+// AddDeviceCtx adds a device for a customer
+func (c *CustomerIO) AddDeviceCtx(ctx context.Context, customerID string, deviceID string, platform string, data map[string]interface{}) error {
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
@@ -145,29 +166,39 @@ func (c *CustomerIO) AddDevice(customerID string, deviceID string, platform stri
 	for k, v := range data {
 		body["device"][k] = v
 	}
-	return c.request("PUT",
+	return c.request(ctx, "PUT",
 		fmt.Sprintf("%s/api/v1/customers/%s/devices", c.URL, url.PathEscape(customerID)),
 		body)
 }
 
-// DeleteDevice deletes a device for a customer
-func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
+// AddDevice adds a device for a customer
+func (c *CustomerIO) AddDevice(customerID string, deviceID string, platform string, data map[string]interface{}) error {
+	return c.AddDeviceCtx(context.Background(), customerID, deviceID, platform, data)
+}
+
+// DeleteDeviceCtx deletes a device for a customer
+func (c *CustomerIO) DeleteDeviceCtx(ctx context.Context, customerID string, deviceID string) error {
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
 	if deviceID == "" {
 		return ParamError{Param: "deviceID"}
 	}
-	return c.request("DELETE",
+	return c.request(ctx, "DELETE",
 		fmt.Sprintf("%s/api/v1/customers/%s/devices/%s", c.URL, url.PathEscape(customerID), url.PathEscape(deviceID)),
 		nil)
+}
+
+// DeleteDevice deletes a device for a customer
+func (c *CustomerIO) DeleteDevice(customerID string, deviceID string) error {
+	return c.DeleteDeviceCtx(context.Background(), customerID, deviceID)
 }
 
 func (c *CustomerIO) auth() string {
 	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%v:%v", c.siteID, c.apiKey)))
 }
 
-func (c *CustomerIO) request(method, url string, body interface{}) error {
+func (c *CustomerIO) request(ctx context.Context, method, url string, body interface{}) error {
 	var req *http.Request
 	if body != nil {
 		j, err := json.Marshal(body)
@@ -179,6 +210,7 @@ func (c *CustomerIO) request(method, url string, body interface{}) error {
 		if err != nil {
 			return err
 		}
+		req = req.WithContext(ctx)
 
 		req.Header.Add("User-Agent", c.UserAgent)
 		req.Header.Add("Content-Type", "application/json")
@@ -248,8 +280,8 @@ func (id Identifier) validate() error {
 	return nil
 }
 
-// MergeCustomers sends a request to Customer.io to merge two customer profiles together.
-func (c *CustomerIO) MergeCustomers(primary Identifier, secondary Identifier) error {
+// MergeCustomersCtx sends a request to Customer.io to merge two customer profiles together.
+func (c *CustomerIO) MergeCustomersCtx(ctx context.Context, primary Identifier, secondary Identifier) error {
 	if primary.validate() != nil {
 		return ParamError{Param: "primary"}
 	}
@@ -257,10 +289,15 @@ func (c *CustomerIO) MergeCustomers(primary Identifier, secondary Identifier) er
 		return ParamError{Param: "secondary"}
 	}
 
-	return c.request("POST",
+	return c.request(ctx, "POST",
 		fmt.Sprintf("%s/api/v1/merge_customers", c.URL),
 		map[string]interface{}{
 			"primary":   primary.kv(),
 			"secondary": secondary.kv(),
 		})
+}
+
+// MergeCustomers sends a request to Customer.io to merge two customer profiles together.
+func (c *CustomerIO) MergeCustomers(primary Identifier, secondary Identifier) error {
+	return c.MergeCustomersCtx(context.Background(), primary, secondary)
 }
