@@ -1,0 +1,16 @@
+# curl --data-binary @codecov.yml https://codecov.io/validate
+codecov:
+  require_ci_to_pass: yes
+  branch: main
+
+coverage:
+  precision: 2
+  round: down
+  range: "60...100"  # less than 60% having a red background
+
+comment:
+  layout: "reach,diff,flags"
+  behavior: default         #  update, if exists. Otherwise post new.
+  require_changes: true     # if true: only post the comment if coverage changes
+  require_base: no          # [yes :: must have a base report to post]
+  require_head: yes         # [yes :: must have a head report to post]
