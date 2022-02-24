@@ -1,0 +1,6 @@
+tasks:
+  - init: go mod download
+
+vscode:
+  extensions:
+    - golang.go
