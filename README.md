@@ -7,7 +7,7 @@
 
 ![Latest release](https://img.shields.io/github/v/release/customerio/go-customerio)
 ![Software License](https://img.shields.io/github/license/customerio/go-customerio)
-[![Build status](https://github.com/customerio/go-customerio/actions/workflows/main.yml/badge.svg)](https://github.com/customerio/go-customerio/actions/workflows/main.yml)
+[![CI status](https://github.com/customerio/go-customerio/actions/workflows/main.yml/badge.svg)](https://github.com/customerio/go-customerio/actions/workflows/main.yml)
 ![Go version](https://img.shields.io/github/go-mod/go-version/customerio/go-customerio)
 [![Go Doc](https://img.shields.io/badge/Go_Doc-reference-blue.svg)](https://pkg.go.dev/github.com/customerio/go-customerio/v3)
 
