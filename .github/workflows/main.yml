@@ -1,26 +1,39 @@
-name: build
+name: ci
 
 on: [ push ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [ '1.15', '1.16' ]
-    env:
-      TEST_RESULTS: /tmp/test-results
+        go: [  '1.15.x', '1.16.x', '1.17.x', 'tip' ]
     name: Go ${{ matrix.go }} test
     steps:
       - uses: actions/checkout@v2
-      - name: setup go
+      - name: Install stable Go
+        if: matrix.go != 'tip'
         uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go }}
-      - run: go env
-      - run: mkdir -pv $TEST_RESULTS
+      - name: Install Go tip
+        if: matrix.go == 'tip'
+        run: |
+          curl -sL https://storage.googleapis.com/go-build-snap/go/linux-amd64/$(git ls-remote https://github.com/golang/go.git HEAD | awk '{print $1;}').tar.gz -o gotip.tar.gz
+          mkdir -p ~/sdk/gotip
+          tar -C ~/sdk/gotip -xzf gotip.tar.gz
+          echo "PATH=$HOME/go/bin:$HOME/sdk/gotip/bin/:$PATH" >> $GITHUB_ENV
+      - run: go version
       - name: Setup gotestsum
         run: |
           curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v0.6.0/gotestsum_0.6.0_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum
-      - run: | 
-          gotestsum --junitfile ${TEST_RESULTS}/unit-tests.xml -- -timeout 5m -p 1 ./...
+      - run: go test -race -coverprofile=coverage.txt -covermode=atomic
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v2
+        env:
+          GO_VERSION: ${{ matrix.go }}
+        with:
+          files: ./coverage.txt
+          env_vars: GO_VERSION
+          flags: unittests
+          fail_ci_if_error: true
