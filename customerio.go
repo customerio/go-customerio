@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const DefaultUserAgent = "Customer.io Go Client/" + Version
@@ -95,11 +96,22 @@ func (c *CustomerIO) TrackCtx(ctx context.Context, customerID string, eventName 
 	if eventName == "" {
 		return ParamError{Param: "eventName"}
 	}
+	var timestamp *int64
+
+	timestampRaw, ok := data["timestamp"]
+	if ok {
+		if timestampTime, ok := timestampRaw.(time.Time); ok {
+			timestamp = timestampTime.Unix()
+			delete(data, "timestamp")
+		}
+	}
+
 	return c.request(ctx, "POST",
 		fmt.Sprintf("%s/api/v1/customers/%s/events", c.URL, url.PathEscape(customerID)),
 		map[string]interface{}{
-			"name": eventName,
-			"data": data,
+			"name":      eventName,
+			"data":      data,
+			"timestamp": timestamp,
 		})
 }
 
