@@ -323,6 +323,24 @@ if err != nil {
 fmt.Println(body)
 ```
 
+## Context Support
+There are additional API methods that support passing a context that satisfies the `context.Context` interface to allow better control over dispatched requests. For example with sending an event:
+```go
+// Create an instance of the Customer.io Track API client
+track := customerio.NewTrackClient(siteID, trackAPIKey, customerio.WithRegion(customerio.RegionUS))
+
+// Create a context with a 5s deadline
+ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
+defer cancel()
+
+if err := track.TrackCtx(ctx, "5", "purchase", map[string]interface{}{
+    "type": "socks",
+    "price": "13.99",
+}); err != nil {
+  // handle error
+}
+```
+
 ## Contributing
 
 1. Fork it
