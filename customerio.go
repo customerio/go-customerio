@@ -110,9 +110,6 @@ func (c *CustomerIO) Track(customerID string, eventName string, data map[string]
 
 // TrackAnonymousCtx sends a single event to Customer.io for the anonymous user
 func (c *CustomerIO) TrackAnonymousCtx(ctx context.Context, anonymousID, eventName string, data map[string]interface{}) error {
-	if anonymousID == "" {
-		return ParamError{Param: "anonymousID"}
-	}
 	if eventName == "" {
 		return ParamError{Param: "eventName"}
 	}
