@@ -113,13 +113,17 @@ func (c *CustomerIO) TrackAnonymousCtx(ctx context.Context, anonymousID, eventNa
 	if eventName == "" {
 		return ParamError{Param: "eventName"}
 	}
-	return c.request(ctx, "POST",
-		fmt.Sprintf("%s/api/v1/events", c.URL),
-		map[string]interface{}{
-			"name":         eventName,
-			"anonymous_id": anonymousID,
-			"data":         data,
-		})
+
+	payload := map[string]interface{}{
+		"name": eventName,
+		"data": data,
+	}
+
+	if anonymousID != "" {
+		payload["anonymous_id"] = anonymousID
+	}
+
+	return c.request(ctx, "POST", fmt.Sprintf("%s/api/v1/events", c.URL), payload)
 }
 
 // TrackAnonymous sends a single event to Customer.io for the anonymous user
