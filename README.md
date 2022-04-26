@@ -220,7 +220,7 @@ You can also send anonymous events representing people you haven't identified. A
 
 ```go
 // Arguments
-// anonymous_id (required)    - an identifier representing an unknown person.
+// anonymous_id (required)    - nullable, an identifier representing an unknown person.
 // name (required)            - the name of the event you want to track.
 // attributes (optional)      - any related information you'd like to attach to this
 //                              event, as a ```map[string]interface{}```. 
@@ -230,6 +230,18 @@ You can also send anonymous events representing people you haven't identified. A
 if err := track.TrackAnonymous("anonymous_id", "invite", map[string]interface{}{
     "first_name": "Alex",
     "source": "OldApp",
+}); err != nil {
+  // handle error
+}
+```
+#### Anonymous invite events
+
+If you previously sent [invite events](https://customer.io/docs/anonymous-invite-emails/), you can achieve the same functionality by sending an anonymous event an empty string for the anonymous identifier. To send anonymous invites, your event *must* include a `recipient` attribute. 
+
+```go
+if err := track.TrackAnonymous("", "invite", map[string]interface{}{
+    "first_name": "Alex",
+    "recipient": "alex.person@example.com",
 }); err != nil {
   // handle error
 }
