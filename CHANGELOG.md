@@ -1,6 +1,6 @@
 # Changelog
 
-## [v3.4.0](https://github.com/customerio/go-customerio/compare/v3.4.0...v3.4.1) (2022-05-19)
+## [v3.4.1](https://github.com/customerio/go-customerio/compare/v3.4.0...v3.4.1) (2022-05-19)
 ### Fixed
 - Resolved issue where some attachments were truncated due to not flushing all the data from the buffer.
 
