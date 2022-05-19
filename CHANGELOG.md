@@ -1,5 +1,17 @@
 # Changelog
 
+## [v3.4.0](https://github.com/customerio/go-customerio/compare/v3.4.0...v3.4.1) (2022-05-19)
+### Fixed
+- Resolved issue where some attachments were truncated due to not flushing all the data from the buffer.
+
+## [v3.4.0](https://github.com/customerio/go-customerio/compare/v3.3.0...v3.4.0) (2022-04-26)
+### Added
+- Added support for sending a blank value for anonymous activity, which will be treated as unassociated with a profile within Customer.io.
+
+## [v3.3.0](https://github.com/customerio/go-customerio/compare/v.3.2.0...v3.3.0) (2021-12-22)
+### Added
+- Added support for context to all API calls.
+
 ## [v3.2.0](https://github.com/customerio/go-customerio/compare/v3.1.0...v.3.2.0) (2021-10-04)
 ### Added
 - **client:** adds a default User-Agent header on requests and the option to set a custom User-Agent value. ([2123497](https://github.com/customerio/go-customerio/commit/212349768ba234d6c4ad3684aa6450f770f35cb8))
