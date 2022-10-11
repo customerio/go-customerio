@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/customerio/go-customerio/v3"
 )
@@ -86,8 +85,7 @@ func TestTrack(t *testing.T) {
 	body := map[string]interface{}{
 		"name": "test",
 		"data": map[string]interface{}{
-			"a":         "1",
-			"timestamp": time.Now().UTC(),
+			"a": "1",
 		},
 	}
 	err := cio.Track("", "test", data)
