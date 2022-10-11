@@ -47,8 +47,11 @@ func (e *SendEmailRequest) Attach(name string, value io.Reader) error {
 	if _, err := io.Copy(enc, value); err != nil {
 		return err
 	}
+	if err := enc.Close(); err != nil {
+		return err
+	}
 
-	e.Attachments[name] = string(buf.Bytes())
+	e.Attachments[name] = buf.String()
 	return nil
 }
 

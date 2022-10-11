@@ -220,7 +220,7 @@ You can also send anonymous events representing people you haven't identified. A
 
 ```go
 // Arguments
-// anonymous_id (required)    - an identifier representing an unknown person.
+// anonymous_id (required)    - nullable, an identifier representing an unknown person.
 // name (required)            - the name of the event you want to track.
 // attributes (optional)      - any related information you'd like to attach to this
 //                              event, as a ```map[string]interface{}```. 
@@ -230,6 +230,18 @@ You can also send anonymous events representing people you haven't identified. A
 if err := track.TrackAnonymous("anonymous_id", "invite", map[string]interface{}{
     "first_name": "Alex",
     "source": "OldApp",
+}); err != nil {
+  // handle error
+}
+```
+#### Anonymous invite events
+
+If you previously sent [invite events](https://customer.io/docs/anonymous-invite-emails/), you can achieve the same functionality by sending an anonymous event an empty string for the anonymous identifier. To send anonymous invites, your event *must* include a `recipient` attribute. 
+
+```go
+if err := track.TrackAnonymous("", "invite", map[string]interface{}{
+    "first_name": "Alex",
+    "recipient": "alex.person@example.com",
 }); err != nil {
   // handle error
 }
@@ -321,6 +333,24 @@ if err != nil {
 }
 
 fmt.Println(body)
+```
+
+## Context Support
+There are additional API methods that support passing a context that satisfies the `context.Context` interface to allow better control over dispatched requests. For example with sending an event:
+```go
+// Create an instance of the Customer.io Track API client
+track := customerio.NewTrackClient(siteID, trackAPIKey, customerio.WithRegion(customerio.RegionUS))
+
+// Create a context with a 5s deadline
+ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
+defer cancel()
+
+if err := track.TrackCtx(ctx, "5", "purchase", map[string]interface{}{
+    "type": "socks",
+    "price": "13.99",
+}); err != nil {
+  // handle error
+}
 ```
 
 ## Contributing
