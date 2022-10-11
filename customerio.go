@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/oklog/ulid"
 )
 
 const DefaultUserAgent = "Customer.io Go Client/" + Version
@@ -90,29 +92,33 @@ func (c *CustomerIO) Identify(customerID string, attributes map[string]interface
 
 // TrackCtx sends a single event to Customer.io for the supplied user
 func (c *CustomerIO) TrackCtx(ctx context.Context, customerID string, eventName string, data map[string]interface{}) error {
+	return c.TrackWithInfoCtx(ctx, customerID, eventName, data, nil, nil, nil)
+}
+
+func (c *CustomerIO) TrackWithInfoCtx(ctx context.Context, customerID string, eventName string, data map[string]interface{}, id *ulid.ULID, timestamp *time.Time, typ *TrackType) error {
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
 	if eventName == "" {
 		return ParamError{Param: "eventName"}
 	}
-	var timestamp *int64
 
-	timestampRaw, ok := data["timestamp"]
-	if ok {
-		if timestampTime, ok := timestampRaw.(time.Time); ok {
-			timestamp = timestampTime.Unix()
-			delete(data, "timestamp")
-		}
+	props := map[string]interface{}{
+		"name": eventName,
+		"data": data,
 	}
 
-	return c.request(ctx, "POST",
-		fmt.Sprintf("%s/api/v1/customers/%s/events", c.URL, url.PathEscape(customerID)),
-		map[string]interface{}{
-			"name":      eventName,
-			"data":      data,
-			"timestamp": timestamp,
-		})
+	if id != nil {
+		props["id"] = *id
+	}
+	if timestamp != nil {
+		props["timestamp"] = timestamp.Unix()
+	}
+	if typ != nil {
+		props["type"] = *typ
+	}
+
+	return c.request(ctx, "POST", fmt.Sprintf("%s/api/v1/customers/%s/events", c.URL, url.PathEscape(customerID)), props)
 }
 
 // Track sends a single event to Customer.io for the supplied user
@@ -272,6 +278,14 @@ type Identifier struct {
 	Type  IdentifierType
 	Value string
 }
+
+type TrackType string
+
+const (
+	TrackTypeEvent  TrackType = "event"
+	TrackTypePage   TrackType = "page"
+	TrackTypeScreen TrackType = "screen"
+)
 
 func (id Identifier) kv() map[string]string {
 	return map[string]string{
