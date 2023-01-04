@@ -30,6 +30,9 @@ type SendEmailRequest struct {
 	SendToUnsubscribed      *bool                  `json:"send_to_unsubscribed,omitempty"`
 	EnableTracking          *bool                  `json:"tracked,omitempty"`
 	QueueDraft              *bool                  `json:"queue_draft,omitempty"`
+	DisableCSSPreprocessing *bool                  `json:"disable_css_preprocessing,omitempty"`
+	SendAt                  *int64                 `json:"send_at,omitempty"`
+	Language                *string                `json:"language,omitempty"`
 }
 
 var ErrAttachmentExists = errors.New("attachment with this name already exists")
