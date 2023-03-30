@@ -22,7 +22,7 @@ type SendEmailRequest struct {
 	Subject                 string                 `json:"subject,omitempty"`
 	Preheader               string                 `json:"preheader,omitempty"`
 	Body                    string                 `json:"body,omitempty"`
-	PlaintextBody           string                 `json:"body_plaintext,omitempty"`
+	PlaintextBody           string                 `json:"body_plain,omitempty"`
 	AMPBody                 string                 `json:"body_amp,omitempty"`
 	FakeBCC                 *bool                  `json:"fake_bcc,omitempty"`
 	Attachments             map[string]string      `json:"attachments,omitempty"`
