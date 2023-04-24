@@ -6,28 +6,28 @@ import (
 	"net/url"
 )
 
-type DeviceV1 struct {
+type deviceV1 struct {
 	ID         string                 `json:"id"`
 	Platform   string                 `json:"platform"`
 	LastUsed   string                 `json:"last_used,omitempty"`
 	Attributes map[string]interface{} `json:"attributes"`
 }
 
-type DeviceV2 struct {
+type deviceV2 struct {
 	ID         string                 `json:"token"`
 	Platform   string                 `json:"platform"`
 	LastUsed   string                 `json:"last_used,omitempty"`
 	Attributes map[string]interface{} `json:"attributes"`
 }
 
-func NewDeviceV1(deviceID, platform string, data map[string]interface{}) (*DeviceV1, error) {
+func newDeviceV1(deviceID, platform string, data map[string]interface{}) (*deviceV1, error) {
 	if deviceID == "" {
 		return nil, ParamError{Param: "deviceID"}
 	}
 	if platform == "" {
 		return nil, ParamError{Param: "platform"}
 	}
-	d := &DeviceV1{
+	d := &deviceV1{
 		ID:       deviceID,
 		Platform: platform,
 	}
@@ -47,12 +47,12 @@ func NewDeviceV1(deviceID, platform string, data map[string]interface{}) (*Devic
 	return d, nil
 }
 
-func NewDevice(deviceID, platform string, data map[string]interface{}) (*DeviceV2, error) {
-	d, err := NewDeviceV1(deviceID, platform, data)
+func NewDevice(deviceID, platform string, data map[string]interface{}) (*deviceV2, error) {
+	d, err := newDeviceV1(deviceID, platform, data)
 	if err != nil {
 		return nil, err
 	}
-	return &DeviceV2{
+	return &deviceV2{
 		ID:         d.ID,
 		Platform:   d.Platform,
 		Attributes: d.Attributes,
@@ -71,7 +71,7 @@ func (c *CustomerIO) AddDeviceCtx(ctx context.Context, customerID string, device
 		return ParamError{Param: "customerID"}
 	}
 
-	d, err := NewDeviceV1(deviceID, platform, data)
+	d, err := newDeviceV1(deviceID, platform, data)
 	if err != nil {
 		return err
 	}

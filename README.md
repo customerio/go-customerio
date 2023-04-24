@@ -258,11 +258,11 @@ In order to send push notifications, we need customer device information.
 // platform (required)   - the platform of the device, currently only accepts 'ios' and 'android'
 // data (optional)       - a ```map[string]interface{}``` of information about the device. 
 //                         You can pass any key/value pairs that would be useful in your triggers. 
-//                         We currently only save 'last_used'.
 //                         Your interface{} should be parseable as Json by 'encoding/json'.Marshal
 
 if err := track.AddDevice("5", "messaging token", "android", map[string]interface{}{
 "last_used": time.Now().Unix(),
+"attribute_name": "attribute_value",
 }); err != nil {
   // handle error
 }
