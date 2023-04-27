@@ -23,6 +23,7 @@ type SendPushRequest struct {
 	CustomData    json.RawMessage `json:"custom_data,omitempty"`
 	CustomPayload json.RawMessage `json:"custom_payload,omitempty"`
 	Device        *deviceV2       `json:"custom_device,omitempty"`
+	Sound         string          `json:"sound,omitempty"`
 }
 
 type SendPushResponse struct {
