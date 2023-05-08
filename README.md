@@ -258,11 +258,11 @@ In order to send push notifications, we need customer device information.
 // platform (required)   - the platform of the device, currently only accepts 'ios' and 'android'
 // data (optional)       - a ```map[string]interface{}``` of information about the device. 
 //                         You can pass any key/value pairs that would be useful in your triggers. 
-//                         We currently only save 'last_used'.
 //                         Your interface{} should be parseable as Json by 'encoding/json'.Marshal
 
 if err := track.AddDevice("5", "messaging token", "android", map[string]interface{}{
 "last_used": time.Now().Unix(),
+"attribute_name": "attribute_value",
 }); err != nil {
   // handle error
 }
@@ -288,6 +288,7 @@ if err := track.DeleteDevice("5", "messaging-token"); err != nil {
 
 To use the Customer.io [Transactional API](https://customer.io/docs/transactional-api), create an instance of the API client using an [App API key](https://customer.io/docs/managing-credentials#app-api-keys).
 
+## Email
 Create a `customerio.SendEmailRequest` instance, and then use `(c *customerio.APIClient).SendEmail` to send your message. [Learn more about transactional messages and optional `SendEmailRequest` properties](https://customer.io/docs/transactional-api).
 
 You can also send attachments with your message. Use `customerio.SendEmailRequest.Attach` to encode attachments.
@@ -328,6 +329,42 @@ defer f.Close()
 request.Attach("receipt.pdf", f)
 
 body, err := client.SendEmail(context.Background(), &request)
+if err != nil {
+  // handle error
+}
+
+fmt.Println(body)
+```
+
+## Push
+Create a `customerio.SendPushRequest` instance, and then use `(c *customerio.APIClient).SendPush` to send your message. [Learn more about transactional messages and optional `SendPush` properties](https://customer.io/docs/transactional-api).
+
+```go
+client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customerio.RegionUS));
+
+request := customerio.SendPushRequest{
+  TransactionalMessageID: "3",
+  MessageData: map[string]interface{}{
+    "name": "Person",
+    "items": map[string]interface{}{
+      "name": "shoes",
+      "price": "59.99",
+    },
+    "products": []interface{}{},
+  },
+  Identifiers: map[string]string{
+    "id": "example1",
+  },
+}
+
+// (optional) upsert a particular device for the profile the push is being sent to.
+device, err := customerio.NewDevice("device-id", "android", map[string]interface{}{"optional_attr": "value"})
+if err != nil {
+  // handle error, invalid device params.
+}
+request.Device = device
+
+body, err := client.SendPush(context.Background(), &request)
 if err != nil {
   // handle error
 }

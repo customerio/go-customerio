@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"io"
-	"net/http"
 )
 
 type SendEmailRequest struct {
@@ -64,33 +62,12 @@ type SendEmailResponse struct {
 
 // SendEmail sends a single transactional email using the Customer.io transactional API
 func (c *APIClient) SendEmail(ctx context.Context, req *SendEmailRequest) (*SendEmailResponse, error) {
-	body, statusCode, err := c.doRequest(ctx, "POST", "/v1/send/email", req)
+	resp, err := c.sendTransactional(ctx, TransactionalTypeEmail, req)
 	if err != nil {
 		return nil, err
 	}
 
-	if statusCode != http.StatusOK {
-		var meta struct {
-			Meta struct {
-				Err string `json:"error"`
-			} `json:"meta"`
-		}
-		if err := json.Unmarshal(body, &meta); err != nil {
-			return nil, &TransactionalError{
-				StatusCode: statusCode,
-				Err:        string(body),
-			}
-		}
-		return nil, &TransactionalError{
-			StatusCode: statusCode,
-			Err:        meta.Meta.Err,
-		}
-	}
-
-	var result SendEmailResponse
-	if err := json.Unmarshal(body, &result); err != nil {
-		return nil, err
-	}
-
-	return &result, nil
+	return &SendEmailResponse{
+		*resp,
+	}, nil
 }

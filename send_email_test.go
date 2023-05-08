@@ -3,7 +3,6 @@ package customerio_test
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -28,31 +27,19 @@ func TestSendEmail(t *testing.T) {
 		},
 	}
 
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		b, err := ioutil.ReadAll(req.Body)
-		if err != nil {
-			t.Error(err)
-		}
-		defer req.Body.Close()
-
+	var verify = func(request []byte) {
 		var body customerio.SendEmailRequest
-		if err := json.Unmarshal(b, &body); err != nil {
+		if err := json.Unmarshal(request, &body); err != nil {
 			t.Error(err)
 		}
 
 		if !reflect.DeepEqual(&body, emailRequest) {
-			t.Errorf("Request differed, want: %#v, got: %#v", emailRequest, body)
+			t.Errorf("Request differed, want: %#v, got: %#v", request, body)
 		}
+	}
 
-		w.Write([]byte(`{
-			"delivery_id": "ABCDEFG",
-			"queued_at": 1500111111
-		  }`))
-	}))
+	api, srv := transactionalServer(t, verify)
 	defer srv.Close()
-
-	api := customerio.NewAPIClient("myKey")
-	api.URL = srv.URL
 
 	resp, err := api.SendEmail(context.Background(), emailRequest)
 	if err != nil {
@@ -61,8 +48,8 @@ func TestSendEmail(t *testing.T) {
 
 	expect := &customerio.SendEmailResponse{
 		TransactionalResponse: customerio.TransactionalResponse{
-			DeliveryID: "ABCDEFG",
-			QueuedAt:   time.Unix(1500111111, 0),
+			DeliveryID: testDeliveryID,
+			QueuedAt:   time.Unix(int64(testQueuedAt), 0),
 		},
 	}
 
