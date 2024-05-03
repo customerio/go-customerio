@@ -1,8 +1,7 @@
-<p align="center">
+<p align=center>
   <a href="https://customer.io">
-    <img src="https://user-images.githubusercontent.com/6409227/144680509-907ee093-d7ad-4a9c-b0a5-f640eeb060cd.png" height="60">
+    <img src="https://avatars.githubusercontent.com/u/1152079?s=200&v=4" height="60">
   </a>
-  <p align="center">Power automated communication that people like to receive.</p>
 </p>
 
 ![Latest release](https://img.shields.io/github/v/release/customerio/go-customerio)
@@ -12,9 +11,9 @@
 ![Go version](https://img.shields.io/github/go-mod/go-version/customerio/go-customerio)
 [![Go Doc](https://img.shields.io/badge/Go_Doc-reference-blue.svg)](https://pkg.go.dev/github.com/customerio/go-customerio/v3)
 
-# Customer.io Go 
+# Customer.io Journeys Go Client 
 
-A Go client library for interacting with the [Customer.io API](https://customer.io/docs/api/).
+A Go client library for the [Customer.io Journeys Track API](https://customer.io/docs/api/track). If you're new to Customer.io, we recommend that you integrate with our [Data Pipelines Go client](https://github.com/customerio/cdp-analytics-go) instead.
 
 ## Installation
 
