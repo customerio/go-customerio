@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: [  '1.15.x', '1.16.x', '1.17.x', 'tip' ]
+        go: [  '1.19.x', '1.20.x', '1.21.x', 'tip' ]
     name: Go ${{ matrix.go }} test
     steps:
       - uses: actions/checkout@v2
@@ -27,13 +27,4 @@ jobs:
       - name: Setup gotestsum
         run: |
           curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v0.6.0/gotestsum_0.6.0_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum
-      - run: go test -race -coverprofile=coverage.txt -covermode=atomic
-      - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v2
-        env:
-          GO_VERSION: ${{ matrix.go }}
-        with:
-          files: ./coverage.txt
-          env_vars: GO_VERSION
-          flags: unittests
-          fail_ci_if_error: true
+      - run: go test -race
