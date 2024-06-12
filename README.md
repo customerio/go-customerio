@@ -296,8 +296,8 @@ client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customeri
 
 // TransactionalMessageId — the ID of the transactional message you want to send.
 // To                     — the email address of your recipients.
-// Identifiers            — contains the id of your recipient. 
-//                          If the id does not exist, Customer.io creates it.
+// Identifiers            — contains the email and/or id of your recipient. 
+//                          If the person does not exist, Customer.io creates them.
 // MessageData            — contains properties that you want reference in your message using liquid.
 // Attach                 — a helper that encodes attachments to your message.
 
@@ -313,7 +313,7 @@ request := customerio.SendEmailRequest{
     "products": []interface{}{},
   },
   Identifiers: map[string]string{
-    "id": "example1",
+    "email": "person@example.com",
   },
 }
 
