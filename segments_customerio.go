@@ -28,7 +28,7 @@ func (c *CustomerIO) RemovePeopleFromSegment(ctx context.Context, segmentID int,
 	if len(ids) == 0 {
 		return ParamError{Param: "ids"}
 	}
-	return c.request(ctx, "DELETE",
+	return c.request(ctx, "POST",
 		fmt.Sprintf("%s/api/v1/segments/%d/remove_customers", c.URL, segmentID),
 		map[string]interface{}{
 			"ids": ids,

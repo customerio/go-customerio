@@ -89,9 +89,9 @@ func segmentsTrackServer(t *testing.T, verify func(request []byte)) (*customerio
 			w.WriteHeader(http.StatusOK)
 		case req.Method == "POST" && req.URL.Path == "/api/v1/segments/2/add_customers":
 			w.WriteHeader(http.StatusNotFound)
-		case req.Method == "DELETE" && req.URL.Path == "/api/v1/segments/1/remove_customers":
+		case req.Method == "POST" && req.URL.Path == "/api/v1/segments/1/remove_customers":
 			w.WriteHeader(http.StatusOK)
-		case req.Method == "DELETE" && req.URL.Path == "/api/v1/segments/2/remove_customers":
+		case req.Method == "POST" && req.URL.Path == "/api/v1/segments/2/remove_customers":
 			w.WriteHeader(http.StatusNotFound)
 		default:
 			t.Errorf("Unexpected request: %s %s", req.Method, req.URL.Path)
