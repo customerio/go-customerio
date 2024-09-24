@@ -190,7 +190,7 @@ type ListCustomersInSegmentResponse struct {
 // CustomerIdentifier represents the customer identifiers in a segment.
 type CustomerIdentifier struct {
 	Email string `json:"email"`  // Email of the customer.
-	ID    int    `json:"id"`     // Internal ID of the customer.
+	ID    string `json:"id"`     // Internal ID of the customer.
 	CioID string `json:"cio_id"` // Customer.io ID of the customer.
 }
 

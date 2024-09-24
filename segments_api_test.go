@@ -490,7 +490,7 @@ func TestListCustomersInSegment(t *testing.T) {
 		Identifiers: []customerio.CustomerIdentifier{
 			{
 				Email: "test@example.com",
-				ID:    2,
+				ID:    "test@example.com",
 				CioID: "a3000001",
 			},
 		},
@@ -597,7 +597,7 @@ func segmentsAppServer(t *testing.T, verify func(request []byte)) (*customerio.A
 				"identifiers": [
 					{
 						"email": "test@example.com",
-						"id": 2,
+						"id": "test@example.com",
 						"cio_id": "a3000001"
 					}
 				],
