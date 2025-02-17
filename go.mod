@@ -1,4 +1,4 @@
-module github.com/customerio/go-customerio/v3
+module github.com/jackhopner/go-customerio/v3
 
 go 1.17
 
