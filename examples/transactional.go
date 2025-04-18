@@ -14,7 +14,7 @@ func main() {
 
 	client := customerio.NewAPIClient("<your-key-here>", customerio.WithRegion(customerio.RegionUS))
 
-	req := customerio.SendEmailRequest{
+	emailReq := customerio.SendEmailRequest{
 		Identifiers: map[string]string{
 			"id": "customer_1",
 		},
@@ -34,14 +34,33 @@ func main() {
 	}
 	defer f.Close()
 
-	if err := req.Attach("sample.pdf", f); err != nil {
+	if err := emailReq.Attach("sample.pdf", f); err != nil {
 		panic(err)
 	}
 
-	resp, err := client.SendEmail(ctx, &req)
+	emailResp, err := client.SendEmail(ctx, &emailReq)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(resp)
+	fmt.Println(emailResp)
+
+	// Create and configure your transactional messages in the Customer.io UI.
+	transactionalMessageID := "push_message_id"
+
+	pushReq := customerio.SendPushRequest{
+		TransactionalMessageID: transactionalMessageID,
+		Identifiers: map[string]string{
+			"id": "customer_1",
+		},
+		Title:   "hello, {{ trigger.name }}",
+		Message: "hello from the Customer.io {{ trigger.client }} client",
+	}
+
+	pushResp, err := client.SendPush(ctx, &pushReq)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(pushResp)
 }

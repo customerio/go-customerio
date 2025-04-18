@@ -1,20 +1,18 @@
-<p align="center">
+<p align=center>
   <a href="https://customer.io">
-    <img src="https://user-images.githubusercontent.com/6409227/144680509-907ee093-d7ad-4a9c-b0a5-f640eeb060cd.png" height="60">
+    <img src="https://avatars.githubusercontent.com/u/1152079?s=200&v=4" height="60">
   </a>
-  <p align="center">Power automated communication that people like to receive.</p>
 </p>
 
 ![Latest release](https://img.shields.io/github/v/release/customerio/go-customerio)
 ![Software License](https://img.shields.io/github/license/customerio/go-customerio)
 [![CI status](https://github.com/customerio/go-customerio/actions/workflows/main.yml/badge.svg)](https://github.com/customerio/go-customerio/actions/workflows/main.yml)
-[![codecov](https://codecov.io/gh/customerio/go-customerio/branch/main/graph/badge.svg?token=D59CJnFVDV)](https://codecov.io/gh/customerio/go-customerio)
 ![Go version](https://img.shields.io/github/go-mod/go-version/customerio/go-customerio)
 [![Go Doc](https://img.shields.io/badge/Go_Doc-reference-blue.svg)](https://pkg.go.dev/github.com/customerio/go-customerio/v3)
 
-# Customer.io Go 
+# Customer.io Journeys Go Client 
 
-A Go client library for interacting with the [Customer.io API](https://customer.io/docs/api/).
+A Go client library for the [Customer.io Journeys Track API](https://customer.io/docs/api/track). If you're new to Customer.io, we recommend that you integrate with our [Data Pipelines Go client](https://github.com/customerio/cdp-analytics-go) instead.
 
 ## Installation
 
@@ -258,11 +256,11 @@ In order to send push notifications, we need customer device information.
 // platform (required)   - the platform of the device, currently only accepts 'ios' and 'android'
 // data (optional)       - a ```map[string]interface{}``` of information about the device. 
 //                         You can pass any key/value pairs that would be useful in your triggers. 
-//                         We currently only save 'last_used'.
 //                         Your interface{} should be parseable as Json by 'encoding/json'.Marshal
 
 if err := track.AddDevice("5", "messaging token", "android", map[string]interface{}{
 "last_used": time.Now().Unix(),
+"attribute_name": "attribute_value",
 }); err != nil {
   // handle error
 }
@@ -288,6 +286,7 @@ if err := track.DeleteDevice("5", "messaging-token"); err != nil {
 
 To use the Customer.io [Transactional API](https://customer.io/docs/transactional-api), create an instance of the API client using an [App API key](https://customer.io/docs/managing-credentials#app-api-keys).
 
+## Email
 Create a `customerio.SendEmailRequest` instance, and then use `(c *customerio.APIClient).SendEmail` to send your message. [Learn more about transactional messages and optional `SendEmailRequest` properties](https://customer.io/docs/transactional-api).
 
 You can also send attachments with your message. Use `customerio.SendEmailRequest.Attach` to encode attachments.
@@ -328,6 +327,42 @@ defer f.Close()
 request.Attach("receipt.pdf", f)
 
 body, err := client.SendEmail(context.Background(), &request)
+if err != nil {
+  // handle error
+}
+
+fmt.Println(body)
+```
+
+## Push
+Create a `customerio.SendPushRequest` instance, and then use `(c *customerio.APIClient).SendPush` to send your message. [Learn more about transactional messages and optional `SendPush` properties](https://customer.io/docs/transactional-api).
+
+```go
+client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customerio.RegionUS));
+
+request := customerio.SendPushRequest{
+  TransactionalMessageID: "3",
+  MessageData: map[string]interface{}{
+    "name": "Person",
+    "items": map[string]interface{}{
+      "name": "shoes",
+      "price": "59.99",
+    },
+    "products": []interface{}{},
+  },
+  Identifiers: map[string]string{
+    "id": "example1",
+  },
+}
+
+// (optional) upsert a particular device for the profile the push is being sent to.
+device, err := customerio.NewDevice("device-id", "android", map[string]interface{}{"optional_attr": "value"})
+if err != nil {
+  // handle error, invalid device params.
+}
+request.Device = device
+
+body, err := client.SendPush(context.Background(), &request)
 if err != nil {
   // handle error
 }
