@@ -14,11 +14,13 @@ type TransactionalType int
 const (
 	TransactionalTypeEmail = 0
 	TransactionalTypePush  = 1
+	TransactionalTypeSMS   = 2
 )
 
 var typeToApi = map[TransactionalType]string{
 	TransactionalTypeEmail: "email",
 	TransactionalTypePush:  "push",
+	TransactionalTypeSMS:   "sms",
 }
 
 var ErrInvalidTransactionalMessageType = errors.New("unknown transactional message type")
