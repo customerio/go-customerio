@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"net/http"
 )
@@ -32,12 +33,17 @@ func NewAPIClient(key string, opts ...option) *APIClient {
 }
 
 func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, body interface{}) ([]byte, int, error) {
-	b, err := json.Marshal(body)
-	if err != nil {
-		return nil, 0, err
+	var requestBody io.Reader
+
+	if body != nil {
+		b, err := json.Marshal(body)
+		if err != nil {
+			return nil, 0, err
+		}
+		requestBody = bytes.NewBuffer(b)
 	}
 
-	req, err := http.NewRequest(verb, c.URL+requestPath, bytes.NewBuffer(b))
+	req, err := http.NewRequest(verb, c.URL+requestPath, requestBody)
 	if err != nil {
 		return nil, 0, err
 	}

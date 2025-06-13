@@ -388,6 +388,11 @@ if err := track.TrackCtx(ctx, "5", "purchase", map[string]interface{}{
 }
 ```
 
+## Segments API
+
+We also provide a client for managing customer segments through the Segments API. For more details on how to use it, refer to the [Segments API README](./SEGMENTS.md).
+
+
 ## Contributing
 
 1. Fork it
