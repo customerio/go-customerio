@@ -12,6 +12,7 @@ import (
 
 func TestSendSMS(t *testing.T) {
 	req := &customerio.SendSMSRequest{
+		TransactionalMessageID: "123456",
 		Identifiers: map[string]string{
 			"id": "customer_1",
 		},

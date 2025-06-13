@@ -24,7 +24,7 @@ type SendSMSResponse struct {
 
 // SendPush sends a single transactional push using the Customer.io transactional API
 func (c *APIClient) SendSMS(ctx context.Context, req *SendSMSRequest) (*SendSMSResponse, error) {
-	resp, err := c.sendTransactional(ctx, TransactionalTypePush, req)
+	resp, err := c.sendTransactional(ctx, TransactionalTypeSMS, req)
 	if err != nil {
 		return nil, err
 	}
