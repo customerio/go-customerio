@@ -22,7 +22,7 @@ type CustomerIO struct {
 	apiKey    string
 	URL       string
 	UserAgent string
-	Client    *http.Client
+	Client    HTTPClient
 }
 
 // CustomerIOError is returned by any method that fails at the API level
