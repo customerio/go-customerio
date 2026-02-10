@@ -12,15 +12,17 @@ import (
 type TransactionalType int
 
 const (
-	TransactionalTypeEmail = 0
-	TransactionalTypePush  = 1
-	TransactionalTypeSMS   = 2
+	TransactionalTypeEmail        = 0
+	TransactionalTypePush         = 1
+	TransactionalTypeSMS          = 2
+	TransactionalTypeInboxMessage = 3
 )
 
 var typeToApi = map[TransactionalType]string{
-	TransactionalTypeEmail: "email",
-	TransactionalTypePush:  "push",
-	TransactionalTypeSMS:   "sms",
+	TransactionalTypeEmail:        "email",
+	TransactionalTypePush:         "push",
+	TransactionalTypeSMS:          "sms",
+	TransactionalTypeInboxMessage: "inbox_message",
 }
 
 var ErrInvalidTransactionalMessageType = errors.New("unknown transactional message type")
