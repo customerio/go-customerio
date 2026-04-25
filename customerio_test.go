@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -197,7 +197,7 @@ var (
 )
 
 func handler(w http.ResponseWriter, req *http.Request) {
-	b, err := ioutil.ReadAll(req.Body)
+	b, err := io.ReadAll(req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -253,7 +253,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			return err
 		}
-		if bytes.Compare(expected, got) != 0 {
+		if !bytes.Equal(expected, got) {
 			return fmt.Errorf("expected %v got %v", expected, got)
 		}
 		return nil

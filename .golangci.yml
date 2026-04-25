@@ -1,0 +1,15 @@
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - misspell
+    - staticcheck
+    - unused
+
+issues:
+  exclude-rules:
+    # errcheck on test files is noisy (e.g. w.Write return values in httptest handlers)
+    - path: _test\.go
+      linters:
+        - errcheck
