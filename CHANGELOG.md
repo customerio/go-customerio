@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.8.0]
+### Added
+- Add support for sending transactional in-app messages ([#55](https://github.com/customerio/go-customerio/pull/55))
+
 ## [v3.4.1](https://github.com/customerio/go-customerio/compare/v3.4.0...v3.4.1) (2022-05-19)
 ### Fixed
 - Resolved issue where some attachments were truncated due to not flushing all the data from the buffer.
