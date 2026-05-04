@@ -8,11 +8,15 @@ import (
 	"net/http"
 )
 
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 type APIClient struct {
 	Key       string
 	URL       string
 	UserAgent string
-	Client    *http.Client
+	Client    HTTPClient
 }
 
 // NewAPIClient prepares a client for use with the Customer.io API, see: https://customer.io/docs/api/#apicoreintroduction

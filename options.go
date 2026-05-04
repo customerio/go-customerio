@@ -1,7 +1,5 @@
 package customerio
 
-import "net/http"
-
 type option struct {
 	api   func(*APIClient)
 	track func(*CustomerIO)
@@ -34,7 +32,7 @@ func WithRegion(r region) option {
 	}
 }
 
-func WithHTTPClient(client *http.Client) option {
+func WithHTTPClient(client HTTPClient) option {
 	return option{
 		api: func(a *APIClient) {
 			a.Client = client
