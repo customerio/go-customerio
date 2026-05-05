@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/customerio/go-customerio/v3"
 )
@@ -135,6 +136,35 @@ func TestTrack(t *testing.T) {
 		})
 }
 
+func TestTrackWithOptions(t *testing.T) {
+	data := map[string]any{
+		"a": "1",
+	}
+	timestamp := time.Unix(1640995200, 0)
+
+	body := map[string]any{
+		"name":      "test",
+		"id":        "evt_123",
+		"timestamp": timestamp.Unix(),
+		"type":      customerio.TrackTypePage,
+		"data": map[string]any{
+			"a": "1",
+		},
+	}
+
+	expect("POST", "/api/v1/customers/1/events", body)
+	if err := cio.Track(
+		"1",
+		"test",
+		data,
+		customerio.WithEventID("evt_123"),
+		customerio.WithEventTimestamp(timestamp),
+		customerio.WithEventType(customerio.TrackTypePage),
+	); err != nil {
+		t.Error(err.Error())
+	}
+}
+
 func TestTrackAnonymous(t *testing.T) {
 	data := map[string]any{
 		"a": "1",
@@ -150,6 +180,36 @@ func TestTrackAnonymous(t *testing.T) {
 
 	expect("POST", "/api/v1/events", body)
 	if err := cio.TrackAnonymous("anon123", "test", data); err != nil {
+		t.Error(err.Error())
+	}
+}
+
+func TestTrackAnonymousWithOptions(t *testing.T) {
+	data := map[string]any{
+		"a": "1",
+	}
+	timestamp := time.Unix(1640995200, 0)
+
+	body := map[string]any{
+		"name":         "test",
+		"anonymous_id": "anon123",
+		"id":           "evt_123",
+		"timestamp":    timestamp.Unix(),
+		"type":         customerio.TrackTypeScreen,
+		"data": map[string]any{
+			"a": "1",
+		},
+	}
+
+	expect("POST", "/api/v1/events", body)
+	if err := cio.TrackAnonymous(
+		"anon123",
+		"test",
+		data,
+		customerio.WithEventID("evt_123"),
+		customerio.WithEventTimestamp(timestamp),
+		customerio.WithEventType(customerio.TrackTypeScreen),
+	); err != nil {
 		t.Error(err.Error())
 	}
 }

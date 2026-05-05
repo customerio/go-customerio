@@ -41,12 +41,10 @@ func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, bod
 		return nil, 0, err
 	}
 
-	req, err := http.NewRequest(verb, c.URL+requestPath, bytes.NewBuffer(b))
+	req, err := http.NewRequestWithContext(ctx, verb, c.URL+requestPath, bytes.NewBuffer(b))
 	if err != nil {
 		return nil, 0, err
 	}
-
-	req = req.WithContext(ctx)
 
 	req.Header.Set("Authorization", "Bearer "+c.Key)
 	req.Header.Set("Content-Type", "application/json")
