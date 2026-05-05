@@ -23,8 +23,19 @@ func TestAPIOptions(t *testing.T) {
 	if client.URL != customerio.RegionUS.APIURL() {
 		t.Errorf("wrong default url. got: %s, want: %s", client.URL, customerio.RegionUS.APIURL())
 	}
-	if client.Client != http.DefaultClient {
-		t.Errorf("wrong default http client. got: %#v, want: %#v", client.Client, http.DefaultClient)
+	defaultHTTPClient, ok := client.Client.(*http.Client)
+	if !ok {
+		t.Fatalf("expected default HTTP client to be *http.Client, got %T", client.Client)
+	}
+	if defaultHTTPClient.Timeout != customerio.DefaultHTTPTimeout {
+		t.Errorf("wrong default timeout. got: %s, want: %s", defaultHTTPClient.Timeout, customerio.DefaultHTTPTimeout)
+	}
+	defaultTransport, ok := defaultHTTPClient.Transport.(*http.Transport)
+	if !ok {
+		t.Fatalf("expected default transport to be *http.Transport, got %T", defaultHTTPClient.Transport)
+	}
+	if defaultTransport.MaxIdleConnsPerHost != 100 {
+		t.Errorf("wrong default max idle conns per host. got: %d, want: 100", defaultTransport.MaxIdleConnsPerHost)
 	}
 
 	client = customerio.NewAPIClient("mykey", customerio.WithRegion(customerio.RegionEU))
@@ -55,8 +66,8 @@ func TestTrackOptions(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected default HTTP client to be *http.Client, got %T", client.Client)
 	}
-	if defaultHTTPClient.Timeout != 0 {
-		t.Errorf("wrong default timeout. got: %s, want: 0s", defaultHTTPClient.Timeout)
+	if defaultHTTPClient.Timeout != customerio.DefaultHTTPTimeout {
+		t.Errorf("wrong default timeout. got: %s, want: %s", defaultHTTPClient.Timeout, customerio.DefaultHTTPTimeout)
 	}
 	defaultTransport, ok := defaultHTTPClient.Transport.(*http.Transport)
 	if !ok {
@@ -113,5 +124,8 @@ func TestTrackDefaultClientAcceptsInstrumentedDefaultTransport(t *testing.T) {
 	}
 	if defaultHTTPClient.Transport != rt {
 		t.Errorf("wrong default transport. got: %#v, want: %#v", defaultHTTPClient.Transport, rt)
+	}
+	if defaultHTTPClient.Timeout != customerio.DefaultHTTPTimeout {
+		t.Errorf("wrong default timeout. got: %s, want: %s", defaultHTTPClient.Timeout, customerio.DefaultHTTPTimeout)
 	}
 }

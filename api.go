@@ -24,7 +24,7 @@ type APIClient struct {
 func NewAPIClient(key string, opts ...Option) *APIClient {
 	client := &APIClient{
 		Key:       key,
-		Client:    http.DefaultClient,
+		Client:    newDefaultHTTPClient(),
 		URL:       "https://api.customer.io",
 		UserAgent: DefaultUserAgent,
 	}
