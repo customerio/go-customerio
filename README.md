@@ -381,6 +381,54 @@ if err != nil {
 fmt.Println(body)
 ```
 
+## Triggering API Broadcasts
+
+Use `(c *customerio.APIClient).TriggerBroadcast` to trigger a [broadcast campaign](https://customer.io/docs/api/#tag/Broadcasts) via the App API.
+
+### Segment-based broadcast
+
+Send to everyone who matches a segment:
+
+```go
+client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customerio.RegionUS))
+
+resp, err := client.TriggerBroadcast(
+  context.Background(),
+  campaignID,
+  map[string]interface{}{"name": "gopher"},
+  customerio.BroadcastRecipients{
+    Segment: map[string]interface{}{"id": 1},
+  },
+)
+if err != nil {
+  // handle error
+}
+fmt.Println(resp.ID)
+```
+
+### Direct recipient broadcast
+
+Send directly to a list of email addresses or customer IDs:
+
+```go
+ignore := true
+resp, err := client.TriggerBroadcast(
+  context.Background(),
+  campaignID,
+  map[string]interface{}{"name": "gopher"},
+  customerio.BroadcastRecipients{
+    Emails:             []string{"user@example.com"},
+    EmailIgnoreMissing: &ignore,
+  },
+)
+if err != nil {
+  // handle error
+}
+fmt.Println(resp.ID)
+```
+
+You can also use `Ids`, `PerUserData`, or `DataFileURL` as the direct recipient field. When a direct field is set, only its allowed companion options (`IDIgnoreMissing`, `EmailIgnoreMissing`, `EmailAddDuplicates`) are included in the request — extra options are dropped to match API expectations.
+
 ## Context Support
 There are additional API methods that support passing a context that satisfies the `context.Context` interface to allow better control over dispatched requests. For example with sending an event:
 ```go
