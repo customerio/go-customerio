@@ -127,7 +127,7 @@ Your account region (`customerio.RegionUS` or `customerio.RegionEU`) is optional
 
 If your account is based in the EU and you do not provide the correct region, we'll route requests from the US to `customerio.RegionEU` accordingly, however this may cause data to be logged in the US.
 
-By default, clients use a 30 second HTTP timeout. To use a different timeout, transport, or proxy policy, pass your own `*http.Client` with `customerio.WithHTTPClient`.
+To use a custom timeout, transport, or proxy policy, pass your own `*http.Client` with `customerio.WithHTTPClient`.
 
 ### Identify logged in customers
 

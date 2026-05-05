@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+### Changed
+- `Device` now exposes a `Token` field for transactional push custom-device payloads to match the `token` JSON field.
+
+### Fixed
+- Preserved existing default HTTP behavior: API clients use `http.DefaultClient`, track clients do not set a default timeout, and Basic auth continues to use the previous URL-safe base64 encoding.
+- Made the default track transport safe when `http.DefaultTransport` is replaced by instrumentation.
+- Hardened client options and region selection against nil options and mutable package-level region values.
+
 ## [v3.8.0]
 ### Added
 - Add support for sending transactional in-app messages ([#55](https://github.com/customerio/go-customerio/pull/55))

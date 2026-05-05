@@ -15,7 +15,7 @@ type deviceV1 struct {
 
 // Device identifies a push notification device for transactional sends.
 type Device struct {
-	ID         string         `json:"token"`
+	Token      string         `json:"token"`
 	Platform   string         `json:"platform"`
 	LastUsed   string         `json:"last_used,omitempty"`
 	Attributes map[string]any `json:"attributes"`
@@ -55,7 +55,7 @@ func NewDevice(deviceID, platform string, data map[string]any) (*Device, error) 
 		return nil, err
 	}
 	return &Device{
-		ID:         d.ID,
+		Token:      d.ID,
 		Platform:   d.Platform,
 		Attributes: d.Attributes,
 		LastUsed:   d.LastUsed,

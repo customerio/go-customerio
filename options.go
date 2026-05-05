@@ -3,43 +3,65 @@ package customerio
 import "time"
 
 // Option configures Customer.io API and Track clients.
-type Option struct {
+type Option interface {
+	applyAPI(*APIClient)
+	applyTrack(*CustomerIO)
+}
+
+type option struct {
 	api   func(*APIClient)
 	track func(*CustomerIO)
 }
 
-// Region configures the Customer.io API endpoints for a workspace region.
-type Region struct {
-	ApiURL   string
-	TrackURL string
+func (o option) applyAPI(a *APIClient) {
+	if o.api != nil {
+		o.api(a)
+	}
 }
 
-var (
+func (o option) applyTrack(c *CustomerIO) {
+	if o.track != nil {
+		o.track(c)
+	}
+}
+
+// Region configures the Customer.io API endpoints for a workspace region.
+type Region string
+
+const (
 	// RegionUS configures clients for Customer.io US endpoints.
-	RegionUS = Region{
-		ApiURL:   "https://api.customer.io",
-		TrackURL: "https://track.customer.io",
-	}
+	RegionUS Region = "us"
 	// RegionEU configures clients for Customer.io EU endpoints.
-	RegionEU = Region{
-		ApiURL:   "https://api-eu.customer.io",
-		TrackURL: "https://track-eu.customer.io",
-	}
+	RegionEU Region = "eu"
 )
 
+func (r Region) APIURL() string {
+	if r == RegionEU {
+		return "https://api-eu.customer.io"
+	}
+	return "https://api.customer.io"
+}
+
+func (r Region) TrackURL() string {
+	if r == RegionEU {
+		return "https://track-eu.customer.io"
+	}
+	return "https://track.customer.io"
+}
+
 func WithRegion(r Region) Option {
-	return Option{
+	return option{
 		api: func(a *APIClient) {
-			a.URL = r.ApiURL
+			a.URL = r.APIURL()
 		},
 		track: func(c *CustomerIO) {
-			c.URL = r.TrackURL
+			c.URL = r.TrackURL()
 		},
 	}
 }
 
 func WithHTTPClient(client HTTPClient) Option {
-	return Option{
+	return option{
 		api: func(a *APIClient) {
 			a.Client = client
 		},
@@ -50,7 +72,7 @@ func WithHTTPClient(client HTTPClient) Option {
 }
 
 func WithUserAgent(ua string) Option {
-	return Option{
+	return option{
 		api: func(a *APIClient) {
 			a.UserAgent = ua
 		},

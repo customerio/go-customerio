@@ -86,10 +86,10 @@ func TestIdentify(t *testing.T) {
 		})
 }
 
-func TestBasicAuthUsesStandardBase64(t *testing.T) {
+func TestBasicAuthUsesURLSafeBase64(t *testing.T) {
 	siteID := "~~~"
 	apiKey := "~~~"
-	expectedAuth := "Basic " + base64.StdEncoding.EncodeToString([]byte(siteID+":"+apiKey))
+	expectedAuth := "Basic " + base64.URLEncoding.EncodeToString([]byte(siteID+":"+apiKey))
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if got := req.Header.Get("Authorization"); got != expectedAuth {
@@ -184,6 +184,24 @@ func TestTrackAnonymous(t *testing.T) {
 	}
 }
 
+func TestTrackAnonymousAllowsEmptyAnonymousID(t *testing.T) {
+	data := map[string]any{
+		"a": "1",
+	}
+
+	body := map[string]any{
+		"name": "test",
+		"data": map[string]any{
+			"a": "1",
+		},
+	}
+
+	expect("POST", "/api/v1/events", body)
+	if err := cio.TrackAnonymous("", "test", data); err != nil {
+		t.Error(err.Error())
+	}
+}
+
 func TestTrackAnonymousWithOptions(t *testing.T) {
 	data := map[string]any{
 		"a": "1",
@@ -247,6 +265,25 @@ func TestDeleteCtxUsesRequestContext(t *testing.T) {
 	}
 }
 
+func TestTrackCtxUsesRequestContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	client := customerio.NewTrackClient("siteid", "apikey", customerio.WithHTTPClient(httpClientFunc(func(req *http.Request) (*http.Response, error) {
+		if err := req.Context().Err(); err != context.Canceled {
+			t.Errorf("expected canceled request context, got %v", err)
+		}
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader("")),
+		}, nil
+	})))
+
+	if err := client.TrackCtx(ctx, "1", "purchase", nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCustomerIOErrorAccessors(t *testing.T) {
 	const responseBody = "rate limited"
 
@@ -272,6 +309,9 @@ func TestCustomerIOErrorAccessors(t *testing.T) {
 	if apiErr.URL() != srv.URL+"/api/v1/customers/1/events" {
 		t.Errorf("unexpected url: %s", apiErr.URL())
 	}
+	if apiErr.Error() != fmt.Sprintf("%d: %s %s", http.StatusTooManyRequests, srv.URL+"/api/v1/customers/1/events", responseBody) {
+		t.Errorf("unexpected error string: %s", apiErr.Error())
+	}
 	body := apiErr.Body()
 	if string(body) != responseBody {
 		t.Errorf("expected body %q got %q", responseBody, string(body))
@@ -279,6 +319,29 @@ func TestCustomerIOErrorAccessors(t *testing.T) {
 	body[0] = 'R'
 	if string(apiErr.Body()) != responseBody {
 		t.Error("Body should return a copy")
+	}
+}
+
+func TestNewDeviceMarshalsToken(t *testing.T) {
+	device, err := customerio.NewDevice("device-id", "ios", map[string]any{"attr1": "value1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	b, err := json.Marshal(device)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(b, &payload); err != nil {
+		t.Fatal(err)
+	}
+	if payload["token"] != "device-id" {
+		t.Errorf("expected token to be device-id, got %v", payload["token"])
+	}
+	if _, ok := payload["id"]; ok {
+		t.Errorf("device payload should use token, got id in %s", b)
 	}
 }
 
@@ -357,7 +420,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	decoded, err := base64.StdEncoding.DecodeString(s[1])
+	decoded, err := base64.URLEncoding.DecodeString(s[1])
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -367,7 +430,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	if pair[0] != "siteid" && pair[1] != "apikey" {
+	if pair[0] != "siteid" || pair[1] != "apikey" {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -416,6 +479,38 @@ func expect(method, path string, body any) {
 	expectedMethod = method
 	expectedPath = path
 	expectedBody = body
+}
+
+func TestHandlerRejectsMismatchedBasicAuth(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		siteID string
+		apiKey string
+	}{
+		{
+			name:   "wrong site id",
+			siteID: "wrong",
+			apiKey: "apikey",
+		},
+		{
+			name:   "wrong api key",
+			siteID: "siteid",
+			apiKey: "wrong",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPut, "/api/v1/customers/1", strings.NewReader(`{"a":"1"}`))
+			req.Header.Set("Authorization", "Basic "+base64.URLEncoding.EncodeToString([]byte(tc.siteID+":"+tc.apiKey)))
+			req.Header.Set("Content-Type", "application/json")
+
+			rec := httptest.NewRecorder()
+			handler(rec, req)
+
+			if rec.Code != http.StatusUnauthorized {
+				t.Errorf("expected status %d got %d", http.StatusUnauthorized, rec.Code)
+			}
+		})
+	}
 }
 
 func TestMergeCustomers(t *testing.T) {

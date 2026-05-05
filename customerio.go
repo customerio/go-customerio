@@ -72,7 +72,10 @@ func NewTrackClient(siteID, apiKey string, opts ...Option) *CustomerIO {
 	}
 
 	for _, opt := range opts {
-		opt.track(c)
+		if opt == nil {
+			continue
+		}
+		opt.applyTrack(c)
 	}
 
 	return c
@@ -149,7 +152,7 @@ func (c *CustomerIO) DeleteCtx(ctx context.Context, customerID string) error {
 }
 
 func (c *CustomerIO) auth() string {
-	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v:%v", c.siteID, c.apiKey)))
+	return base64.URLEncoding.EncodeToString(fmt.Appendf(nil, "%v:%v", c.siteID, c.apiKey))
 }
 
 func (c *CustomerIO) request(ctx context.Context, method, url string, body any) error {
