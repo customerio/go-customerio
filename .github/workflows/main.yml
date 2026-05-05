@@ -1,22 +1,39 @@
 name: ci
 
-on: [ push ]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   test:
+    name: Go ${{ matrix.go }} test
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        go: [ '1.21.x', '1.22.x', '1.23.x', '1.24.x', 'stable' ]
-    name: Go ${{ matrix.go }} test
+        go: ["1.21.x", "1.22.x", "1.23.x", "1.24.x", "stable"]
     steps:
       - uses: actions/checkout@v4
-      - name: Install stable Go
-        uses: actions/setup-go@v5.5.0
+      - uses: actions/setup-go@v5.5.0
         with:
           go-version: ${{ matrix.go }}
+          cache: true
       - run: go version
-      - name: Setup gotestsum
-        run: |
-          curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v1.12.2/gotestsum_1.12.2_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum
-      - run: go test -race
+      - run: go test -race ./...
+      - run: go test -coverprofile=coverage.out ./...
+
+  govulncheck:
+    name: govulncheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5.5.0
+        with:
+          go-version: stable
+          cache: true
+      - run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - run: govulncheck ./...
