@@ -212,6 +212,17 @@ if err := track.Track("5", "purchase", map[string]interface{}{
 }
 ```
 
+Use event options when you need to set top-level event fields like `id`, `timestamp`, or `type`.
+
+```go
+if err := track.Track("5", "purchase", map[string]interface{}{
+    "type": "socks",
+    "price": "13.99",
+}, customerio.WithEventTimestamp(time.Now()), customerio.WithEventID("evt_123")); err != nil {
+  // handle error
+}
+```
+
 ### Tracking an anonymous event
 
 You can also send anonymous events representing people you haven't identified. An anonymous event requires an `anonymous_id` representing the unknown person and an event `name`. When you identify a person, you can set their `anonymous_id` attribute. If [event merging](https://customer.io/docs/anonymous-events/#turn-on-merging) is turned on in your workspace, and the attribute matches the `anonymous_id` in one or more events that were logged within the last 30 days, we associate those events with the person.

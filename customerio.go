@@ -88,7 +88,7 @@ func (c *CustomerIO) Identify(customerID string, attributes map[string]interface
 }
 
 // TrackCtx sends a single event to Customer.io for the supplied user
-func (c *CustomerIO) TrackCtx(ctx context.Context, customerID string, eventName string, data map[string]interface{}) error {
+func (c *CustomerIO) TrackCtx(ctx context.Context, customerID string, eventName string, data map[string]interface{}, opts ...TrackOption) error {
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
@@ -97,27 +97,21 @@ func (c *CustomerIO) TrackCtx(ctx context.Context, customerID string, eventName 
 	}
 	return c.request(ctx, "POST",
 		fmt.Sprintf("%s/api/v1/customers/%s/events", c.URL, url.PathEscape(customerID)),
-		map[string]interface{}{
-			"name": eventName,
-			"data": data,
-		})
+		trackPayload(eventName, data, opts...))
 }
 
 // Track sends a single event to Customer.io for the supplied user
-func (c *CustomerIO) Track(customerID string, eventName string, data map[string]interface{}) error {
-	return c.TrackCtx(context.Background(), customerID, eventName, data)
+func (c *CustomerIO) Track(customerID string, eventName string, data map[string]interface{}, opts ...TrackOption) error {
+	return c.TrackCtx(context.Background(), customerID, eventName, data, opts...)
 }
 
 // TrackAnonymousCtx sends a single event to Customer.io for the anonymous user
-func (c *CustomerIO) TrackAnonymousCtx(ctx context.Context, anonymousID, eventName string, data map[string]interface{}) error {
+func (c *CustomerIO) TrackAnonymousCtx(ctx context.Context, anonymousID, eventName string, data map[string]interface{}, opts ...TrackOption) error {
 	if eventName == "" {
 		return ParamError{Param: "eventName"}
 	}
 
-	payload := map[string]interface{}{
-		"name": eventName,
-		"data": data,
-	}
+	payload := trackPayload(eventName, data, opts...)
 
 	if anonymousID != "" {
 		payload["anonymous_id"] = anonymousID
@@ -127,8 +121,8 @@ func (c *CustomerIO) TrackAnonymousCtx(ctx context.Context, anonymousID, eventNa
 }
 
 // TrackAnonymous sends a single event to Customer.io for the anonymous user
-func (c *CustomerIO) TrackAnonymous(anonymousID, eventName string, data map[string]interface{}) error {
-	return c.TrackAnonymousCtx(context.Background(), anonymousID, eventName, data)
+func (c *CustomerIO) TrackAnonymous(anonymousID, eventName string, data map[string]interface{}, opts ...TrackOption) error {
+	return c.TrackAnonymousCtx(context.Background(), anonymousID, eventName, data, opts...)
 }
 
 // DeleteCtx deletes a customer
