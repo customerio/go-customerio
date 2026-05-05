@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -40,7 +39,7 @@ type testCase struct {
 	id     string
 	method string
 	path   string
-	body   interface{}
+	body   any
 }
 
 func runCases(t *testing.T, cases []testCase, do func(c testCase) error) {
@@ -68,7 +67,7 @@ func checkParamError(t *testing.T, err error, param string) {
 }
 
 func TestIdentify(t *testing.T) {
-	attributes := map[string]interface{}{
+	attributes := map[string]any{
 		"a": "1",
 	}
 	err := cio.Identify("", attributes)
@@ -103,19 +102,19 @@ func TestBasicAuthUsesStandardBase64(t *testing.T) {
 	client := customerio.NewTrackClient(siteID, apiKey)
 	client.URL = srv.URL
 
-	if err := client.Identify("1", map[string]interface{}{"a": "1"}); err != nil {
+	if err := client.Identify("1", map[string]any{"a": "1"}); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestTrack(t *testing.T) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"a": "1",
 	}
 
-	body := map[string]interface{}{
+	body := map[string]any{
 		"name": "test",
-		"data": map[string]interface{}{
+		"data": map[string]any{
 			"a": "1",
 		},
 	}
@@ -136,14 +135,14 @@ func TestTrack(t *testing.T) {
 }
 
 func TestTrackAnonymous(t *testing.T) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"a": "1",
 	}
 
-	body := map[string]interface{}{
+	body := map[string]any{
 		"name":         "test",
 		"anonymous_id": "anon123",
-		"data": map[string]interface{}{
+		"data": map[string]any{
 			"a": "1",
 		},
 	}
@@ -195,7 +194,7 @@ func TestAddDevice(t *testing.T) {
 	err = cio.AddDevice("1", "d1", "", nil)
 	checkParamError(t, err, "platform")
 
-	body := map[string]map[string]interface{}{
+	body := map[string]map[string]any{
 		"device": {
 			"id":        "d1",
 			"platform":  "ios",
@@ -209,7 +208,7 @@ func TestAddDevice(t *testing.T) {
 			{"1/", "PUT", "/api/v1/customers/1%2F/devices", body},
 		},
 		func(c testCase) error {
-			return cio.AddDevice(c.id, "d1", "ios", map[string]interface{}{
+			return cio.AddDevice(c.id, "d1", "ios", map[string]any{
 				"last_used": 1606511962,
 			})
 		})
@@ -243,11 +242,11 @@ func TestDeleteDevice(t *testing.T) {
 var (
 	expectedMethod string
 	expectedPath   string
-	expectedBody   interface{}
+	expectedBody   any
 )
 
 func handler(w http.ResponseWriter, req *http.Request) {
-	b, err := ioutil.ReadAll(req.Body)
+	b, err := io.ReadAll(req.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -281,7 +280,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "expected Content-Type application/json", http.StatusBadRequest)
 	}
 
-	var data map[string]interface{}
+	var data map[string]any
 	if len(b) > 0 {
 		dec := json.NewDecoder(bytes.NewReader(b))
 		dec.UseNumber()
@@ -290,7 +289,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	validate := func(method, path string, body interface{}) error {
+	validate := func(method, path string, body any) error {
 		if method != expectedMethod {
 			return fmt.Errorf("expected %s got %s", expectedMethod, method)
 		}
@@ -317,7 +316,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func expect(method, path string, body interface{}) {
+func expect(method, path string, body any) {
 	expectedMethod = method
 	expectedPath = path
 	expectedBody = body

@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -68,7 +68,7 @@ func NewCustomerIO(siteID, apiKey string) *CustomerIO {
 }
 
 // IdentifyCtx identifies a customer and sets their attributes
-func (c *CustomerIO) IdentifyCtx(ctx context.Context, customerID string, attributes map[string]interface{}) error {
+func (c *CustomerIO) IdentifyCtx(ctx context.Context, customerID string, attributes map[string]any) error {
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
@@ -78,12 +78,12 @@ func (c *CustomerIO) IdentifyCtx(ctx context.Context, customerID string, attribu
 }
 
 // Identify identifies a customer and sets their attributes
-func (c *CustomerIO) Identify(customerID string, attributes map[string]interface{}) error {
+func (c *CustomerIO) Identify(customerID string, attributes map[string]any) error {
 	return c.IdentifyCtx(context.Background(), customerID, attributes)
 }
 
 // TrackCtx sends a single event to Customer.io for the supplied user
-func (c *CustomerIO) TrackCtx(ctx context.Context, customerID string, eventName string, data map[string]interface{}) error {
+func (c *CustomerIO) TrackCtx(ctx context.Context, customerID string, eventName string, data map[string]any) error {
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
@@ -92,24 +92,24 @@ func (c *CustomerIO) TrackCtx(ctx context.Context, customerID string, eventName 
 	}
 	return c.request(ctx, "POST",
 		fmt.Sprintf("%s/api/v1/customers/%s/events", c.URL, url.PathEscape(customerID)),
-		map[string]interface{}{
+		map[string]any{
 			"name": eventName,
 			"data": data,
 		})
 }
 
 // Track sends a single event to Customer.io for the supplied user
-func (c *CustomerIO) Track(customerID string, eventName string, data map[string]interface{}) error {
+func (c *CustomerIO) Track(customerID string, eventName string, data map[string]any) error {
 	return c.TrackCtx(context.Background(), customerID, eventName, data)
 }
 
 // TrackAnonymousCtx sends a single event to Customer.io for the anonymous user
-func (c *CustomerIO) TrackAnonymousCtx(ctx context.Context, anonymousID, eventName string, data map[string]interface{}) error {
+func (c *CustomerIO) TrackAnonymousCtx(ctx context.Context, anonymousID, eventName string, data map[string]any) error {
 	if eventName == "" {
 		return ParamError{Param: "eventName"}
 	}
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"name": eventName,
 		"data": data,
 	}
@@ -122,7 +122,7 @@ func (c *CustomerIO) TrackAnonymousCtx(ctx context.Context, anonymousID, eventNa
 }
 
 // TrackAnonymous sends a single event to Customer.io for the anonymous user
-func (c *CustomerIO) TrackAnonymous(anonymousID, eventName string, data map[string]interface{}) error {
+func (c *CustomerIO) TrackAnonymous(anonymousID, eventName string, data map[string]any) error {
 	return c.TrackAnonymousCtx(context.Background(), anonymousID, eventName, data)
 }
 
@@ -140,7 +140,7 @@ func (c *CustomerIO) auth() string {
 	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v:%v", c.siteID, c.apiKey)))
 }
 
-func (c *CustomerIO) request(ctx context.Context, method, url string, body interface{}) error {
+func (c *CustomerIO) request(ctx context.Context, method, url string, body any) error {
 	var req *http.Request
 	if body != nil {
 		j, err := json.Marshal(body)
@@ -174,7 +174,7 @@ func (c *CustomerIO) request(ctx context.Context, method, url string, body inter
 		_ = resp.Body.Close()
 	}()
 
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func (c *CustomerIO) MergeCustomersCtx(ctx context.Context, primary Identifier, 
 
 	return c.request(ctx, "POST",
 		fmt.Sprintf("%s/api/v1/merge_customers", c.URL),
-		map[string]interface{}{
+		map[string]any{
 			"primary":   primary.kv(),
 			"secondary": secondary.kv(),
 		})

@@ -18,7 +18,7 @@ func TestSendSMS(t *testing.T) {
 		},
 		To:   "+12345678900",
 		From: "+18007654321",
-		MessageData: map[string]interface{}{
+		MessageData: map[string]any{
 			"token": "123456",
 		},
 		DisableMessageRetention: &[]bool{true}[0],

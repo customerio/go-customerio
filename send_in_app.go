@@ -5,13 +5,13 @@ import (
 )
 
 type SendInAppRequest struct {
-	MessageData             map[string]interface{} `json:"message_data,omitempty"`
-	TransactionalMessageID  string                 `json:"transactional_message_id,omitempty"`
-	Identifiers             map[string]string      `json:"identifiers"`
-	DisableMessageRetention *bool                  `json:"disable_message_retention,omitempty"`
-	QueueDraft              *bool                  `json:"queue_draft,omitempty"`
-	SendAt                  *int64                 `json:"send_at,omitempty"`
-	Language                *string                `json:"language,omitempty"`
+	MessageData             map[string]any    `json:"message_data,omitempty"`
+	TransactionalMessageID  string            `json:"transactional_message_id,omitempty"`
+	Identifiers             map[string]string `json:"identifiers"`
+	DisableMessageRetention *bool             `json:"disable_message_retention,omitempty"`
+	QueueDraft              *bool             `json:"queue_draft,omitempty"`
+	SendAt                  *int64            `json:"send_at,omitempty"`
+	Language                *string           `json:"language,omitempty"`
 }
 
 type SendInAppResponse struct {

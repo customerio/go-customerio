@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -35,7 +35,7 @@ func NewAPIClient(key string, opts ...option) *APIClient {
 	return client
 }
 
-func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, body interface{}) ([]byte, int, error) {
+func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, body any) ([]byte, int, error) {
 	b, err := json.Marshal(body)
 	if err != nil {
 		return nil, 0, err
@@ -60,7 +60,7 @@ func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, bod
 		_ = resp.Body.Close()
 	}()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, 0, err
 	}

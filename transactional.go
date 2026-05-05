@@ -29,7 +29,7 @@ var typeToApi = map[TransactionalType]string{
 
 var ErrInvalidTransactionalMessageType = errors.New("unknown transactional message type")
 
-func (c *APIClient) sendTransactional(ctx context.Context, typ TransactionalType, req interface{}) (*TransactionalResponse, error) {
+func (c *APIClient) sendTransactional(ctx context.Context, typ TransactionalType, req any) (*TransactionalResponse, error) {
 	api, ok := typeToApi[typ]
 	if !ok {
 		return nil, ErrInvalidTransactionalMessageType

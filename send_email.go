@@ -9,28 +9,28 @@ import (
 )
 
 type SendEmailRequest struct {
-	MessageData             map[string]interface{} `json:"message_data,omitempty"`
-	TransactionalMessageID  string                 `json:"transactional_message_id,omitempty"`
-	Identifiers             map[string]string      `json:"identifiers"`
-	Headers                 map[string]string      `json:"headers,omitempty"`
-	From                    string                 `json:"from,omitempty"`
-	To                      string                 `json:"to,omitempty"`
-	ReplyTo                 string                 `json:"reply_to,omitempty"`
-	BCC                     string                 `json:"bcc,omitempty"`
-	Subject                 string                 `json:"subject,omitempty"`
-	Preheader               string                 `json:"preheader,omitempty"`
-	Body                    string                 `json:"body,omitempty"`
-	PlaintextBody           string                 `json:"body_plain,omitempty"`
-	AMPBody                 string                 `json:"body_amp,omitempty"`
-	FakeBCC                 *bool                  `json:"fake_bcc,omitempty"`
-	Attachments             map[string]string      `json:"attachments,omitempty"`
-	DisableMessageRetention *bool                  `json:"disable_message_retention,omitempty"`
-	SendToUnsubscribed      *bool                  `json:"send_to_unsubscribed,omitempty"`
-	EnableTracking          *bool                  `json:"tracked,omitempty"`
-	QueueDraft              *bool                  `json:"queue_draft,omitempty"`
-	DisableCSSPreprocessing *bool                  `json:"disable_css_preprocessing,omitempty"`
-	SendAt                  *int64                 `json:"send_at,omitempty"`
-	Language                *string                `json:"language,omitempty"`
+	MessageData             map[string]any    `json:"message_data,omitempty"`
+	TransactionalMessageID  string            `json:"transactional_message_id,omitempty"`
+	Identifiers             map[string]string `json:"identifiers"`
+	Headers                 map[string]string `json:"headers,omitempty"`
+	From                    string            `json:"from,omitempty"`
+	To                      string            `json:"to,omitempty"`
+	ReplyTo                 string            `json:"reply_to,omitempty"`
+	BCC                     string            `json:"bcc,omitempty"`
+	Subject                 string            `json:"subject,omitempty"`
+	Preheader               string            `json:"preheader,omitempty"`
+	Body                    string            `json:"body,omitempty"`
+	PlaintextBody           string            `json:"body_plain,omitempty"`
+	AMPBody                 string            `json:"body_amp,omitempty"`
+	FakeBCC                 *bool             `json:"fake_bcc,omitempty"`
+	Attachments             map[string]string `json:"attachments,omitempty"`
+	DisableMessageRetention *bool             `json:"disable_message_retention,omitempty"`
+	SendToUnsubscribed      *bool             `json:"send_to_unsubscribed,omitempty"`
+	EnableTracking          *bool             `json:"tracked,omitempty"`
+	QueueDraft              *bool             `json:"queue_draft,omitempty"`
+	DisableCSSPreprocessing *bool             `json:"disable_css_preprocessing,omitempty"`
+	SendAt                  *int64            `json:"send_at,omitempty"`
+	Language                *string           `json:"language,omitempty"`
 }
 
 var ErrAttachmentExists = errors.New("attachment with this name already exists")

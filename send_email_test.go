@@ -21,7 +21,7 @@ func TestSendEmail(t *testing.T) {
 		From:    "business@example.com",
 		Subject: "hello, {{ trigger.name }}",
 		Body:    "hello from the Customer.io {{ trigger.client }} client",
-		MessageData: map[string]interface{}{
+		MessageData: map[string]any{
 			"client": "Go",
 			"name":   "gopher",
 		},
@@ -75,7 +75,7 @@ func TestSendEmailError(t *testing.T) {
 		From:    "business@example.com",
 		Subject: "hello, {{ trigger.name }}",
 		Body:    "hello from the Customer.io {{ trigger.client }} client",
-		MessageData: map[string]interface{}{
+		MessageData: map[string]any{
 			"client": "Go",
 			"name":   "gopher",
 		},
