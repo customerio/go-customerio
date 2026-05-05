@@ -170,7 +170,9 @@ func (c *CustomerIO) request(ctx context.Context, method, url string, body inter
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -208,9 +210,9 @@ func (id Identifier) kv() map[string]string {
 }
 
 func (id Identifier) validate() error {
-	if !(id.Type == IdentifierTypeID ||
-		id.Type == IdentifierTypeEmail ||
-		id.Type == IdentifierTypeCioID) {
+	if id.Type != IdentifierTypeID &&
+		id.Type != IdentifierTypeEmail &&
+		id.Type != IdentifierTypeCioID {
 		return errors.New("invalid id type")
 	}
 

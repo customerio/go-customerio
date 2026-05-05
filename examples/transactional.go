@@ -32,7 +32,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	if err := emailReq.Attach("sample.pdf", f); err != nil {
 		panic(err)

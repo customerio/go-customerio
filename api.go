@@ -56,7 +56,9 @@ func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, bod
 	if err != nil {
 		return nil, 0, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

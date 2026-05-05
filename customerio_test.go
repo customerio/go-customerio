@@ -252,7 +252,9 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer req.Body.Close()
+	defer func() {
+		_ = req.Body.Close()
+	}()
 
 	s := strings.SplitN(req.Header.Get("Authorization"), " ", 2)
 	if len(s) != 2 || s[0] != "Basic" {
@@ -303,7 +305,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			return err
 		}
-		if bytes.Compare(expected, got) != 0 {
+		if !bytes.Equal(expected, got) {
 			return fmt.Errorf("expected %v got %v", expected, got)
 		}
 		return nil
@@ -365,7 +367,8 @@ func TestMergeCustomers(t *testing.T) {
 			{"3", "POST", "/api/v1/merge_customers", `{"primary":{"cio_id":"CIO123"},"secondary":{"id":"person1"}}`},
 		},
 		func(c testCase) error {
-			if c.id == "1" {
+			switch c.id {
+			case "1":
 				return cio.MergeCustomers(customerio.Identifier{
 					Type:  "email",
 					Value: "cool.person@company.com",
@@ -373,7 +376,7 @@ func TestMergeCustomers(t *testing.T) {
 					Type:  "email",
 					Value: "cperson@gmail.com",
 				})
-			} else if c.id == "2" {
+			case "2":
 				return cio.MergeCustomers(customerio.Identifier{
 					Type:  "id",
 					Value: "cool.person@company.com",
@@ -381,7 +384,7 @@ func TestMergeCustomers(t *testing.T) {
 					Type:  "cio_id",
 					Value: "person2",
 				})
-			} else {
+			default:
 				return cio.MergeCustomers(customerio.Identifier{
 					Type:  customerio.IdentifierTypeCioID,
 					Value: "CIO123",
