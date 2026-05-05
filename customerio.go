@@ -142,7 +142,7 @@ func (c *CustomerIO) DeleteCtx(ctx context.Context, customerID string) error {
 }
 
 func (c *CustomerIO) auth() string {
-	return base64.URLEncoding.EncodeToString([]byte(fmt.Sprintf("%v:%v", c.siteID, c.apiKey)))
+	return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v:%v", c.siteID, c.apiKey)))
 }
 
 func (c *CustomerIO) request(ctx context.Context, method, url string, body interface{}) error {

@@ -77,6 +77,29 @@ func TestIdentify(t *testing.T) {
 		})
 }
 
+func TestBasicAuthUsesStandardBase64(t *testing.T) {
+	siteID := "~~~"
+	apiKey := "~~~"
+	expectedAuth := "Basic " + base64.StdEncoding.EncodeToString([]byte(siteID+":"+apiKey))
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if got := req.Header.Get("Authorization"); got != expectedAuth {
+			t.Errorf("expected Authorization %q got %q", expectedAuth, got)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	client := customerio.NewTrackClient(siteID, apiKey)
+	client.URL = srv.URL
+
+	if err := client.Identify("1", map[string]interface{}{"a": "1"}); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestTrack(t *testing.T) {
 	data := map[string]interface{}{
 		"a": "1",
