@@ -127,6 +127,8 @@ Your account region (`customerio.RegionUS` or `customerio.RegionEU`) is optional
 
 If your account is based in the EU and you do not provide the correct region, we'll route requests from the US to `customerio.RegionEU` accordingly, however this may cause data to be logged in the US. 
 
+By default, clients use a 30 second HTTP timeout. To use a different timeout, transport, or proxy policy, pass your own `*http.Client` with `customerio.WithHTTPClient`.
+
 ### Identify logged in customers
 
 Tracking data of logged in customers is a key part of [Customer.io](https://customer.io). In order to send triggered messages, we must know the email address of the customer to send email or the phone number for SMS.

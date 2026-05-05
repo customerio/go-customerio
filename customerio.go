@@ -46,17 +46,12 @@ func (e ParamError) Error() string { return e.Param + ": missing" }
 // NewTrackClient prepares a client for use with the Customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
 // using a Tracking Site ID and API Key pair from https://fly.customer.io/settings/api_credentials
 func NewTrackClient(siteID, apiKey string, opts ...option) *CustomerIO {
-	client := &http.Client{
-		Transport: &http.Transport{
-			MaxIdleConnsPerHost: 100,
-		},
-	}
 	c := &CustomerIO{
 		siteID:    siteID,
 		apiKey:    apiKey,
 		URL:       "https://track.customer.io",
 		UserAgent: DefaultUserAgent,
-		Client:    client,
+		Client:    newDefaultHTTPClient(),
 	}
 
 	for _, opt := range opts {
