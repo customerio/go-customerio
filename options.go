@@ -1,28 +1,32 @@
 package customerio
 
-type option struct {
+// Option configures Customer.io API and Track clients.
+type Option struct {
 	api   func(*APIClient)
 	track func(*CustomerIO)
 }
 
-type region struct {
+// Region configures the Customer.io API endpoints for a workspace region.
+type Region struct {
 	ApiURL   string
 	TrackURL string
 }
 
 var (
-	RegionUS = region{
+	// RegionUS configures clients for Customer.io US endpoints.
+	RegionUS = Region{
 		ApiURL:   "https://api.customer.io",
 		TrackURL: "https://track.customer.io",
 	}
-	RegionEU = region{
+	// RegionEU configures clients for Customer.io EU endpoints.
+	RegionEU = Region{
 		ApiURL:   "https://api-eu.customer.io",
 		TrackURL: "https://track-eu.customer.io",
 	}
 )
 
-func WithRegion(r region) option {
-	return option{
+func WithRegion(r Region) Option {
+	return Option{
 		api: func(a *APIClient) {
 			a.URL = r.ApiURL
 		},
@@ -32,8 +36,8 @@ func WithRegion(r region) option {
 	}
 }
 
-func WithHTTPClient(client HTTPClient) option {
-	return option{
+func WithHTTPClient(client HTTPClient) Option {
+	return Option{
 		api: func(a *APIClient) {
 			a.Client = client
 		},
@@ -43,8 +47,8 @@ func WithHTTPClient(client HTTPClient) option {
 	}
 }
 
-func WithUserAgent(ua string) option {
-	return option{
+func WithUserAgent(ua string) Option {
+	return Option{
 		api: func(a *APIClient) {
 			a.UserAgent = ua
 		},

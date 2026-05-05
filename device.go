@@ -13,7 +13,8 @@ type deviceV1 struct {
 	Attributes map[string]any `json:"attributes"`
 }
 
-type deviceV2 struct {
+// Device identifies a push notification device for transactional sends.
+type Device struct {
 	ID         string         `json:"token"`
 	Platform   string         `json:"platform"`
 	LastUsed   string         `json:"last_used,omitempty"`
@@ -47,12 +48,13 @@ func newDeviceV1(deviceID, platform string, data map[string]any) (*deviceV1, err
 	return d, nil
 }
 
-func NewDevice(deviceID, platform string, data map[string]any) (*deviceV2, error) {
+// NewDevice prepares a push notification device for transactional sends.
+func NewDevice(deviceID, platform string, data map[string]any) (*Device, error) {
 	d, err := newDeviceV1(deviceID, platform, data)
 	if err != nil {
 		return nil, err
 	}
-	return &deviceV2{
+	return &Device{
 		ID:         d.ID,
 		Platform:   d.Platform,
 		Attributes: d.Attributes,

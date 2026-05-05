@@ -36,6 +36,23 @@ func (e *CustomerIOError) Error() string {
 	return fmt.Sprintf("%v: %v %v", e.status, e.url, string(e.body))
 }
 
+// StatusCode returns the HTTP status code from a failed API response.
+func (e *CustomerIOError) StatusCode() int {
+	return e.status
+}
+
+// URL returns the request URL from a failed API response.
+func (e *CustomerIOError) URL() string {
+	return e.url
+}
+
+// Body returns a copy of the failed API response body.
+func (e *CustomerIOError) Body() []byte {
+	body := make([]byte, len(e.body))
+	copy(body, e.body)
+	return body
+}
+
 // ParamError is an error returned if a parameter to the track API is invalid.
 type ParamError struct {
 	Param string // Param is the name of the parameter.
@@ -45,7 +62,7 @@ func (e ParamError) Error() string { return e.Param + ": missing" }
 
 // NewTrackClient prepares a client for use with the Customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
 // using a Tracking Site ID and API Key pair from https://fly.customer.io/settings/api_credentials
-func NewTrackClient(siteID, apiKey string, opts ...option) *CustomerIO {
+func NewTrackClient(siteID, apiKey string, opts ...Option) *CustomerIO {
 	c := &CustomerIO{
 		siteID:    siteID,
 		apiKey:    apiKey,
@@ -62,7 +79,8 @@ func NewTrackClient(siteID, apiKey string, opts ...option) *CustomerIO {
 }
 
 // NewCustomerIO prepares a client for use with the Customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
-// deprecated in favour of NewTrackClient
+//
+// Deprecated: use NewTrackClient.
 func NewCustomerIO(siteID, apiKey string) *CustomerIO {
 	return NewTrackClient(siteID, apiKey)
 }

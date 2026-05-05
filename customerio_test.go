@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -183,6 +184,41 @@ func TestDeleteCtxUsesRequestContext(t *testing.T) {
 
 	if err := client.DeleteCtx(ctx, "1"); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestCustomerIOErrorAccessors(t *testing.T) {
+	const responseBody = "rate limited"
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+		if _, err := w.Write([]byte(responseBody)); err != nil {
+			t.Error(err)
+		}
+	}))
+	defer srv.Close()
+
+	client := customerio.NewTrackClient("siteid", "apikey")
+	client.URL = srv.URL
+
+	err := client.Track("1", "purchase", nil)
+	var apiErr *customerio.CustomerIOError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected CustomerIOError, got %T", err)
+	}
+	if apiErr.StatusCode() != http.StatusTooManyRequests {
+		t.Errorf("expected status %d got %d", http.StatusTooManyRequests, apiErr.StatusCode())
+	}
+	if apiErr.URL() != srv.URL+"/api/v1/customers/1/events" {
+		t.Errorf("unexpected url: %s", apiErr.URL())
+	}
+	body := apiErr.Body()
+	if string(body) != responseBody {
+		t.Errorf("expected body %q got %q", responseBody, string(body))
+	}
+	body[0] = 'R'
+	if string(apiErr.Body()) != responseBody {
+		t.Error("Body should return a copy")
 	}
 }
 
