@@ -153,18 +153,17 @@ func (c *CustomerIO) request(ctx context.Context, method, url string, body inter
 			return err
 		}
 
-		req, err = http.NewRequest(method, url, bytes.NewBuffer(j))
+		req, err = http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(j))
 		if err != nil {
 			return err
 		}
-		req = req.WithContext(ctx)
 
 		req.Header.Add("User-Agent", c.UserAgent)
 		req.Header.Add("Content-Type", "application/json")
 		req.Header.Add("Content-Length", strconv.Itoa(len(j)))
 	} else {
 		var err error
-		req, err = http.NewRequest(method, url, nil)
+		req, err = http.NewRequestWithContext(ctx, method, url, nil)
 		if err != nil {
 			return err
 		}

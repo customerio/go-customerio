@@ -2,9 +2,11 @@ package customerio_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -17,6 +19,12 @@ import (
 )
 
 var cio *customerio.CustomerIO
+
+type httpClientFunc func(*http.Request) (*http.Response, error)
+
+func (f httpClientFunc) Do(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
 
 func TestMain(m *testing.M) {
 	srv := httptest.NewServer(http.HandlerFunc(handler))
@@ -158,6 +166,25 @@ func TestDelete(t *testing.T) {
 		func(c testCase) error {
 			return cio.Delete(c.id)
 		})
+}
+
+func TestDeleteCtxUsesRequestContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	client := customerio.NewTrackClient("siteid", "apikey", customerio.WithHTTPClient(httpClientFunc(func(req *http.Request) (*http.Response, error) {
+		if err := req.Context().Err(); err != context.Canceled {
+			t.Errorf("expected canceled request context, got %v", err)
+		}
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader("")),
+		}, nil
+	})))
+
+	if err := client.DeleteCtx(ctx, "1"); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestAddDevice(t *testing.T) {
