@@ -381,6 +381,60 @@ if err != nil {
 fmt.Println(body)
 ```
 
+### Adding people to a manual segment
+
+Add customers to a manual segment by segment ID. Pass `customerio.WithSegmentIDType` to interpret the supplied ids as `email` or `cio_id` instead of the default `id`. [Learn more about adding customers to a segment](https://docs.customer.io/integrations/api/track/#tag/track-segments/add_to_segment).
+
+```go
+// Arguments
+// segmentID (required) - the integer ID of the manual segment.
+// ids (required)       - a []string of customer identifiers.
+// opts (optional)      - SegmentOption values, e.g. WithSegmentIDType to choose
+//                        between "id" (default), "email", or "cio_id".
+
+if err := track.AddPeopleToSegment(7, []string{"5", "6", "7"}); err != nil {
+  // handle error
+}
+```
+
+To interpret the supplied ids as email addresses or `cio_id`s, pass `WithSegmentIDType`:
+
+```go
+if err := track.AddPeopleToSegment(7,
+  []string{"alice@example.com", "bob@example.com"},
+  customerio.WithSegmentIDType(customerio.IdentifierTypeEmail),
+); err != nil {
+  // handle error
+}
+```
+
+### Removing people from a manual segment
+
+Remove customers from a manual segment by segment ID. Pass `customerio.WithSegmentIDType` to interpret the supplied ids as `email` or `cio_id` instead of the default `id`. [Learn more about removing customers from a segment](https://docs.customer.io/integrations/api/track/#tag/track-segments/remove_from_segment).
+
+```go
+// Arguments
+// segmentID (required) - the integer ID of the manual segment.
+// ids (required)       - a []string of customer identifiers to remove.
+// opts (optional)      - SegmentOption values, e.g. WithSegmentIDType to choose
+//                        between "id" (default), "email", or "cio_id".
+
+if err := track.RemovePeopleFromSegment(7, []string{"5", "6"}); err != nil {
+  // handle error
+}
+```
+
+To interpret the supplied ids as email addresses or `cio_id`s, pass `WithSegmentIDType`:
+
+```go
+if err := track.RemovePeopleFromSegment(7,
+  []string{"alice@example.com", "bob@example.com"},
+  customerio.WithSegmentIDType(customerio.IdentifierTypeEmail),
+); err != nil {
+  // handle error
+}
+```
+
 ## Context Support
 There are additional API methods that support passing a context that satisfies the `context.Context` interface to allow better control over dispatched requests. For example with sending an event:
 ```go
