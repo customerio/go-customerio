@@ -402,7 +402,7 @@ To interpret the supplied ids as email addresses or `cio_id`s, pass `WithSegment
 ```go
 if err := track.AddPeopleToSegment(7,
   []string{"alice@example.com", "bob@example.com"},
-  customerio.WithSegmentIDType(customerio.IdentifierTypeEmail),
+  customerio.WithSegmentIDType(customerio.IdentifierTypeEmail)
 ); err != nil {
   // handle error
 }
@@ -429,7 +429,7 @@ To interpret the supplied ids as email addresses or `cio_id`s, pass `WithSegment
 ```go
 if err := track.RemovePeopleFromSegment(7,
   []string{"alice@example.com", "bob@example.com"},
-  customerio.WithSegmentIDType(customerio.IdentifierTypeEmail),
+  customerio.WithSegmentIDType(customerio.IdentifierTypeEmail)
 ); err != nil {
   // handle error
 }

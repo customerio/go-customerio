@@ -6,26 +6,16 @@ import (
 	"net/url"
 )
 
-// AddPeopleToSegmentCtx adds customers to a manual segment by segment ID.
+// AddPeopleToSegment adds customers to a manual segment by segment ID.
 // See https://docs.customer.io/api/track/#operation/add_customers
-func (c *CustomerIO) AddPeopleToSegmentCtx(ctx context.Context, segmentID int, ids []string, opts ...SegmentOption) error {
+func (c *CustomerIO) AddPeopleToSegment(ctx context.Context, segmentID int, ids []string, opts ...SegmentOption) error {
 	return c.segmentMembership(ctx, "add_customers", segmentID, ids, opts...)
 }
 
-// AddPeopleToSegment adds customers to a manual segment by segment ID.
-func (c *CustomerIO) AddPeopleToSegment(segmentID int, ids []string, opts ...SegmentOption) error {
-	return c.AddPeopleToSegmentCtx(context.Background(), segmentID, ids, opts...)
-}
-
-// RemovePeopleFromSegmentCtx removes customers from a manual segment by segment ID.
-// See https://docs.customer.io/api/track/#operation/remove_customers
-func (c *CustomerIO) RemovePeopleFromSegmentCtx(ctx context.Context, segmentID int, ids []string, opts ...SegmentOption) error {
-	return c.segmentMembership(ctx, "remove_customers", segmentID, ids, opts...)
-}
-
 // RemovePeopleFromSegment removes customers from a manual segment by segment ID.
-func (c *CustomerIO) RemovePeopleFromSegment(segmentID int, ids []string, opts ...SegmentOption) error {
-	return c.RemovePeopleFromSegmentCtx(context.Background(), segmentID, ids, opts...)
+// See https://docs.customer.io/api/track/#operation/remove_customers
+func (c *CustomerIO) RemovePeopleFromSegment(ctx context.Context, segmentID int, ids []string, opts ...SegmentOption) error {
+	return c.segmentMembership(ctx, "remove_customers", segmentID, ids, opts...)
 }
 
 func (c *CustomerIO) segmentMembership(ctx context.Context, action string, segmentID int, ids []string, opts ...SegmentOption) error {

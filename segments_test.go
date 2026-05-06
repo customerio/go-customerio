@@ -1,6 +1,7 @@
 package customerio_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/customerio/go-customerio/v3"
@@ -13,10 +14,12 @@ var (
 )
 
 func TestAddPeopleToSegment(t *testing.T) {
-	checkParamError(t, cio.AddPeopleToSegment(0, idsByID), "segmentID")
-	checkParamError(t, cio.AddPeopleToSegment(-1, idsByID), "segmentID")
-	checkParamError(t, cio.AddPeopleToSegment(7, nil), "ids")
-	checkParamError(t, cio.AddPeopleToSegment(7, []string{}), "ids")
+	ctx := context.Background()
+
+	checkParamError(t, cio.AddPeopleToSegment(ctx, 0, idsByID), "segmentID")
+	checkParamError(t, cio.AddPeopleToSegment(ctx, -1, idsByID), "segmentID")
+	checkParamError(t, cio.AddPeopleToSegment(ctx, 7, nil), "ids")
+	checkParamError(t, cio.AddPeopleToSegment(ctx, 7, []string{}), "ids")
 
 	runCases(t,
 		[]testCase{
@@ -27,20 +30,22 @@ func TestAddPeopleToSegment(t *testing.T) {
 		func(c testCase) error {
 			switch c.id {
 			case "email":
-				return cio.AddPeopleToSegment(7, idsByEmail, customerio.WithSegmentIDType(customerio.IdentifierTypeEmail))
+				return cio.AddPeopleToSegment(ctx, 7, idsByEmail, customerio.WithSegmentIDType(customerio.IdentifierTypeEmail))
 			case "cio_id":
-				return cio.AddPeopleToSegment(7, idsByCioID, customerio.WithSegmentIDType(customerio.IdentifierTypeCioID))
+				return cio.AddPeopleToSegment(ctx, 7, idsByCioID, customerio.WithSegmentIDType(customerio.IdentifierTypeCioID))
 			default:
-				return cio.AddPeopleToSegment(7, idsByID)
+				return cio.AddPeopleToSegment(ctx, 7, idsByID)
 			}
 		})
 }
 
 func TestRemovePeopleFromSegment(t *testing.T) {
-	checkParamError(t, cio.RemovePeopleFromSegment(0, idsByID), "segmentID")
-	checkParamError(t, cio.RemovePeopleFromSegment(-1, idsByID), "segmentID")
-	checkParamError(t, cio.RemovePeopleFromSegment(7, nil), "ids")
-	checkParamError(t, cio.RemovePeopleFromSegment(7, []string{}), "ids")
+	ctx := context.Background()
+
+	checkParamError(t, cio.RemovePeopleFromSegment(ctx, 0, idsByID), "segmentID")
+	checkParamError(t, cio.RemovePeopleFromSegment(ctx, -1, idsByID), "segmentID")
+	checkParamError(t, cio.RemovePeopleFromSegment(ctx, 7, nil), "ids")
+	checkParamError(t, cio.RemovePeopleFromSegment(ctx, 7, []string{}), "ids")
 
 	runCases(t,
 		[]testCase{
@@ -51,11 +56,11 @@ func TestRemovePeopleFromSegment(t *testing.T) {
 		func(c testCase) error {
 			switch c.id {
 			case "email":
-				return cio.RemovePeopleFromSegment(7, idsByEmail, customerio.WithSegmentIDType(customerio.IdentifierTypeEmail))
+				return cio.RemovePeopleFromSegment(ctx, 7, idsByEmail, customerio.WithSegmentIDType(customerio.IdentifierTypeEmail))
 			case "cio_id":
-				return cio.RemovePeopleFromSegment(7, idsByCioID, customerio.WithSegmentIDType(customerio.IdentifierTypeCioID))
+				return cio.RemovePeopleFromSegment(ctx, 7, idsByCioID, customerio.WithSegmentIDType(customerio.IdentifierTypeCioID))
 			default:
-				return cio.RemovePeopleFromSegment(7, idsByID)
+				return cio.RemovePeopleFromSegment(ctx, 7, idsByID)
 			}
 		})
 }
