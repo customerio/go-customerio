@@ -383,7 +383,7 @@ fmt.Println(body)
 
 ## Triggering API Broadcasts
 
-Use `(c *customerio.APIClient).TriggerBroadcast` to trigger a [broadcast campaign](https://customer.io/docs/api/#tag/Broadcasts) via the App API.
+Use `(c *customerio.APIClient).TriggerBroadcast` to trigger a broadcast campaign. [Learn more about triggering a broadcast here](https://docs.customer.io/journeys/api-triggered-broadcasts/) via the App API.
 
 ### Segment-based broadcast
 

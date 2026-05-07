@@ -3,7 +3,8 @@ package customerio_test
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -12,18 +13,20 @@ import (
 	"github.com/customerio/go-customerio/v3"
 )
 
+const expectedBroadcastResponseID = 999
+
 func boolPtr(b bool) *bool { return &b }
 
 func broadcastServer(t *testing.T, verify func(method, path string, body []byte)) (*customerio.APIClient, *httptest.Server) {
 	t.Helper()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		b, err := ioutil.ReadAll(req.Body)
+		b, err := io.ReadAll(req.Body)
 		if err != nil {
 			t.Error(err)
 		}
 		defer req.Body.Close()
 		verify(req.Method, req.URL.Path, b)
-		w.Write([]byte(`{"id":"broadcast-trigger-id"}`))
+		fmt.Fprintf(w, `{"id":%d}`, expectedBroadcastResponseID)
 	}))
 
 	api := customerio.NewAPIClient("myKey")
@@ -33,8 +36,8 @@ func broadcastServer(t *testing.T, verify func(method, path string, body []byte)
 }
 
 func TestTriggerBroadcastSegment(t *testing.T) {
-	campaignID := 123
-	data := map[string]interface{}{"name": "gopher"}
+	broadcastID := 123
+	data := map[string]interface{}{"name": "Joe"}
 	recipients := customerio.BroadcastRecipients{
 		Segment: map[string]interface{}{"id": float64(1)},
 	}
@@ -43,8 +46,8 @@ func TestTriggerBroadcastSegment(t *testing.T) {
 		if method != "POST" {
 			t.Errorf("expected POST, got %s", method)
 		}
-		if path != "/api/campaigns/123/triggers" {
-			t.Errorf("expected /api/campaigns/123/triggers, got %s", path)
+		if path != "/v1/campaigns/123/triggers" {
+			t.Errorf("expected /v1/campaigns/123/triggers, got %s", path)
 		}
 
 		var payload map[string]interface{}
@@ -71,12 +74,12 @@ func TestTriggerBroadcastSegment(t *testing.T) {
 	})
 	defer srv.Close()
 
-	resp, err := api.TriggerBroadcast(context.Background(), campaignID, data, recipients)
+	resp, err := api.TriggerBroadcast(context.Background(), broadcastID, data, recipients)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resp.ID != "broadcast-trigger-id" {
-		t.Errorf("unexpected response ID: %s", resp.ID)
+	if resp.ID != expectedBroadcastResponseID {
+		t.Errorf("unexpected response ID: %d", resp.ID)
 	}
 }
 
@@ -215,7 +218,7 @@ func TestTriggerBroadcastDataFileURL(t *testing.T) {
 	}
 
 	api, srv := broadcastServer(t, func(_, path string, body []byte) {
-		if path != "/api/campaigns/5/triggers" {
+		if path != "/v1/campaigns/5/triggers" {
 			t.Errorf("unexpected path: %s", path)
 		}
 		var payload map[string]interface{}
@@ -250,19 +253,20 @@ func TestTriggerBroadcastIDZero(t *testing.T) {
 	api := customerio.NewAPIClient("myKey")
 
 	_, err := api.TriggerBroadcast(context.Background(), 0, nil, customerio.BroadcastRecipients{})
-	checkParamError(t, err, "id")
+	checkParamError(t, err, "broadcastID")
 }
 
 func TestTriggerBroadcastIDNegative(t *testing.T) {
 	api := customerio.NewAPIClient("myKey")
 
 	_, err := api.TriggerBroadcast(context.Background(), -1, nil, customerio.BroadcastRecipients{})
-	checkParamError(t, err, "id")
+	checkParamError(t, err, "broadcastID")
 }
 
 func TestTriggerBroadcastError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusBadGateway)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"errors":[{"detail":"broadcast with id 1 does not exist","status":"404"}]}`))
 	}))
 	defer srv.Close()
 
@@ -277,8 +281,34 @@ func TestTriggerBroadcastError(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected *TransactionalError, got %T", err)
 	}
+	if te.StatusCode != http.StatusNotFound {
+		t.Errorf("expected status %d, got %d", http.StatusNotFound, te.StatusCode)
+	}
+	if te.Err != "broadcast with id 1 does not exist" {
+		t.Errorf("expected detail in Err, got %q", te.Err)
+	}
+}
+
+func TestTriggerBroadcastErrorUnparseableBody(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusBadGateway)
+		w.Write([]byte(`upstream issue`))
+	}))
+	defer srv.Close()
+
+	api := customerio.NewAPIClient("myKey")
+	api.URL = srv.URL
+
+	_, err := api.TriggerBroadcast(context.Background(), 1, nil, customerio.BroadcastRecipients{})
+	te, ok := err.(*customerio.TransactionalError)
+	if !ok {
+		t.Fatalf("expected *TransactionalError, got %T", err)
+	}
 	if te.StatusCode != http.StatusBadGateway {
 		t.Errorf("expected status %d, got %d", http.StatusBadGateway, te.StatusCode)
+	}
+	if te.Err != "upstream issue" {
+		t.Errorf("expected raw body in Err, got %q", te.Err)
 	}
 }
 

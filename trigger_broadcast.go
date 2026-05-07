@@ -24,31 +24,32 @@ type BroadcastRecipients struct {
 
 // BroadcastResponse is returned when a broadcast is successfully triggered.
 type BroadcastResponse struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 }
 
-// TriggerBroadcast triggers a broadcast campaign by POSTing to /api/campaigns/{id}/triggers.
+// TriggerBroadcast triggers a broadcast by POSTing to /v1/campaigns/{id}/triggers.
 // For segment-based targeting, set recipients.Segment. For direct targeting, set exactly one
 // of recipients.Ids, recipients.Emails, recipients.PerUserData, or recipients.DataFileURL.
-func (c *APIClient) TriggerBroadcast(ctx context.Context, id int, data map[string]interface{}, recipients BroadcastRecipients) (*BroadcastResponse, error) {
-	if id <= 0 {
-		return nil, ParamError{Param: "id"}
+func (c *APIClient) TriggerBroadcast(ctx context.Context, broadcastID int, data map[string]interface{}, recipients BroadcastRecipients) (*BroadcastResponse, error) {
+	if broadcastID <= 0 {
+		return nil, ParamError{Param: "broadcastID"}
 	}
 
 	payload := buildBroadcastPayload(data, recipients)
 
-	body, statusCode, err := c.doRequest(ctx, "POST", fmt.Sprintf("/api/campaigns/%d/triggers", id), payload)
+	body, statusCode, err := c.doRequest(ctx, "POST", fmt.Sprintf("/v1/campaigns/%d/triggers", broadcastID), payload)
 	if err != nil {
 		return nil, err
 	}
 
 	if statusCode != http.StatusOK {
-		var meta struct {
-			Meta struct {
-				Err string `json:"error"`
-			} `json:"meta"`
+		var errResp struct {
+			Errors []struct {
+				Detail string `json:"detail"`
+				Status string `json:"status"`
+			} `json:"errors"`
 		}
-		if err := json.Unmarshal(body, &meta); err != nil {
+		if err := json.Unmarshal(body, &errResp); err != nil || len(errResp.Errors) == 0 {
 			return nil, &TransactionalError{
 				StatusCode: statusCode,
 				Err:        string(body),
@@ -56,7 +57,7 @@ func (c *APIClient) TriggerBroadcast(ctx context.Context, id int, data map[strin
 		}
 		return nil, &TransactionalError{
 			StatusCode: statusCode,
-			Err:        meta.Meta.Err,
+			Err:        errResp.Errors[0].Detail,
 		}
 	}
 
@@ -68,8 +69,7 @@ func (c *APIClient) TriggerBroadcast(ctx context.Context, id int, data map[strin
 	return &resp, nil
 }
 
-// buildBroadcastPayload mirrors the Node client's payload-shaping logic:
-// if a direct recipient field (ids, emails, per_user_data, data_file_url) is present,
+// If a direct recipient field (ids, emails, per_user_data, data_file_url) is present,
 // it and its allowed companion options are flattened to the top level alongside data.
 // Otherwise the full recipients struct is nested under a "recipients" key.
 func buildBroadcastPayload(data map[string]interface{}, r BroadcastRecipients) map[string]interface{} {
