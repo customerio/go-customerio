@@ -37,27 +37,17 @@ func (c *APIClient) TriggerBroadcast(ctx context.Context, broadcastID int, data 
 
 	payload := buildBroadcastPayload(data, recipients)
 
-	body, statusCode, err := c.doRequest(ctx, "POST", fmt.Sprintf("/v1/campaigns/%d/triggers", broadcastID), payload)
+	requestPath := fmt.Sprintf("/v1/campaigns/%d/triggers", broadcastID)
+	body, statusCode, err := c.doRequest(ctx, "POST", requestPath, payload)
 	if err != nil {
 		return nil, err
 	}
 
 	if statusCode != http.StatusOK {
-		var errResp struct {
-			Errors []struct {
-				Detail string `json:"detail"`
-				Status string `json:"status"`
-			} `json:"errors"`
-		}
-		if err := json.Unmarshal(body, &errResp); err != nil || len(errResp.Errors) == 0 {
-			return nil, &TransactionalError{
-				StatusCode: statusCode,
-				Err:        string(body),
-			}
-		}
-		return nil, &TransactionalError{
+		return nil, &CustomerIOError{
 			StatusCode: statusCode,
-			Err:        errResp.Errors[0].Detail,
+			URL:        c.URL + requestPath,
+			Body:       body,
 		}
 	}
 

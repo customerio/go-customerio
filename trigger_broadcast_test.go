@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/customerio/go-customerio/v3"
@@ -277,15 +278,15 @@ func TestTriggerBroadcastError(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	te, ok := err.(*customerio.TransactionalError)
+	cioErr, ok := err.(*customerio.CustomerIOError)
 	if !ok {
-		t.Fatalf("expected *TransactionalError, got %T", err)
+		t.Fatalf("expected *CustomerIOError, got %T", err)
 	}
-	if te.StatusCode != http.StatusNotFound {
-		t.Errorf("expected status %d, got %d", http.StatusNotFound, te.StatusCode)
+	if cioErr.StatusCode != http.StatusNotFound {
+		t.Errorf("expected status %d, got %d", http.StatusNotFound, cioErr.StatusCode)
 	}
-	if te.Err != "broadcast with id 1 does not exist" {
-		t.Errorf("expected detail in Err, got %q", te.Err)
+	if !strings.Contains(string(cioErr.Body), "broadcast with id 1 does not exist") {
+		t.Errorf("expected detail in Body, got %q", string(cioErr.Body))
 	}
 }
 
@@ -300,15 +301,15 @@ func TestTriggerBroadcastErrorUnparseableBody(t *testing.T) {
 	api.URL = srv.URL
 
 	_, err := api.TriggerBroadcast(context.Background(), 1, nil, customerio.BroadcastRecipients{})
-	te, ok := err.(*customerio.TransactionalError)
+	cioErr, ok := err.(*customerio.CustomerIOError)
 	if !ok {
-		t.Fatalf("expected *TransactionalError, got %T", err)
+		t.Fatalf("expected *CustomerIOError, got %T", err)
 	}
-	if te.StatusCode != http.StatusBadGateway {
-		t.Errorf("expected status %d, got %d", http.StatusBadGateway, te.StatusCode)
+	if cioErr.StatusCode != http.StatusBadGateway {
+		t.Errorf("expected status %d, got %d", http.StatusBadGateway, cioErr.StatusCode)
 	}
-	if te.Err != "upstream issue" {
-		t.Errorf("expected raw body in Err, got %q", te.Err)
+	if string(cioErr.Body) != "upstream issue" {
+		t.Errorf("expected raw body in Body, got %q", string(cioErr.Body))
 	}
 }
 
