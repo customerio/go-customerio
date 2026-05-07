@@ -18,12 +18,12 @@ func TestSendPush(t *testing.T) {
 		To:      "customer@example.com",
 		Title:   "hello, {{ trigger.name }}",
 		Message: "hello from the Customer.io {{ trigger.client }} client",
-		MessageData: map[string]interface{}{
+		MessageData: map[string]any{
 			"client": "Go",
 			"name":   "gopher",
 		},
 	}
-	d, err := customerio.NewDevice("device-id", "ios", map[string]interface{}{"attr1": "value1"})
+	d, err := customerio.NewDevice("device-id", "ios", map[string]any{"attr1": "value1"})
 	if err != nil {
 		t.Error(err)
 	}

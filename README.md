@@ -10,7 +10,7 @@
 ![Go version](https://img.shields.io/github/go-mod/go-version/customerio/go-customerio)
 [![Go Doc](https://img.shields.io/badge/Go_Doc-reference-blue.svg)](https://pkg.go.dev/github.com/customerio/go-customerio/v3)
 
-# Customer.io Journeys Go Client 
+# Customer.io Journeys Go Client
 
 A Go client library for the [Customer.io Journeys Track API](https://customer.io/docs/api/track). If you're new to Customer.io, we recommend that you integrate with our [Data Pipelines Go client](https://github.com/customerio/cdp-analytics-go) instead.
 
@@ -82,7 +82,7 @@ func main() {
 	track := customerio.NewTrackClient(siteID, trackAPIKey, customerio.WithRegion(customerio.RegionUS))
 
 	// Send an Identify TrackAPI call
-	if err := track.Identify("5", map[string]interface{}{
+	if err := track.Identify("5", map[string]any{
 		"email":      "lucy@example.com",
 		"created_at": time.Now().Unix(),
 		"first_name": "Lucy",
@@ -106,7 +106,7 @@ func main() {
 		From:    "business@example.com",
 		Subject: "hello, {{ trigger.name }}",
 		Body:    "hello from the Customer.io {{ trigger.client }} client",
-		MessageData: map[string]interface{}{
+		MessageData: map[string]any{
 			"client": "Go",
 			"name":   "gopher",
 		},
@@ -123,9 +123,11 @@ func main() {
 
 ```
 
-Your account region (`customerio.RegionUS` or `customerio.RegionEU`) is optional. If you do not specify your region, we assume that your account is based in the US (`customerio.RegionUS`). 
+Your account region (`customerio.RegionUS` or `customerio.RegionEU`) is optional. If you do not specify your region, we assume that your account is based in the US (`customerio.RegionUS`).
 
-If your account is based in the EU and you do not provide the correct region, we'll route requests from the US to `customerio.RegionEU` accordingly, however this may cause data to be logged in the US. 
+If your account is based in the EU and you do not provide the correct region, we'll route requests from the US to `customerio.RegionEU` accordingly, however this may cause data to be logged in the US.
+
+By default, clients use a 30 second HTTP timeout. To use a custom timeout, transport, or proxy policy, pass your own `*http.Client` with `customerio.WithHTTPClient`.
 
 ### Identify logged in customers
 
@@ -144,12 +146,12 @@ You'll want to identify your customers when they sign up for your product and an
 ```go
 // Arguments
 // customerID (required) - a unique identifier string for this customers
-// attributes (required) - a ```map[string]interface{}``` of information about the customer. You can pass any
+// attributes (required) - a ```map[string]any``` of information about the customer. You can pass any
 //                         information that would be useful in your triggers. You
 //                         should at least pass in an email, and created_at timestamp.
-//                         your interface{} should be parseable as JSON by 'encoding/json'.Marshal
+//                         your values should be parseable as JSON by 'encoding/json'.Marshal
 
-if err := track.Identify("5", map[string]interface{}{
+if err := track.Identify("5", map[string]any{
   "email": "bob@example.com",
   "created_at": time.Now().Unix(),
   "first_name": "Bob",
@@ -181,17 +183,20 @@ if err := track.Delete("5"); err != nil {
 
 When you merge two people, you pick a primary person and merge a secondary, duplicate person into the primary person. The primary person remains after the merge and the secondary person is deleted. This process is permanent: you cannot recover the secondary person.
 
-The first and third parameters represent the identifier for the primary and secondary people respectively, one of `id`, `email`, or `cio_id`. The second and fourth parameters are the identifier values for the primary and secondary people, respectively.
+Use `Identifier` structs to specify the primary and secondary people to merge. Each identifier specifies a type (`id`, `email`, or `cio_id`) and a value.
 
 ```go
-if err := track.MergeCustomers(customerio.IdentifierTypeEmail, "cool.person@company.com", customerio.IdentifierTypeCioID, "C123"); err != nil {
-  // handle error
+if err := track.MergeCustomers(
+    customerio.Identifier{Type: customerio.IdentifierTypeEmail, Value: "cool.person@company.com"},
+    customerio.Identifier{Type: customerio.IdentifierTypeCioID, Value: "C123"},
+); err != nil {
+    // handle error
 }
 ```
 
 ### Tracking a custom event
 
-Now that you're identifying your customers with [Customer.io](https://customer.io), you can now send events like "purchased" or "watchedIntroVideo". 
+Now that you're identifying your customers with [Customer.io](https://customer.io), you can now send events like "purchased" or "watchedIntroVideo".
 
 These allow you to more specifically target your users with automated messages, and track conversions when you're sending automated messages to encourage your customers to perform an action.
 
@@ -200,11 +205,11 @@ These allow you to more specifically target your users with automated messages, 
 // customerID (required)  - the id of the customer who you want to associate with the event.
 // name (required)        - the name of the event you want to track.
 // attributes (optional)  - any related information you'd like to attach to this
-//                          event, as a ```map[string]interface{}```. 
+//                          event, as a ```map[string]any```.
 //                          These attributes can be used in your triggers to control who should
 //                          receive the triggered message. You can set any number of data values.
 
-if err := track.Track("5", "purchase", map[string]interface{}{
+if err := track.Track("5", "purchase", map[string]any{
     "type": "socks",
     "price": "13.99",
 }); err != nil {
@@ -215,7 +220,7 @@ if err := track.Track("5", "purchase", map[string]interface{}{
 Use event options when you need to set top-level event fields like `id`, `timestamp`, or `type`.
 
 ```go
-if err := track.Track("5", "purchase", map[string]interface{}{
+if err := track.Track("5", "purchase", map[string]any{
     "type": "socks",
     "price": "13.99",
 }, customerio.WithEventTimestamp(time.Now()), customerio.WithEventID("evt_123")); err != nil {
@@ -232,11 +237,11 @@ You can also send anonymous events representing people you haven't identified. A
 // anonymous_id (required)    - nullable, an identifier representing an unknown person.
 // name (required)            - the name of the event you want to track.
 // attributes (optional)      - any related information you'd like to attach to this
-//                              event, as a ```map[string]interface{}```. 
+//                              event, as a ```map[string]any```.
 //                              These attributes can be used in your triggers to control who should
 //                              receive the triggered message. You can set any number of data values.
 
-if err := track.TrackAnonymous("anonymous_id", "invite", map[string]interface{}{
+if err := track.TrackAnonymous("anonymous_id", "invite", map[string]any{
     "first_name": "Alex",
     "source": "OldApp",
 }); err != nil {
@@ -245,10 +250,10 @@ if err := track.TrackAnonymous("anonymous_id", "invite", map[string]interface{}{
 ```
 #### Anonymous invite events
 
-If you previously sent [invite events](https://customer.io/docs/anonymous-invite-emails/), you can achieve the same functionality by sending an anonymous event an empty string for the anonymous identifier. To send anonymous invites, your event *must* include a `recipient` attribute. 
+If you previously sent [invite events](https://customer.io/docs/anonymous-invite-emails/), you can achieve the same functionality by sending an anonymous event an empty string for the anonymous identifier. To send anonymous invites, your event *must* include a `recipient` attribute.
 
 ```go
-if err := track.TrackAnonymous("", "invite", map[string]interface{}{
+if err := track.TrackAnonymous("", "invite", map[string]any{
     "first_name": "Alex",
     "recipient": "alex.person@example.com",
 }); err != nil {
@@ -265,11 +270,11 @@ In order to send push notifications, we need customer device information.
 // customerID (required) - a unique identifier string for this customer
 // deviceID (required)   - a unique identifier string for this device
 // platform (required)   - the platform of the device, currently only accepts 'ios' and 'android'
-// data (optional)       - a ```map[string]interface{}``` of information about the device. 
-//                         You can pass any key/value pairs that would be useful in your triggers. 
-//                         Your interface{} should be parseable as Json by 'encoding/json'.Marshal
+// data (optional)       - a ```map[string]any``` of information about the device.
+//                         You can pass any key/value pairs that would be useful in your triggers.
+//                         Your values should be parseable as Json by 'encoding/json'.Marshal
 
-if err := track.AddDevice("5", "messaging token", "android", map[string]interface{}{
+if err := track.AddDevice("5", "messaging token", "android", map[string]any{
 "last_used": time.Now().Unix(),
 "attribute_name": "attribute_value",
 }); err != nil {
@@ -307,7 +312,7 @@ client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customeri
 
 // TransactionalMessageId — the ID of the transactional message you want to send.
 // To                     — the email address of your recipients.
-// Identifiers            — contains the email and/or id of your recipient. 
+// Identifiers            — contains the email and/or id of your recipient.
 //                          If the person does not exist, Customer.io creates them.
 // MessageData            — contains properties that you want reference in your message using liquid.
 // Attach                 — a helper that encodes attachments to your message.
@@ -315,13 +320,13 @@ client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customeri
 request := customerio.SendEmailRequest{
   To: "person@example.com",
   TransactionalMessageID: "3",
-  MessageData: map[string]interface{}{
+  MessageData: map[string]any{
     "name": "Person",
-    "items": map[string]interface{}{
+    "items": map[string]any{
       "name": "shoes",
       "price": "59.99",
     },
-    "products": []interface{}{},
+    "products": []any{},
   },
   Identifiers: map[string]string{
     "email": "person@example.com",
@@ -353,13 +358,13 @@ client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customeri
 
 request := customerio.SendPushRequest{
   TransactionalMessageID: "3",
-  MessageData: map[string]interface{}{
+  MessageData: map[string]any{
     "name": "Person",
-    "items": map[string]interface{}{
+    "items": map[string]any{
       "name": "shoes",
       "price": "59.99",
     },
-    "products": []interface{}{},
+    "products": []any{},
   },
   Identifiers: map[string]string{
     "id": "example1",
@@ -367,7 +372,7 @@ request := customerio.SendPushRequest{
 }
 
 // (optional) upsert a particular device for the profile the push is being sent to.
-device, err := customerio.NewDevice("device-id", "android", map[string]interface{}{"optional_attr": "value"})
+device, err := customerio.NewDevice("device-id", "android", map[string]any{"optional_attr": "value"})
 if err != nil {
   // handle error, invalid device params.
 }
@@ -445,7 +450,7 @@ track := customerio.NewTrackClient(siteID, trackAPIKey, customerio.WithRegion(cu
 ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(5*time.Second))
 defer cancel()
 
-if err := track.TrackCtx(ctx, "5", "purchase", map[string]interface{}{
+if err := track.TrackCtx(ctx, "5", "purchase", map[string]any{
     "type": "socks",
     "price": "13.99",
 }); err != nil {
