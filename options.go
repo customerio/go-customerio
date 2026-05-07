@@ -2,6 +2,7 @@ package customerio
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -142,4 +143,15 @@ func trackPayload(eventName string, data map[string]any, opts ...TrackOption) ma
 	}
 
 	return payload
+}
+
+// SegmentOption configures optional query parameters on segment membership requests.
+type SegmentOption func(url.Values)
+
+// WithSegmentIDType sets the id_type query parameter, identifying which kind of
+// identifier the supplied ids represent. Defaults server-side to IdentifierTypeID.
+func WithSegmentIDType(t IdentifierType) SegmentOption {
+	return func(v url.Values) {
+		v.Set("id_type", string(t))
+	}
 }
