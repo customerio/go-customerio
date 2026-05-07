@@ -394,7 +394,7 @@ client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customeri
 
 resp, err := client.TriggerBroadcast(
   context.Background(),
-  campaignID,
+  broadcastID,
   map[string]interface{}{"name": "gopher"},
   customerio.BroadcastRecipients{
     Segment: map[string]interface{}{"id": 1},
@@ -414,7 +414,7 @@ Send directly to a list of email addresses or customer IDs:
 ignore := true
 resp, err := client.TriggerBroadcast(
   context.Background(),
-  campaignID,
+  broadcastID,
   map[string]interface{}{"name": "gopher"},
   customerio.BroadcastRecipients{
     Emails:             []string{"user@example.com"},
