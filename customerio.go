@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
@@ -170,7 +169,6 @@ func (c *CustomerIO) request(ctx context.Context, method, url string, body any) 
 
 		req.Header.Add("User-Agent", c.UserAgent)
 		req.Header.Add("Content-Type", "application/json")
-		req.Header.Add("Content-Length", strconv.Itoa(len(j)))
 	} else {
 		var err error
 		req, err = http.NewRequestWithContext(ctx, method, url, nil)
@@ -189,7 +187,7 @@ func (c *CustomerIO) request(ctx context.Context, method, url string, body any) 
 		_ = resp.Body.Close()
 	}()
 
-	responseBody, err := io.ReadAll(resp.Body)
+	responseBody, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
 		return err
 	}
@@ -240,11 +238,11 @@ func (id Identifier) validate() error {
 
 // MergeCustomersCtx sends a request to Customer.io to merge two customer profiles together.
 func (c *CustomerIO) MergeCustomersCtx(ctx context.Context, primary Identifier, secondary Identifier) error {
-	if primary.validate() != nil {
-		return ParamError{Param: "primary"}
+	if err := primary.validate(); err != nil {
+		return fmt.Errorf("primary: %w", err)
 	}
-	if secondary.validate() != nil {
-		return ParamError{Param: "secondary"}
+	if err := secondary.validate(); err != nil {
+		return fmt.Errorf("secondary: %w", err)
 	}
 
 	return c.request(ctx, "POST",

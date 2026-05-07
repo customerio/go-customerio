@@ -96,5 +96,5 @@ type TransactionalError struct {
 }
 
 func (e *TransactionalError) Error() string {
-	return e.Err
+	return fmt.Sprintf("%d: %s", e.StatusCode, e.Err)
 }

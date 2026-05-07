@@ -183,11 +183,14 @@ if err := track.Delete("5"); err != nil {
 
 When you merge two people, you pick a primary person and merge a secondary, duplicate person into the primary person. The primary person remains after the merge and the secondary person is deleted. This process is permanent: you cannot recover the secondary person.
 
-The first and third parameters represent the identifier for the primary and secondary people respectively, one of `id`, `email`, or `cio_id`. The second and fourth parameters are the identifier values for the primary and secondary people, respectively.
+Use `Identifier` structs to specify the primary and secondary people to merge. Each identifier specifies a type (`id`, `email`, or `cio_id`) and a value.
 
 ```go
-if err := track.MergeCustomers(customerio.IdentifierTypeEmail, "cool.person@company.com", customerio.IdentifierTypeCioID, "C123"); err != nil {
-  // handle error
+if err := track.MergeCustomers(
+    customerio.Identifier{Type: customerio.IdentifierTypeEmail, Value: "cool.person@company.com"},
+    customerio.Identifier{Type: customerio.IdentifierTypeCioID, Value: "C123"},
+); err != nil {
+    // handle error
 }
 ```
 

@@ -1,6 +1,9 @@
 package customerio
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // Option configures Customer.io API and Track clients.
 type Option interface {
@@ -50,6 +53,11 @@ func (r Region) TrackURL() string {
 }
 
 func WithRegion(r Region) Option {
+	switch r {
+	case RegionUS, RegionEU:
+	default:
+		panic(fmt.Sprintf("customerio: unknown region %q", r))
+	}
 	return option{
 		api: func(a *APIClient) {
 			a.URL = r.APIURL()
@@ -61,6 +69,9 @@ func WithRegion(r Region) Option {
 }
 
 func WithHTTPClient(client HTTPClient) Option {
+	if client == nil {
+		panic("customerio: WithHTTPClient called with nil HTTPClient")
+	}
 	return option{
 		api: func(a *APIClient) {
 			a.Client = client
@@ -72,6 +83,9 @@ func WithHTTPClient(client HTTPClient) Option {
 }
 
 func WithUserAgent(ua string) Option {
+	if ua == "" {
+		panic("customerio: WithUserAgent called with empty string")
+	}
 	return option{
 		api: func(a *APIClient) {
 			a.UserAgent = ua
@@ -122,7 +136,9 @@ func trackPayload(eventName string, data map[string]any, opts ...TrackOption) ma
 	}
 
 	for _, opt := range opts {
-		opt(payload)
+		if opt != nil {
+			opt(payload)
+		}
 	}
 
 	return payload

@@ -514,6 +514,16 @@ func TestHandlerRejectsMismatchedBasicAuth(t *testing.T) {
 }
 
 func TestMergeCustomers(t *testing.T) {
+	checkMergeError := func(t *testing.T, err error, prefix, contains string) {
+		t.Helper()
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if got := err.Error(); !strings.Contains(got, prefix+": ") || !strings.Contains(got, contains) {
+			t.Errorf("expected error containing %q and %q, got %q", prefix, contains, got)
+		}
+	}
+
 	err1 := cio.MergeCustomers(customerio.Identifier{
 		Type:  "",
 		Value: "id1",
@@ -521,7 +531,7 @@ func TestMergeCustomers(t *testing.T) {
 		Type:  "id",
 		Value: "id2",
 	})
-	checkParamError(t, err1, "primary")
+	checkMergeError(t, err1, "primary", "invalid id type")
 
 	err2 := cio.MergeCustomers(customerio.Identifier{
 		Type:  "id",
@@ -530,7 +540,7 @@ func TestMergeCustomers(t *testing.T) {
 		Type:  "id",
 		Value: "id2",
 	})
-	checkParamError(t, err2, "primary")
+	checkMergeError(t, err2, "primary", "invalid id")
 
 	err3 := cio.MergeCustomers(customerio.Identifier{
 		Type:  "email",
@@ -539,7 +549,7 @@ func TestMergeCustomers(t *testing.T) {
 		Type:  "",
 		Value: "id2",
 	})
-	checkParamError(t, err3, "secondary")
+	checkMergeError(t, err3, "secondary", "invalid id type")
 
 	err4 := cio.MergeCustomers(customerio.Identifier{
 		Type:  "cio_id",
@@ -548,7 +558,7 @@ func TestMergeCustomers(t *testing.T) {
 		Type:  "email",
 		Value: "",
 	})
-	checkParamError(t, err4, "secondary")
+	checkMergeError(t, err4, "secondary", "invalid id")
 
 	runCases(t,
 		[]testCase{

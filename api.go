@@ -37,6 +37,9 @@ func NewAPIClient(key string, opts ...Option) *APIClient {
 	return client
 }
 
+// doRequest returns the raw response body and status code. Callers
+// must check the status code and handle errors; unlike CustomerIO.request(),
+// this method does not return an error for non-200 responses.
 func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, body any) ([]byte, int, error) {
 	b, err := json.Marshal(body)
 	if err != nil {
@@ -60,7 +63,7 @@ func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, bod
 		_ = resp.Body.Close()
 	}()
 
-	respBody, err := io.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
 		return nil, 0, err
 	}
