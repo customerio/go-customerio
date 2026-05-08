@@ -25,7 +25,7 @@ func broadcastServer(t *testing.T, verify func(method, path string, body []byte)
 		if err != nil {
 			t.Error(err)
 		}
-		defer req.Body.Close()
+		defer func() { _ = req.Body.Close() }()
 		verify(req.Method, req.URL.Path, b)
 		fmt.Fprintf(w, `{"id":%d}`, expectedBroadcastResponseID)
 	}))
@@ -38,9 +38,9 @@ func broadcastServer(t *testing.T, verify func(method, path string, body []byte)
 
 func TestTriggerBroadcastSegment(t *testing.T) {
 	broadcastID := 123
-	data := map[string]interface{}{"name": "Joe"}
+	data := map[string]any{"name": "Joe"}
 	recipients := customerio.BroadcastRecipients{
-		Segment: map[string]interface{}{"id": float64(1)},
+		Segment: map[string]any{"id": float64(1)},
 	}
 
 	api, srv := broadcastServer(t, func(method, path string, body []byte) {
@@ -51,7 +51,7 @@ func TestTriggerBroadcastSegment(t *testing.T) {
 			t.Errorf("expected /v1/campaigns/123/triggers, got %s", path)
 		}
 
-		var payload map[string]interface{}
+		var payload map[string]any
 		if err := json.Unmarshal(body, &payload); err != nil {
 			t.Fatal(err)
 		}
@@ -66,8 +66,8 @@ func TestTriggerBroadcastSegment(t *testing.T) {
 			t.Error("ids should not be present in segment-based payload")
 		}
 
-		wantRecipients := map[string]interface{}{
-			"segment": map[string]interface{}{"id": float64(1)},
+		wantRecipients := map[string]any{
+			"segment": map[string]any{"id": float64(1)},
 		}
 		if !reflect.DeepEqual(payload["recipients"], wantRecipients) {
 			t.Errorf("recipients mismatch: want %#v got %#v", wantRecipients, payload["recipients"])
@@ -75,7 +75,7 @@ func TestTriggerBroadcastSegment(t *testing.T) {
 	})
 	defer srv.Close()
 
-	resp, err := api.TriggerBroadcast(context.Background(), broadcastID, data, recipients)
+	resp, err := api.TriggerBroadcast(context.Background(), broadcastID, data, recipients, customerio.BroadcastOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,9 +85,11 @@ func TestTriggerBroadcastSegment(t *testing.T) {
 }
 
 func TestTriggerBroadcastIDs(t *testing.T) {
-	data := map[string]interface{}{"promo": "SAVE10"}
+	data := map[string]any{"promo": "SAVE10"}
 	recipients := customerio.BroadcastRecipients{
-		Ids:             []string{"c1", "c2"},
+		Ids: []string{"c1", "c2"},
+	}
+	opts := customerio.BroadcastOptions{
 		IDIgnoreMissing: boolPtr(true),
 		// These should NOT appear in the output for the ids path.
 		EmailIgnoreMissing: boolPtr(true),
@@ -95,7 +97,7 @@ func TestTriggerBroadcastIDs(t *testing.T) {
 	}
 
 	api, srv := broadcastServer(t, func(_, _ string, body []byte) {
-		var payload map[string]interface{}
+		var payload map[string]any
 		if err := json.Unmarshal(body, &payload); err != nil {
 			t.Fatal(err)
 		}
@@ -107,7 +109,7 @@ func TestTriggerBroadcastIDs(t *testing.T) {
 		if !ok {
 			t.Fatal("expected ids key")
 		}
-		wantIDs := []interface{}{"c1", "c2"}
+		wantIDs := []any{"c1", "c2"}
 		if !reflect.DeepEqual(ids, wantIDs) {
 			t.Errorf("ids mismatch: want %v got %v", wantIDs, ids)
 		}
@@ -123,21 +125,23 @@ func TestTriggerBroadcastIDs(t *testing.T) {
 	})
 	defer srv.Close()
 
-	if _, err := api.TriggerBroadcast(context.Background(), 42, data, recipients); err != nil {
+	if _, err := api.TriggerBroadcast(context.Background(), 42, data, recipients, opts); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestTriggerBroadcastEmails(t *testing.T) {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	recipients := customerio.BroadcastRecipients{
-		Emails:             []string{"a@example.com", "b@example.com"},
+		Emails: []string{"a@example.com", "b@example.com"},
+	}
+	opts := customerio.BroadcastOptions{
 		EmailIgnoreMissing: boolPtr(true),
 		EmailAddDuplicates: boolPtr(false),
 	}
 
 	api, srv := broadcastServer(t, func(_, _ string, body []byte) {
-		var payload map[string]interface{}
+		var payload map[string]any
 		if err := json.Unmarshal(body, &payload); err != nil {
 			t.Fatal(err)
 		}
@@ -149,7 +153,7 @@ func TestTriggerBroadcastEmails(t *testing.T) {
 		if !ok {
 			t.Fatal("expected emails key")
 		}
-		wantEmails := []interface{}{"a@example.com", "b@example.com"}
+		wantEmails := []any{"a@example.com", "b@example.com"}
 		if !reflect.DeepEqual(emails, wantEmails) {
 			t.Errorf("emails mismatch: want %v got %v", wantEmails, emails)
 		}
@@ -165,24 +169,26 @@ func TestTriggerBroadcastEmails(t *testing.T) {
 	})
 	defer srv.Close()
 
-	if _, err := api.TriggerBroadcast(context.Background(), 7, data, recipients); err != nil {
+	if _, err := api.TriggerBroadcast(context.Background(), 7, data, recipients, opts); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestTriggerBroadcastPerUserData(t *testing.T) {
-	data := map[string]interface{}{"campaign": "spring"}
+	data := map[string]any{"campaign": "spring"}
 	recipients := customerio.BroadcastRecipients{
-		PerUserData: []map[string]interface{}{
-			{"id": "u1", "data": map[string]interface{}{"first_name": "Alice"}},
+		PerUserData: []map[string]any{
+			{"id": "u1", "data": map[string]any{"first_name": "Alice"}},
 		},
+	}
+	opts := customerio.BroadcastOptions{
 		IDIgnoreMissing:    boolPtr(false),
 		EmailIgnoreMissing: boolPtr(true),
 		EmailAddDuplicates: boolPtr(true),
 	}
 
 	api, srv := broadcastServer(t, func(_, _ string, body []byte) {
-		var payload map[string]interface{}
+		var payload map[string]any
 		if err := json.Unmarshal(body, &payload); err != nil {
 			t.Fatal(err)
 		}
@@ -205,15 +211,17 @@ func TestTriggerBroadcastPerUserData(t *testing.T) {
 	})
 	defer srv.Close()
 
-	if _, err := api.TriggerBroadcast(context.Background(), 99, data, recipients); err != nil {
+	if _, err := api.TriggerBroadcast(context.Background(), 99, data, recipients, opts); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestTriggerBroadcastDataFileURL(t *testing.T) {
-	data := map[string]interface{}{}
+	data := map[string]any{}
 	recipients := customerio.BroadcastRecipients{
-		DataFileURL:        "s3://mybucket/users.csv",
+		DataFileURL: "s3://mybucket/users.csv",
+	}
+	opts := customerio.BroadcastOptions{
 		IDIgnoreMissing:    boolPtr(true),
 		EmailIgnoreMissing: boolPtr(false),
 	}
@@ -222,7 +230,7 @@ func TestTriggerBroadcastDataFileURL(t *testing.T) {
 		if path != "/v1/campaigns/5/triggers" {
 			t.Errorf("unexpected path: %s", path)
 		}
-		var payload map[string]interface{}
+		var payload map[string]any
 		if err := json.Unmarshal(body, &payload); err != nil {
 			t.Fatal(err)
 		}
@@ -245,7 +253,7 @@ func TestTriggerBroadcastDataFileURL(t *testing.T) {
 	})
 	defer srv.Close()
 
-	if _, err := api.TriggerBroadcast(context.Background(), 5, data, recipients); err != nil {
+	if _, err := api.TriggerBroadcast(context.Background(), 5, data, recipients, opts); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -253,14 +261,14 @@ func TestTriggerBroadcastDataFileURL(t *testing.T) {
 func TestTriggerBroadcastIDZero(t *testing.T) {
 	api := customerio.NewAPIClient("myKey")
 
-	_, err := api.TriggerBroadcast(context.Background(), 0, nil, customerio.BroadcastRecipients{})
+	_, err := api.TriggerBroadcast(context.Background(), 0, nil, customerio.BroadcastRecipients{}, customerio.BroadcastOptions{})
 	checkParamError(t, err, "broadcastID")
 }
 
 func TestTriggerBroadcastIDNegative(t *testing.T) {
 	api := customerio.NewAPIClient("myKey")
 
-	_, err := api.TriggerBroadcast(context.Background(), -1, nil, customerio.BroadcastRecipients{})
+	_, err := api.TriggerBroadcast(context.Background(), -1, nil, customerio.BroadcastRecipients{}, customerio.BroadcastOptions{})
 	checkParamError(t, err, "broadcastID")
 }
 
@@ -274,7 +282,7 @@ func TestTriggerBroadcastError(t *testing.T) {
 	api := customerio.NewAPIClient("myKey")
 	api.URL = srv.URL
 
-	_, err := api.TriggerBroadcast(context.Background(), 1, nil, customerio.BroadcastRecipients{})
+	_, err := api.TriggerBroadcast(context.Background(), 1, nil, customerio.BroadcastRecipients{}, customerio.BroadcastOptions{})
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -300,7 +308,7 @@ func TestTriggerBroadcastErrorUnparseableBody(t *testing.T) {
 	api := customerio.NewAPIClient("myKey")
 	api.URL = srv.URL
 
-	_, err := api.TriggerBroadcast(context.Background(), 1, nil, customerio.BroadcastRecipients{})
+	_, err := api.TriggerBroadcast(context.Background(), 1, nil, customerio.BroadcastRecipients{}, customerio.BroadcastOptions{})
 	cioErr, ok := err.(*customerio.CustomerIOError)
 	if !ok {
 		t.Fatalf("expected *CustomerIOError, got %T", err)
@@ -316,14 +324,16 @@ func TestTriggerBroadcastErrorUnparseableBody(t *testing.T) {
 func TestTriggerBroadcastCompanionOptionsIsolation(t *testing.T) {
 	// When ids is the direct field, email_* options must be excluded even if set.
 	recipients := customerio.BroadcastRecipients{
-		Ids:                []string{"u1"},
+		Ids: []string{"u1"},
+	}
+	opts := customerio.BroadcastOptions{
 		IDIgnoreMissing:    boolPtr(true),
 		EmailIgnoreMissing: boolPtr(true),
 		EmailAddDuplicates: boolPtr(true),
 	}
 
 	api, srv := broadcastServer(t, func(_, _ string, body []byte) {
-		var payload map[string]interface{}
+		var payload map[string]any
 		if err := json.Unmarshal(body, &payload); err != nil {
 			t.Fatal(err)
 		}
@@ -339,7 +349,7 @@ func TestTriggerBroadcastCompanionOptionsIsolation(t *testing.T) {
 	})
 	defer srv.Close()
 
-	if _, err := api.TriggerBroadcast(context.Background(), 1, nil, recipients); err != nil {
+	if _, err := api.TriggerBroadcast(context.Background(), 1, nil, recipients, opts); err != nil {
 		t.Fatal(err)
 	}
 }

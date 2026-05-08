@@ -395,10 +395,11 @@ client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customeri
 resp, err := client.TriggerBroadcast(
   context.Background(),
   broadcastID,
-  map[string]interface{}{"name": "gopher"},
+  map[string]any{"name": "gopher"},
   customerio.BroadcastRecipients{
-    Segment: map[string]interface{}{"id": 1},
+    Segment: map[string]any{"id": 1},
   },
+  customerio.BroadcastOptions{},
 )
 if err != nil {
   // handle error
@@ -417,7 +418,9 @@ resp, err := client.TriggerBroadcast(
   broadcastID,
   map[string]interface{}{"name": "gopher"},
   customerio.BroadcastRecipients{
-    Emails:             []string{"user@example.com"},
+    Emails: []string{"user@example.com"},
+  },
+  customerio.BroadcastOptions{
     EmailIgnoreMissing: &ignore,
   },
 )
@@ -427,7 +430,7 @@ if err != nil {
 fmt.Println(resp.ID)
 ```
 
-You can also use `Ids`, `PerUserData`, or `DataFileURL` as the direct recipient field. When a direct field is set, only its allowed companion options (`IDIgnoreMissing`, `EmailIgnoreMissing`, `EmailAddDuplicates`) are included in the request — extra options are dropped to match API expectations.
+You can also use `Ids`, `PerUserData`, or `DataFileURL` as the direct recipient field. `BroadcastOptions` carries the per-recipient processing flags (`IDIgnoreMissing`, `EmailIgnoreMissing`, `EmailAddDuplicates`); only the flags that apply to the chosen recipient field are sent — others are dropped to match API expectations.
 
 ### Adding people to a manual segment
 
