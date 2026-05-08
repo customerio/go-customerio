@@ -2,8 +2,10 @@ package customerio_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,6 +21,12 @@ import (
 
 var cio *customerio.CustomerIO
 
+type httpClientFunc func(*http.Request) (*http.Response, error)
+
+func (f httpClientFunc) Do(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
 func TestMain(m *testing.M) {
 	srv := httptest.NewServer(http.HandlerFunc(handler))
 	defer srv.Close()
@@ -33,7 +41,7 @@ type testCase struct {
 	id     string
 	method string
 	path   string
-	body   interface{}
+	body   any
 }
 
 func runCases(t *testing.T, cases []testCase, do func(c testCase) error) {
@@ -61,7 +69,7 @@ func checkParamError(t *testing.T, err error, param string) {
 }
 
 func TestIdentify(t *testing.T) {
-	attributes := map[string]interface{}{
+	attributes := map[string]any{
 		"a": "1",
 	}
 	err := cio.Identify("", attributes)
@@ -78,14 +86,37 @@ func TestIdentify(t *testing.T) {
 		})
 }
 
+func TestBasicAuthUsesURLSafeBase64(t *testing.T) {
+	siteID := "~~~"
+	apiKey := "~~~"
+	expectedAuth := "Basic " + base64.URLEncoding.EncodeToString([]byte(siteID+":"+apiKey))
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if got := req.Header.Get("Authorization"); got != expectedAuth {
+			t.Errorf("expected Authorization %q got %q", expectedAuth, got)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	client := customerio.NewTrackClient(siteID, apiKey)
+	client.URL = srv.URL
+
+	if err := client.Identify("1", map[string]any{"a": "1"}); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestTrack(t *testing.T) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"a": "1",
 	}
 
-	body := map[string]interface{}{
+	body := map[string]any{
 		"name": "test",
-		"data": map[string]interface{}{
+		"data": map[string]any{
 			"a": "1",
 		},
 	}
@@ -106,17 +137,17 @@ func TestTrack(t *testing.T) {
 }
 
 func TestTrackWithOptions(t *testing.T) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"a": "1",
 	}
 	timestamp := time.Unix(1640995200, 0)
 
-	body := map[string]interface{}{
+	body := map[string]any{
 		"name":      "test",
 		"id":        "evt_123",
 		"timestamp": timestamp.Unix(),
 		"type":      customerio.TrackTypePage,
-		"data": map[string]interface{}{
+		"data": map[string]any{
 			"a": "1",
 		},
 	}
@@ -135,14 +166,14 @@ func TestTrackWithOptions(t *testing.T) {
 }
 
 func TestTrackAnonymous(t *testing.T) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"a": "1",
 	}
 
-	body := map[string]interface{}{
+	body := map[string]any{
 		"name":         "test",
 		"anonymous_id": "anon123",
-		"data": map[string]interface{}{
+		"data": map[string]any{
 			"a": "1",
 		},
 	}
@@ -153,19 +184,37 @@ func TestTrackAnonymous(t *testing.T) {
 	}
 }
 
+func TestTrackAnonymousAllowsEmptyAnonymousID(t *testing.T) {
+	data := map[string]any{
+		"a": "1",
+	}
+
+	body := map[string]any{
+		"name": "test",
+		"data": map[string]any{
+			"a": "1",
+		},
+	}
+
+	expect("POST", "/api/v1/events", body)
+	if err := cio.TrackAnonymous("", "test", data); err != nil {
+		t.Error(err.Error())
+	}
+}
+
 func TestTrackAnonymousWithOptions(t *testing.T) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"a": "1",
 	}
 	timestamp := time.Unix(1640995200, 0)
 
-	body := map[string]interface{}{
+	body := map[string]any{
 		"name":         "test",
 		"anonymous_id": "anon123",
 		"id":           "evt_123",
 		"timestamp":    timestamp.Unix(),
 		"type":         customerio.TrackTypeScreen,
-		"data": map[string]interface{}{
+		"data": map[string]any{
 			"a": "1",
 		},
 	}
@@ -197,6 +246,105 @@ func TestDelete(t *testing.T) {
 		})
 }
 
+func TestDeleteCtxUsesRequestContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	client := customerio.NewTrackClient("siteid", "apikey", customerio.WithHTTPClient(httpClientFunc(func(req *http.Request) (*http.Response, error) {
+		if err := req.Context().Err(); err != context.Canceled {
+			t.Errorf("expected canceled request context, got %v", err)
+		}
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader("")),
+		}, nil
+	})))
+
+	if err := client.DeleteCtx(ctx, "1"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestTrackCtxUsesRequestContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	client := customerio.NewTrackClient("siteid", "apikey", customerio.WithHTTPClient(httpClientFunc(func(req *http.Request) (*http.Response, error) {
+		if err := req.Context().Err(); err != context.Canceled {
+			t.Errorf("expected canceled request context, got %v", err)
+		}
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader("")),
+		}, nil
+	})))
+
+	if err := client.TrackCtx(ctx, "1", "purchase", nil); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCustomerIOErrorAccessors(t *testing.T) {
+	const responseBody = "rate limited"
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+		if _, err := w.Write([]byte(responseBody)); err != nil {
+			t.Error(err)
+		}
+	}))
+	defer srv.Close()
+
+	client := customerio.NewTrackClient("siteid", "apikey")
+	client.URL = srv.URL
+
+	err := client.Track("1", "purchase", nil)
+	var apiErr *customerio.CustomerIOError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected CustomerIOError, got %T", err)
+	}
+	if apiErr.StatusCode() != http.StatusTooManyRequests {
+		t.Errorf("expected status %d got %d", http.StatusTooManyRequests, apiErr.StatusCode())
+	}
+	if apiErr.URL() != srv.URL+"/api/v1/customers/1/events" {
+		t.Errorf("unexpected url: %s", apiErr.URL())
+	}
+	if apiErr.Error() != fmt.Sprintf("%d: %s %s", http.StatusTooManyRequests, srv.URL+"/api/v1/customers/1/events", responseBody) {
+		t.Errorf("unexpected error string: %s", apiErr.Error())
+	}
+	body := apiErr.Body()
+	if string(body) != responseBody {
+		t.Errorf("expected body %q got %q", responseBody, string(body))
+	}
+	body[0] = 'R'
+	if string(apiErr.Body()) != responseBody {
+		t.Error("Body should return a copy")
+	}
+}
+
+func TestNewDeviceMarshalsToken(t *testing.T) {
+	device, err := customerio.NewDevice("device-id", "ios", map[string]any{"attr1": "value1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	b, err := json.Marshal(device)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal(b, &payload); err != nil {
+		t.Fatal(err)
+	}
+	if payload["token"] != "device-id" {
+		t.Errorf("expected token to be device-id, got %v", payload["token"])
+	}
+	if _, ok := payload["id"]; ok {
+		t.Errorf("device payload should use token, got id in %s", b)
+	}
+}
+
 func TestAddDevice(t *testing.T) {
 	err := cio.AddDevice("", "d1", "ios", nil)
 	checkParamError(t, err, "customerID")
@@ -205,7 +353,7 @@ func TestAddDevice(t *testing.T) {
 	err = cio.AddDevice("1", "d1", "", nil)
 	checkParamError(t, err, "platform")
 
-	body := map[string]map[string]interface{}{
+	body := map[string]map[string]any{
 		"device": {
 			"id":        "d1",
 			"platform":  "ios",
@@ -219,7 +367,7 @@ func TestAddDevice(t *testing.T) {
 			{"1/", "PUT", "/api/v1/customers/1%2F/devices", body},
 		},
 		func(c testCase) error {
-			return cio.AddDevice(c.id, "d1", "ios", map[string]interface{}{
+			return cio.AddDevice(c.id, "d1", "ios", map[string]any{
 				"last_used": 1606511962,
 			})
 		})
@@ -253,7 +401,7 @@ func TestDeleteDevice(t *testing.T) {
 var (
 	expectedMethod string
 	expectedPath   string
-	expectedBody   interface{}
+	expectedBody   any
 )
 
 func handler(w http.ResponseWriter, req *http.Request) {
@@ -262,7 +410,9 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer req.Body.Close()
+	defer func() {
+		_ = req.Body.Close()
+	}()
 
 	s := strings.SplitN(req.Header.Get("Authorization"), " ", 2)
 	if len(s) != 2 || s[0] != "Basic" {
@@ -270,7 +420,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	decoded, err := base64.StdEncoding.DecodeString(s[1])
+	decoded, err := base64.URLEncoding.DecodeString(s[1])
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -280,7 +430,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	if pair[0] != "siteid" && pair[1] != "apikey" {
+	if pair[0] != "siteid" || pair[1] != "apikey" {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -289,7 +439,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "expected Content-Type application/json", http.StatusBadRequest)
 	}
 
-	var data map[string]interface{}
+	var data map[string]any
 	if len(b) > 0 {
 		dec := json.NewDecoder(bytes.NewReader(b))
 		dec.UseNumber()
@@ -298,7 +448,7 @@ func handler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	validate := func(method, path string, body interface{}) error {
+	validate := func(method, path string, body any) error {
 		if method != expectedMethod {
 			return fmt.Errorf("expected %s got %s", expectedMethod, method)
 		}
@@ -325,13 +475,55 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func expect(method, path string, body interface{}) {
+func expect(method, path string, body any) {
 	expectedMethod = method
 	expectedPath = path
 	expectedBody = body
 }
 
+func TestHandlerRejectsMismatchedBasicAuth(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		siteID string
+		apiKey string
+	}{
+		{
+			name:   "wrong site id",
+			siteID: "wrong",
+			apiKey: "apikey",
+		},
+		{
+			name:   "wrong api key",
+			siteID: "siteid",
+			apiKey: "wrong",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPut, "/api/v1/customers/1", strings.NewReader(`{"a":"1"}`))
+			req.Header.Set("Authorization", "Basic "+base64.URLEncoding.EncodeToString([]byte(tc.siteID+":"+tc.apiKey)))
+			req.Header.Set("Content-Type", "application/json")
+
+			rec := httptest.NewRecorder()
+			handler(rec, req)
+
+			if rec.Code != http.StatusUnauthorized {
+				t.Errorf("expected status %d got %d", http.StatusUnauthorized, rec.Code)
+			}
+		})
+	}
+}
+
 func TestMergeCustomers(t *testing.T) {
+	checkMergeError := func(t *testing.T, err error, prefix, contains string) {
+		t.Helper()
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if got := err.Error(); !strings.Contains(got, prefix+": ") || !strings.Contains(got, contains) {
+			t.Errorf("expected error containing %q and %q, got %q", prefix, contains, got)
+		}
+	}
+
 	err1 := cio.MergeCustomers(customerio.Identifier{
 		Type:  "",
 		Value: "id1",
@@ -339,7 +531,7 @@ func TestMergeCustomers(t *testing.T) {
 		Type:  "id",
 		Value: "id2",
 	})
-	checkParamError(t, err1, "primary")
+	checkMergeError(t, err1, "primary", "invalid id type")
 
 	err2 := cio.MergeCustomers(customerio.Identifier{
 		Type:  "id",
@@ -348,7 +540,7 @@ func TestMergeCustomers(t *testing.T) {
 		Type:  "id",
 		Value: "id2",
 	})
-	checkParamError(t, err2, "primary")
+	checkMergeError(t, err2, "primary", "invalid id")
 
 	err3 := cio.MergeCustomers(customerio.Identifier{
 		Type:  "email",
@@ -357,7 +549,7 @@ func TestMergeCustomers(t *testing.T) {
 		Type:  "",
 		Value: "id2",
 	})
-	checkParamError(t, err3, "secondary")
+	checkMergeError(t, err3, "secondary", "invalid id type")
 
 	err4 := cio.MergeCustomers(customerio.Identifier{
 		Type:  "cio_id",
@@ -366,7 +558,7 @@ func TestMergeCustomers(t *testing.T) {
 		Type:  "email",
 		Value: "",
 	})
-	checkParamError(t, err4, "secondary")
+	checkMergeError(t, err4, "secondary", "invalid id")
 
 	runCases(t,
 		[]testCase{

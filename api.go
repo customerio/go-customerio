@@ -21,32 +21,35 @@ type APIClient struct {
 
 // NewAPIClient prepares a client for use with the Customer.io API, see: https://customer.io/docs/api/#apicoreintroduction
 // using an App API Key from https://fly.customer.io/settings/api_credentials?keyType=app
-func NewAPIClient(key string, opts ...option) *APIClient {
+func NewAPIClient(key string, opts ...Option) *APIClient {
 	client := &APIClient{
 		Key:       key,
-		Client:    http.DefaultClient,
+		Client:    newDefaultHTTPClient(),
 		URL:       "https://api.customer.io",
 		UserAgent: DefaultUserAgent,
 	}
 
 	for _, opt := range opts {
-		opt.api(client)
+		if opt != nil {
+			opt.applyAPI(client)
+		}
 	}
 	return client
 }
 
-func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, body interface{}) ([]byte, int, error) {
+// doRequest returns the raw response body and status code. Callers
+// must check the status code and handle errors; unlike CustomerIO.request(),
+// this method does not return an error for non-200 responses.
+func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, body any) ([]byte, int, error) {
 	b, err := json.Marshal(body)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	req, err := http.NewRequest(verb, c.URL+requestPath, bytes.NewBuffer(b))
+	req, err := http.NewRequestWithContext(ctx, verb, c.URL+requestPath, bytes.NewBuffer(b))
 	if err != nil {
 		return nil, 0, err
 	}
-
-	req = req.WithContext(ctx)
 
 	req.Header.Set("Authorization", "Bearer "+c.Key)
 	req.Header.Set("Content-Type", "application/json")
@@ -56,9 +59,12 @@ func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, bod
 	if err != nil {
 		return nil, 0, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
-	respBody, err := io.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+
 	if err != nil {
 		return nil, 0, err
 	}

@@ -1,43 +1,78 @@
 package customerio
 
 import (
+	"fmt"
 	"net/url"
 	"time"
 )
+
+// Option configures Customer.io API and Track clients.
+type Option interface {
+	applyAPI(*APIClient)
+	applyTrack(*CustomerIO)
+}
 
 type option struct {
 	api   func(*APIClient)
 	track func(*CustomerIO)
 }
 
-type region struct {
-	ApiURL   string
-	TrackURL string
+func (o option) applyAPI(a *APIClient) {
+	if o.api != nil {
+		o.api(a)
+	}
 }
 
-var (
-	RegionUS = region{
-		ApiURL:   "https://api.customer.io",
-		TrackURL: "https://track.customer.io",
+func (o option) applyTrack(c *CustomerIO) {
+	if o.track != nil {
+		o.track(c)
 	}
-	RegionEU = region{
-		ApiURL:   "https://api-eu.customer.io",
-		TrackURL: "https://track-eu.customer.io",
-	}
+}
+
+// Region configures the Customer.io API endpoints for a workspace region.
+type Region string
+
+const (
+	// RegionUS configures clients for Customer.io US endpoints.
+	RegionUS Region = "us"
+	// RegionEU configures clients for Customer.io EU endpoints.
+	RegionEU Region = "eu"
 )
 
-func WithRegion(r region) option {
+func (r Region) APIURL() string {
+	if r == RegionEU {
+		return "https://api-eu.customer.io"
+	}
+	return "https://api.customer.io"
+}
+
+func (r Region) TrackURL() string {
+	if r == RegionEU {
+		return "https://track-eu.customer.io"
+	}
+	return "https://track.customer.io"
+}
+
+func WithRegion(r Region) Option {
+	switch r {
+	case RegionUS, RegionEU:
+	default:
+		panic(fmt.Sprintf("customerio: unknown region %q", r))
+	}
 	return option{
 		api: func(a *APIClient) {
-			a.URL = r.ApiURL
+			a.URL = r.APIURL()
 		},
 		track: func(c *CustomerIO) {
-			c.URL = r.TrackURL
+			c.URL = r.TrackURL()
 		},
 	}
 }
 
-func WithHTTPClient(client HTTPClient) option {
+func WithHTTPClient(client HTTPClient) Option {
+	if client == nil {
+		panic("customerio: WithHTTPClient called with nil HTTPClient")
+	}
 	return option{
 		api: func(a *APIClient) {
 			a.Client = client
@@ -48,7 +83,10 @@ func WithHTTPClient(client HTTPClient) option {
 	}
 }
 
-func WithUserAgent(ua string) option {
+func WithUserAgent(ua string) Option {
+	if ua == "" {
+		panic("customerio: WithUserAgent called with empty string")
+	}
 	return option{
 		api: func(a *APIClient) {
 			a.UserAgent = ua
@@ -60,7 +98,7 @@ func WithUserAgent(ua string) option {
 }
 
 // TrackOption sets optional top-level fields on tracked events.
-type TrackOption func(map[string]interface{})
+type TrackOption func(map[string]any)
 
 // TrackType is the type of event being tracked.
 type TrackType string
@@ -73,33 +111,35 @@ const (
 
 // WithEventID sets the id field on tracked events.
 func WithEventID(id string) TrackOption {
-	return func(payload map[string]interface{}) {
+	return func(payload map[string]any) {
 		payload["id"] = id
 	}
 }
 
 // WithEventTimestamp sets the timestamp field on tracked events.
 func WithEventTimestamp(timestamp time.Time) TrackOption {
-	return func(payload map[string]interface{}) {
+	return func(payload map[string]any) {
 		payload["timestamp"] = timestamp.Unix()
 	}
 }
 
 // WithEventType sets the type field on tracked events.
 func WithEventType(typ TrackType) TrackOption {
-	return func(payload map[string]interface{}) {
+	return func(payload map[string]any) {
 		payload["type"] = typ
 	}
 }
 
-func trackPayload(eventName string, data map[string]interface{}, opts ...TrackOption) map[string]interface{} {
-	payload := map[string]interface{}{
+func trackPayload(eventName string, data map[string]any, opts ...TrackOption) map[string]any {
+	payload := map[string]any{
 		"name": eventName,
 		"data": data,
 	}
 
 	for _, opt := range opts {
-		opt(payload)
+		if opt != nil {
+			opt(payload)
+		}
 	}
 
 	return payload

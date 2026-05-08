@@ -22,7 +22,7 @@ func main() {
 		From:    "business@example.com",
 		Subject: "hello, {{ trigger.name }}",
 		Body:    "hello from the Customer.io {{ trigger.client }} client",
-		MessageData: map[string]interface{}{
+		MessageData: map[string]any{
 			"client": "Go",
 			"name":   "gopher",
 		},
@@ -32,7 +32,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 
 	if err := emailReq.Attach("sample.pdf", f); err != nil {
 		panic(err)

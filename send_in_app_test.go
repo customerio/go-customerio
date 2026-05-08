@@ -16,7 +16,7 @@ func TestSendInApp(t *testing.T) {
 		Identifiers: map[string]string{
 			"id": "customer_1",
 		},
-		MessageData: map[string]interface{}{
+		MessageData: map[string]any{
 			"token": "123456",
 		},
 	}

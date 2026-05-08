@@ -21,14 +21,18 @@ func transactionalServer(t *testing.T, verify func(request []byte)) (*customerio
 		if err != nil {
 			t.Error(err)
 		}
-		defer req.Body.Close()
+		defer func() {
+			_ = req.Body.Close()
+		}()
 
 		verify(b)
 
-		w.Write([]byte(`{
-			"delivery_id": "` + testDeliveryID + `",
-			"queued_at": ` + strconv.Itoa(testQueuedAt) + `
-		  }`))
+		if _, err := w.Write([]byte(`{
+				"delivery_id": "` + testDeliveryID + `",
+				"queued_at": ` + strconv.Itoa(testQueuedAt) + `
+			  }`)); err != nil {
+			t.Error(err)
+		}
 	}))
 
 	api := customerio.NewAPIClient("myKey")
