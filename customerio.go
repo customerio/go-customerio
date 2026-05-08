@@ -26,13 +26,13 @@ type CustomerIO struct {
 
 // CustomerIOError is returned by any method that fails at the API level
 type CustomerIOError struct {
-	StatusCode int
-	URL        string
-	Body       []byte
+	status int
+	url    string
+	body   []byte
 }
 
 func (e *CustomerIOError) Error() string {
-	return fmt.Sprintf("%v: %v %v", e.StatusCode, e.URL, string(e.Body))
+	return fmt.Sprintf("%v: %v %v", e.status, e.url, string(e.body))
 }
 
 // StatusCode returns the HTTP status code from a failed API response.
@@ -195,9 +195,9 @@ func (c *CustomerIO) request(ctx context.Context, method, url string, body any) 
 
 	if resp.StatusCode != http.StatusOK {
 		return &CustomerIOError{
-			StatusCode: resp.StatusCode,
-			URL:        url,
-			Body:       responseBody,
+			status: resp.StatusCode,
+			url:    url,
+			body:   responseBody,
 		}
 	}
 

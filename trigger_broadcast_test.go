@@ -292,11 +292,11 @@ func TestTriggerBroadcastError(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected *CustomerIOError, got %T", err)
 	}
-	if cioErr.StatusCode != http.StatusNotFound {
-		t.Errorf("expected status %d, got %d", http.StatusNotFound, cioErr.StatusCode)
+	if cioErr.StatusCode() != http.StatusNotFound {
+		t.Errorf("expected status %d, got %d", http.StatusNotFound, cioErr.StatusCode())
 	}
-	if !strings.Contains(string(cioErr.Body), "broadcast with id 1 does not exist") {
-		t.Errorf("expected detail in Body, got %q", string(cioErr.Body))
+	if !strings.Contains(string(cioErr.Body()), "broadcast with id 1 does not exist") {
+		t.Errorf("expected detail in Body, got %q", string(cioErr.Body()))
 	}
 }
 
@@ -316,11 +316,11 @@ func TestTriggerBroadcastErrorUnparseableBody(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected *CustomerIOError, got %T", err)
 	}
-	if cioErr.StatusCode != http.StatusBadGateway {
-		t.Errorf("expected status %d, got %d", http.StatusBadGateway, cioErr.StatusCode)
+	if cioErr.StatusCode() != http.StatusBadGateway {
+		t.Errorf("expected status %d, got %d", http.StatusBadGateway, cioErr.StatusCode())
 	}
-	if string(cioErr.Body) != "upstream issue" {
-		t.Errorf("expected raw body in Body, got %q", string(cioErr.Body))
+	if string(cioErr.Body()) != "upstream issue" {
+		t.Errorf("expected raw body in Body, got %q", string(cioErr.Body()))
 	}
 }
 

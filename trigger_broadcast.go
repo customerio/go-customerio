@@ -76,9 +76,9 @@ func (c *APIClient) TriggerBroadcast(ctx context.Context, broadcastID int, data 
 
 	if statusCode != http.StatusOK {
 		return nil, &CustomerIOError{
-			StatusCode: statusCode,
-			URL:        c.URL + requestPath,
-			Body:       body,
+			status: statusCode,
+			url:    c.URL + requestPath,
+			body:   body,
 		}
 	}
 
