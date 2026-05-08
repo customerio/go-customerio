@@ -27,7 +27,8 @@ func broadcastServer(t *testing.T, verify func(method, path string, body []byte)
 		}
 		defer func() { _ = req.Body.Close() }()
 		verify(req.Method, req.URL.Path, b)
-		fmt.Fprintf(w, `{"id":%d}`, expectedBroadcastResponseID)
+		// errcheck (golangci-lint): explicitly discard return values
+		_, _ = fmt.Fprintf(w, `{"id":%d}`, expectedBroadcastResponseID)
 	}))
 
 	api := customerio.NewAPIClient("myKey")
@@ -275,7 +276,8 @@ func TestTriggerBroadcastIDNegative(t *testing.T) {
 func TestTriggerBroadcastError(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"errors":[{"detail":"broadcast with id 1 does not exist","status":"404"}]}`))
+		// errcheck (golangci-lint): explicitly discard return values
+		_, _ = w.Write([]byte(`{"errors":[{"detail":"broadcast with id 1 does not exist","status":"404"}]}`))
 	}))
 	defer srv.Close()
 
@@ -301,7 +303,8 @@ func TestTriggerBroadcastError(t *testing.T) {
 func TestTriggerBroadcastErrorUnparseableBody(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusBadGateway)
-		w.Write([]byte(`upstream issue`))
+		// errcheck (golangci-lint): explicitly discard return values
+		_, _ = w.Write([]byte(`upstream issue`))
 	}))
 	defer srv.Close()
 
