@@ -188,7 +188,6 @@ func (c *CustomerIO) request(ctx context.Context, method, url string, body any) 
 	}()
 
 	responseBody, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-
 	if err != nil {
 		return err
 	}

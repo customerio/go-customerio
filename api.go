@@ -64,7 +64,6 @@ func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, bod
 	}()
 
 	respBody, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-
 	if err != nil {
 		return nil, 0, err
 	}
