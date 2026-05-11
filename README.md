@@ -386,6 +386,57 @@ if err != nil {
 fmt.Println(body)
 ```
 
+## Triggering API Broadcasts
+
+Use `(c *customerio.APIClient).TriggerBroadcast` to trigger a broadcast campaign. [Learn more about triggering a broadcast here](https://docs.customer.io/journeys/api-triggered-broadcasts/) via the App API.
+
+### Segment-based broadcast
+
+Send to everyone who matches a segment:
+
+```go
+client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customerio.RegionUS))
+
+resp, err := client.TriggerBroadcast(
+  context.Background(),
+  broadcastID,
+  map[string]any{"name": "gopher"},
+  customerio.BroadcastRecipients{
+    Segment: map[string]any{"id": 1},
+  },
+  customerio.BroadcastOptions{},
+)
+if err != nil {
+  // handle error
+}
+fmt.Println(resp.ID)
+```
+
+### Direct recipient broadcast
+
+Send directly to a list of email addresses or customer IDs:
+
+```go
+ignore := true
+resp, err := client.TriggerBroadcast(
+  context.Background(),
+  broadcastID,
+  map[string]interface{}{"name": "gopher"},
+  customerio.BroadcastRecipients{
+    Emails: []string{"user@example.com"},
+  },
+  customerio.BroadcastOptions{
+    EmailIgnoreMissing: &ignore,
+  },
+)
+if err != nil {
+  // handle error
+}
+fmt.Println(resp.ID)
+```
+
+You can also use `Ids`, `PerUserData`, or `DataFileURL` as the direct recipient field. `BroadcastOptions` carries the per-recipient processing flags (`IDIgnoreMissing`, `EmailIgnoreMissing`, `EmailAddDuplicates`); only the flags that apply to the chosen recipient field are sent — others are dropped to match API expectations.
+
 ### Adding people to a manual segment
 
 Add customers to a manual segment by segment ID. Pass `customerio.WithSegmentIDType` to interpret the supplied ids as `email` or `cio_id` instead of the default `id`. [Learn more about adding customers to a segment](https://docs.customer.io/integrations/api/track/#tag/track-segments/add_to_segment).
