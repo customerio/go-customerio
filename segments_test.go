@@ -24,9 +24,9 @@ func TestAddPeopleToSegment(t *testing.T) {
 
 	runCases(t, rec,
 		[]testCase{
-			{"default", "POST", "/api/v1/segments/7/add_customers", map[string]interface{}{"ids": idsByID}},
-			{"email", "POST", "/api/v1/segments/7/add_customers?id_type=email", map[string]interface{}{"ids": idsByEmail}},
-			{"cio_id", "POST", "/api/v1/segments/7/add_customers?id_type=cio_id", map[string]interface{}{"ids": idsByCioID}},
+			{"default", "POST", "/api/v1/segments/7/add_customers", map[string]any{"ids": idsByID}},
+			{"email", "POST", "/api/v1/segments/7/add_customers?id_type=email", map[string]any{"ids": idsByEmail}},
+			{"cio_id", "POST", "/api/v1/segments/7/add_customers?id_type=cio_id", map[string]any{"ids": idsByCioID}},
 		},
 		func(c testCase) error {
 			switch c.id {
@@ -51,9 +51,9 @@ func TestRemovePeopleFromSegment(t *testing.T) {
 
 	runCases(t, rec,
 		[]testCase{
-			{"default", "POST", "/api/v1/segments/7/remove_customers", map[string]interface{}{"ids": idsByID}},
-			{"email", "POST", "/api/v1/segments/7/remove_customers?id_type=email", map[string]interface{}{"ids": idsByEmail}},
-			{"cio_id", "POST", "/api/v1/segments/7/remove_customers?id_type=cio_id", map[string]interface{}{"ids": idsByCioID}},
+			{"default", "POST", "/api/v1/segments/7/remove_customers", map[string]any{"ids": idsByID}},
+			{"email", "POST", "/api/v1/segments/7/remove_customers?id_type=email", map[string]any{"ids": idsByEmail}},
+			{"cio_id", "POST", "/api/v1/segments/7/remove_customers?id_type=cio_id", map[string]any{"ids": idsByCioID}},
 		},
 		func(c testCase) error {
 			switch c.id {
