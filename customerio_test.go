@@ -265,6 +265,24 @@ func TestDeleteCtxUsesRequestContext(t *testing.T) {
 	}
 }
 
+func TestDeleteRequestIncludesUserAgent(t *testing.T) {
+	client := customerio.NewTrackClient("siteid", "apikey", customerio.WithHTTPClient(httpClientFunc(func(req *http.Request) (*http.Response, error) {
+		if ua := req.Header.Get("User-Agent"); ua == "" {
+			t.Error("expected User-Agent header on DELETE request, got empty string")
+		} else if ua != customerio.DefaultUserAgent {
+			t.Errorf("expected User-Agent %q, got %q", customerio.DefaultUserAgent, ua)
+		}
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader("")),
+		}, nil
+	})))
+
+	if err := client.DeleteCtx(context.Background(), "1"); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestTrackCtxUsesRequestContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
