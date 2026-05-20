@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 )
@@ -29,7 +28,7 @@ func (c *APIClient) sendTransactional(ctx context.Context, typ TransactionalType
 		return nil, ErrInvalidTransactionalMessageType
 	}
 
-	body, statusCode, err := c.doRequest(ctx, "POST", fmt.Sprintf("/v1/send/%s", api), req)
+	body, statusCode, err := c.doRequest(ctx, "POST", req, "v1", "send", api)
 	if err != nil {
 		return nil, err
 	}

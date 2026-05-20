@@ -2,7 +2,8 @@ package customerio
 
 import (
 	"context"
-	"fmt"
+	"net/url"
+	"strconv"
 )
 
 // IDType is the type of ids you want to use.
@@ -29,11 +30,13 @@ func (c *CustomerIO) AddPeopleToSegment(ctx context.Context, segmentID int, ids 
 	if len(ids) == 0 {
 		return ParamError{Param: "ids"}
 	}
-	return c.request(ctx, "POST",
-		fmt.Sprintf("%s/api/v1/segments/%d/add_customers%s", c.URL, segmentID, c.getQueryParams()),
-		map[string]interface{}{
-			"ids": ids,
-		})
+	u, err := buildURL(c.URL, c.idTypeQuery(), "api", "v1", "segments", strconv.Itoa(segmentID), "add_customers")
+	if err != nil {
+		return err
+	}
+	return c.request(ctx, "POST", u, map[string]interface{}{
+		"ids": ids,
+	})
 }
 
 // RemovePeopleFromSegment removes people from a segment
@@ -44,24 +47,29 @@ func (c *CustomerIO) RemovePeopleFromSegment(ctx context.Context, segmentID int,
 	if len(ids) == 0 {
 		return ParamError{Param: "ids"}
 	}
-	return c.request(ctx, "POST",
-		fmt.Sprintf("%s/api/v1/segments/%d/remove_customers%s", c.URL, segmentID, c.getQueryParams()),
-		map[string]interface{}{
-			"ids": ids,
-		})
+	u, err := buildURL(c.URL, c.idTypeQuery(), "api", "v1", "segments", strconv.Itoa(segmentID), "remove_customers")
+	if err != nil {
+		return err
+	}
+	return c.request(ctx, "POST", u, map[string]interface{}{
+		"ids": ids,
+	})
 }
 
-// getQueryParams returns the query parameter for the request.
-func (c *CustomerIO) getQueryParams() string {
+// idTypeQuery returns the id_type query parameter for segment requests, or nil
+// when no IDType is configured.
+func (c *CustomerIO) idTypeQuery() url.Values {
 	if c.IDType == "" {
-		return ""
+		return nil
 	}
 
-	// Check if the IDType is valid and construct query parameter accordingly
+	// Check if the IDType is valid and construct the query parameter accordingly.
+	v := url.Values{}
 	switch IDType(c.IDType) {
 	case IDTypeEmail, IDTypeCioID:
-		return fmt.Sprintf("?id_type=%s", c.IDType)
+		v.Set("id_type", c.IDType)
 	default:
-		return fmt.Sprintf("?id_type=%s", DefaultIDType)
+		v.Set("id_type", string(DefaultIDType))
 	}
+	return v
 }

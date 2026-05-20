@@ -3,7 +3,6 @@ package customerio
 import (
 	"context"
 	"fmt"
-	"net/url"
 )
 
 type deviceV1 struct {
@@ -80,9 +79,11 @@ func (c *CustomerIO) AddDeviceCtx(ctx context.Context, customerID string, device
 		"device": d,
 	}
 
-	return c.request(ctx, "PUT",
-		fmt.Sprintf("%s/api/v1/customers/%s/devices", c.URL, url.PathEscape(customerID)),
-		body)
+	u, err := buildURL(c.URL, nil, "api", "v1", "customers", customerID, "devices")
+	if err != nil {
+		return err
+	}
+	return c.request(ctx, "PUT", u, body)
 }
 
 // AddDevice adds a device for a customer
@@ -98,9 +99,11 @@ func (c *CustomerIO) DeleteDeviceCtx(ctx context.Context, customerID string, dev
 	if deviceID == "" {
 		return ParamError{Param: "deviceID"}
 	}
-	return c.request(ctx, "DELETE",
-		fmt.Sprintf("%s/api/v1/customers/%s/devices/%s", c.URL, url.PathEscape(customerID), url.PathEscape(deviceID)),
-		nil)
+	u, err := buildURL(c.URL, nil, "api", "v1", "customers", customerID, "devices", deviceID)
+	if err != nil {
+		return err
+	}
+	return c.request(ctx, "DELETE", u, nil)
 }
 
 // DeleteDevice deletes a device for a customer

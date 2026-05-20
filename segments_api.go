@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 )
 
 const errUnexpectedStatusCode = "unexpected status code %d"
@@ -61,7 +62,7 @@ type CreateSegmentResponse struct {
 
 // CreateSegment sends a request to create a new segment and returns the created segment data.
 func (c *APIClient) CreateSegment(ctx context.Context, req *CreateSegmentRequest) (*CreateSegmentResponse, error) {
-	body, statusCode, err := c.doRequest(ctx, "POST", "/v1/segments", req)
+	body, statusCode, err := c.doRequest(ctx, "POST", req, "v1", "segments")
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +84,7 @@ type ListSegmentsResponse struct {
 
 // ListSegments retrieves all segments from the API.
 func (c *APIClient) ListSegments(ctx context.Context) (*ListSegmentsResponse, error) {
-	respBody, statusCode, err := c.doRequest(ctx, "GET", "/v1/segments", nil)
+	respBody, statusCode, err := c.doRequest(ctx, "GET", nil, "v1", "segments")
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +106,7 @@ type GetSegmentResponse struct {
 
 // GetSegment retrieves a specific segment by its ID.
 func (c *APIClient) GetSegment(ctx context.Context, segmentID int) (*GetSegmentResponse, error) {
-	respBody, statusCode, err := c.doRequest(ctx, "GET", fmt.Sprintf("/v1/segments/%d", segmentID), nil)
+	respBody, statusCode, err := c.doRequest(ctx, "GET", nil, "v1", "segments", strconv.Itoa(segmentID))
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +123,7 @@ func (c *APIClient) GetSegment(ctx context.Context, segmentID int) (*GetSegmentR
 
 // DeleteSegment removes a segment by its ID.
 func (c *APIClient) DeleteSegment(ctx context.Context, segmentID int) error {
-	_, statusCode, err := c.doRequest(ctx, "DELETE", fmt.Sprintf("/v1/segments/%d", segmentID), nil)
+	_, statusCode, err := c.doRequest(ctx, "DELETE", nil, "v1", "segments", strconv.Itoa(segmentID))
 	if err != nil {
 		return err
 	}
@@ -143,7 +144,7 @@ type GetSegmentDependenciesResponse struct {
 
 // GetSegmentDependencies returns the dependencies of a specific segment.
 func (c *APIClient) GetSegmentDependencies(ctx context.Context, segmentID int) (*GetSegmentDependenciesResponse, error) {
-	respBody, statusCode, err := c.doRequest(ctx, "GET", fmt.Sprintf("/v1/segments/%d/used_by", segmentID), nil)
+	respBody, statusCode, err := c.doRequest(ctx, "GET", nil, "v1", "segments", strconv.Itoa(segmentID), "used_by")
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +166,7 @@ type GetSegmentCustomerCountResponse struct {
 
 // GetSegmentCustomerCount returns the total number of customers in a specific segment.
 func (c *APIClient) GetSegmentCustomerCount(ctx context.Context, segmentID int) (*GetSegmentCustomerCountResponse, error) {
-	respBody, statusCode, err := c.doRequest(ctx, "GET", fmt.Sprintf("/v1/segments/%d/customer_count", segmentID), nil)
+	respBody, statusCode, err := c.doRequest(ctx, "GET", nil, "v1", "segments", strconv.Itoa(segmentID), "customer_count")
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +197,7 @@ type CustomerIdentifier struct {
 
 // ListCustomersInSegment retrieves a list of customers in a specific segment.
 func (c *APIClient) ListCustomersInSegment(ctx context.Context, segmentID int) (*ListCustomersInSegmentResponse, error) {
-	respBody, statusCode, err := c.doRequest(ctx, "GET", fmt.Sprintf("/v1/segments/%d/membership", segmentID), nil)
+	respBody, statusCode, err := c.doRequest(ctx, "GET", nil, "v1", "segments", strconv.Itoa(segmentID), "membership")
 	if err != nil {
 		return nil, err
 	}

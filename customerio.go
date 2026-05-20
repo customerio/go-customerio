@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 )
@@ -78,9 +77,11 @@ func (c *CustomerIO) IdentifyCtx(ctx context.Context, customerID string, attribu
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
-	return c.request(ctx, "PUT",
-		fmt.Sprintf("%s/api/v1/customers/%s", c.URL, url.PathEscape(customerID)),
-		attributes)
+	u, err := buildURL(c.URL, nil, "api", "v1", "customers", customerID)
+	if err != nil {
+		return err
+	}
+	return c.request(ctx, "PUT", u, attributes)
 }
 
 // Identify identifies a customer and sets their attributes
@@ -96,12 +97,14 @@ func (c *CustomerIO) TrackCtx(ctx context.Context, customerID string, eventName 
 	if eventName == "" {
 		return ParamError{Param: "eventName"}
 	}
-	return c.request(ctx, "POST",
-		fmt.Sprintf("%s/api/v1/customers/%s/events", c.URL, url.PathEscape(customerID)),
-		map[string]interface{}{
-			"name": eventName,
-			"data": data,
-		})
+	u, err := buildURL(c.URL, nil, "api", "v1", "customers", customerID, "events")
+	if err != nil {
+		return err
+	}
+	return c.request(ctx, "POST", u, map[string]interface{}{
+		"name": eventName,
+		"data": data,
+	})
 }
 
 // Track sends a single event to Customer.io for the supplied user
@@ -124,7 +127,11 @@ func (c *CustomerIO) TrackAnonymousCtx(ctx context.Context, anonymousID, eventNa
 		payload["anonymous_id"] = anonymousID
 	}
 
-	return c.request(ctx, "POST", fmt.Sprintf("%s/api/v1/events", c.URL), payload)
+	u, err := buildURL(c.URL, nil, "api", "v1", "events")
+	if err != nil {
+		return err
+	}
+	return c.request(ctx, "POST", u, payload)
 }
 
 // TrackAnonymous sends a single event to Customer.io for the anonymous user
@@ -137,9 +144,11 @@ func (c *CustomerIO) DeleteCtx(ctx context.Context, customerID string) error {
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
-	return c.request(ctx, "DELETE",
-		fmt.Sprintf("%s/api/v1/customers/%s", c.URL, url.PathEscape(customerID)),
-		nil)
+	u, err := buildURL(c.URL, nil, "api", "v1", "customers", customerID)
+	if err != nil {
+		return err
+	}
+	return c.request(ctx, "DELETE", u, nil)
 }
 
 func (c *CustomerIO) auth() string {
@@ -237,12 +246,14 @@ func (c *CustomerIO) MergeCustomersCtx(ctx context.Context, primary Identifier, 
 		return ParamError{Param: "secondary"}
 	}
 
-	return c.request(ctx, "POST",
-		fmt.Sprintf("%s/api/v1/merge_customers", c.URL),
-		map[string]interface{}{
-			"primary":   primary.kv(),
-			"secondary": secondary.kv(),
-		})
+	u, err := buildURL(c.URL, nil, "api", "v1", "merge_customers")
+	if err != nil {
+		return err
+	}
+	return c.request(ctx, "POST", u, map[string]interface{}{
+		"primary":   primary.kv(),
+		"secondary": secondary.kv(),
+	})
 }
 
 // MergeCustomers sends a request to Customer.io to merge two customer profiles together.

@@ -32,7 +32,7 @@ func NewAPIClient(key string, opts ...option) *APIClient {
 	return client
 }
 
-func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, body interface{}) ([]byte, int, error) {
+func (c *APIClient) doRequest(ctx context.Context, verb string, body interface{}, segments ...string) ([]byte, int, error) {
 	var requestBody io.Reader
 
 	if body != nil {
@@ -43,7 +43,12 @@ func (c *APIClient) doRequest(ctx context.Context, verb, requestPath string, bod
 		requestBody = bytes.NewBuffer(b)
 	}
 
-	req, err := http.NewRequest(verb, c.URL+requestPath, requestBody)
+	u, err := buildURL(c.URL, nil, segments...)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	req, err := http.NewRequest(verb, u, requestBody)
 	if err != nil {
 		return nil, 0, err
 	}
