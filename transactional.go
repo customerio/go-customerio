@@ -12,7 +12,7 @@ import (
 type TransactionalType int
 
 const (
-	TransactionalTypeEmail        TransactionalType = iota
+	TransactionalTypeEmail TransactionalType = iota
 	TransactionalTypePush
 	TransactionalTypeSMS
 	TransactionalTypeInboxMessage
