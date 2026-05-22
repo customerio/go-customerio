@@ -13,10 +13,14 @@ type HTTPClient interface {
 }
 
 type APIClient struct {
-	Key       string
-	URL       string
+	// Deprecated: Use NewAPIClient constructor options instead. Will be unexported in v4.
+	Key string
+	// Deprecated: Use NewAPIClient with WithURL or WithRegion instead. Will be unexported in v4.
+	URL string
+	// Deprecated: Use NewAPIClient with WithUserAgent instead. Will be unexported in v4.
 	UserAgent string
-	Client    HTTPClient
+	// Deprecated: Use NewAPIClient with WithHTTPClient instead. Will be unexported in v4.
+	Client HTTPClient
 }
 
 // NewAPIClient prepares a client for use with the Customer.io API, see: https://customer.io/docs/api/#apicoreintroduction
