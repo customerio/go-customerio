@@ -3,6 +3,8 @@ package customerio_test
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
@@ -57,5 +59,31 @@ func TestSendPush(t *testing.T) {
 
 	if !reflect.DeepEqual(resp, expect) {
 		t.Errorf("Expect: %#v, Got: %#v", expect, resp)
+	}
+}
+
+func TestSendPushError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(502)
+	}))
+	defer srv.Close()
+
+	api := customerio.NewAPIClient("myKey")
+	api.URL = srv.URL
+
+	resp, err := api.SendPush(context.Background(), &customerio.SendPushRequest{
+		Identifiers: map[string]string{
+			"id": "customer_1",
+		},
+		To:      "customer@example.com",
+		Title:   "hello",
+		Message: "hello from Go",
+	})
+	if err == nil {
+		t.Errorf("Expected error, got: %#v", resp)
+	}
+
+	if e, ok := err.(*customerio.TransactionalError); !ok {
+		t.Errorf("Expected TransactionalError, got: %#v", e)
 	}
 }
