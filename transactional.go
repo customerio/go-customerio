@@ -12,11 +12,11 @@ import (
 type TransactionalType int
 
 const (
-	TransactionalTypeEmail TransactionalType = iota
-	TransactionalTypePush
-	TransactionalTypeSMS
-	TransactionalTypeInboxMessage
-	TransactionalTypeInApp
+	TransactionalTypeEmail        TransactionalType = 1
+	TransactionalTypePush         TransactionalType = 2
+	TransactionalTypeSMS          TransactionalType = 3
+	TransactionalTypeInboxMessage TransactionalType = 4
+	TransactionalTypeInApp        TransactionalType = 5
 )
 
 var typeToApi = map[TransactionalType]string{
