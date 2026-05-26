@@ -23,7 +23,7 @@ func newDefaultHTTPClient() *http.Client {
 
 // doHTTP is the shared HTTP execution path for both CustomerIO (Track) and
 // APIClient (App API). Auth header injection is caller-supplied via setAuth.
-func doHTTP(ctx context.Context, client HTTPClient, method, url, userAgent string, body any, setAuth func(*http.Request)) ([]byte, int, error) {
+func doHTTP(ctx context.Context, client HTTPClient, method, url, userAgent string, body any, preflight func(*http.Request)) ([]byte, int, error) {
 	var req *http.Request
 	if body != nil {
 		b, err := json.Marshal(body)
@@ -44,7 +44,7 @@ func doHTTP(ctx context.Context, client HTTPClient, method, url, userAgent strin
 	}
 
 	req.Header.Set("User-Agent", userAgent)
-	setAuth(req)
+	preflight(req)
 
 	resp, err := client.Do(req)
 	if err != nil {
