@@ -83,7 +83,7 @@ func TestSendPushError(t *testing.T) {
 		t.Errorf("Expected error, got: %#v", resp)
 	}
 
-	if e, ok := err.(*customerio.TransactionalError); !ok {
-		t.Errorf("Expected TransactionalError, got: %#v", e)
+	if _, ok := err.(*customerio.TransactionalError); !ok {
+		t.Errorf("Expected TransactionalError, got: %#v", err)
 	}
 }
