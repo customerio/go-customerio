@@ -83,6 +83,22 @@ func WithHTTPClient(client HTTPClient) Option {
 	}
 }
 
+// WithURL overrides the base URL for API requests. Most callers should use
+// WithRegion instead; this is intended for tests or on-premise deployments.
+func WithURL(url string) Option {
+	if url == "" {
+		panic("customerio: WithURL called with empty string")
+	}
+	return option{
+		api: func(a *APIClient) {
+			a.URL = url
+		},
+		track: func(c *CustomerIO) {
+			c.URL = url
+		},
+	}
+}
+
 func WithUserAgent(ua string) Option {
 	if ua == "" {
 		panic("customerio: WithUserAgent called with empty string")
