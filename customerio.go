@@ -167,7 +167,6 @@ func (c *CustomerIO) request(ctx context.Context, method, url string, body any) 
 			return err
 		}
 
-		req.Header.Add("User-Agent", c.UserAgent)
 		req.Header.Add("Content-Type", "application/json")
 	} else {
 		var err error
@@ -177,6 +176,7 @@ func (c *CustomerIO) request(ctx context.Context, method, url string, body any) 
 		}
 	}
 
+	req.Header.Add("User-Agent", c.UserAgent)
 	req.Header.Add("Authorization", fmt.Sprintf("Basic %v", c.auth()))
 
 	resp, err := c.Client.Do(req)
