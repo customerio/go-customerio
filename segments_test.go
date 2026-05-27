@@ -14,53 +14,55 @@ var (
 )
 
 func TestAddPeopleToSegment(t *testing.T) {
+	client, rec := trackServer(t)
 	ctx := context.Background()
 
-	checkParamError(t, cio.AddPeopleToSegment(ctx, 0, idsByID), "segmentID")
-	checkParamError(t, cio.AddPeopleToSegment(ctx, -1, idsByID), "segmentID")
-	checkParamError(t, cio.AddPeopleToSegment(ctx, 7, nil), "ids")
-	checkParamError(t, cio.AddPeopleToSegment(ctx, 7, []string{}), "ids")
+	checkParamError(t, client.AddPeopleToSegment(ctx, 0, idsByID), "segmentID")
+	checkParamError(t, client.AddPeopleToSegment(ctx, -1, idsByID), "segmentID")
+	checkParamError(t, client.AddPeopleToSegment(ctx, 7, nil), "ids")
+	checkParamError(t, client.AddPeopleToSegment(ctx, 7, []string{}), "ids")
 
-	runCases(t,
+	runCases(t, rec,
 		[]testCase{
-			{"default", "POST", "/api/v1/segments/7/add_customers", map[string]interface{}{"ids": idsByID}},
-			{"email", "POST", "/api/v1/segments/7/add_customers?id_type=email", map[string]interface{}{"ids": idsByEmail}},
-			{"cio_id", "POST", "/api/v1/segments/7/add_customers?id_type=cio_id", map[string]interface{}{"ids": idsByCioID}},
+			{"default", "POST", "/api/v1/segments/7/add_customers", map[string]any{"ids": idsByID}},
+			{"email", "POST", "/api/v1/segments/7/add_customers?id_type=email", map[string]any{"ids": idsByEmail}},
+			{"cio_id", "POST", "/api/v1/segments/7/add_customers?id_type=cio_id", map[string]any{"ids": idsByCioID}},
 		},
 		func(c testCase) error {
 			switch c.id {
 			case "email":
-				return cio.AddPeopleToSegment(ctx, 7, idsByEmail, customerio.WithSegmentIDType(customerio.IdentifierTypeEmail))
+				return client.AddPeopleToSegment(ctx, 7, idsByEmail, customerio.WithSegmentIDType(customerio.IdentifierTypeEmail))
 			case "cio_id":
-				return cio.AddPeopleToSegment(ctx, 7, idsByCioID, customerio.WithSegmentIDType(customerio.IdentifierTypeCioID))
+				return client.AddPeopleToSegment(ctx, 7, idsByCioID, customerio.WithSegmentIDType(customerio.IdentifierTypeCioID))
 			default:
-				return cio.AddPeopleToSegment(ctx, 7, idsByID)
+				return client.AddPeopleToSegment(ctx, 7, idsByID)
 			}
 		})
 }
 
 func TestRemovePeopleFromSegment(t *testing.T) {
+	client, rec := trackServer(t)
 	ctx := context.Background()
 
-	checkParamError(t, cio.RemovePeopleFromSegment(ctx, 0, idsByID), "segmentID")
-	checkParamError(t, cio.RemovePeopleFromSegment(ctx, -1, idsByID), "segmentID")
-	checkParamError(t, cio.RemovePeopleFromSegment(ctx, 7, nil), "ids")
-	checkParamError(t, cio.RemovePeopleFromSegment(ctx, 7, []string{}), "ids")
+	checkParamError(t, client.RemovePeopleFromSegment(ctx, 0, idsByID), "segmentID")
+	checkParamError(t, client.RemovePeopleFromSegment(ctx, -1, idsByID), "segmentID")
+	checkParamError(t, client.RemovePeopleFromSegment(ctx, 7, nil), "ids")
+	checkParamError(t, client.RemovePeopleFromSegment(ctx, 7, []string{}), "ids")
 
-	runCases(t,
+	runCases(t, rec,
 		[]testCase{
-			{"default", "POST", "/api/v1/segments/7/remove_customers", map[string]interface{}{"ids": idsByID}},
-			{"email", "POST", "/api/v1/segments/7/remove_customers?id_type=email", map[string]interface{}{"ids": idsByEmail}},
-			{"cio_id", "POST", "/api/v1/segments/7/remove_customers?id_type=cio_id", map[string]interface{}{"ids": idsByCioID}},
+			{"default", "POST", "/api/v1/segments/7/remove_customers", map[string]any{"ids": idsByID}},
+			{"email", "POST", "/api/v1/segments/7/remove_customers?id_type=email", map[string]any{"ids": idsByEmail}},
+			{"cio_id", "POST", "/api/v1/segments/7/remove_customers?id_type=cio_id", map[string]any{"ids": idsByCioID}},
 		},
 		func(c testCase) error {
 			switch c.id {
 			case "email":
-				return cio.RemovePeopleFromSegment(ctx, 7, idsByEmail, customerio.WithSegmentIDType(customerio.IdentifierTypeEmail))
+				return client.RemovePeopleFromSegment(ctx, 7, idsByEmail, customerio.WithSegmentIDType(customerio.IdentifierTypeEmail))
 			case "cio_id":
-				return cio.RemovePeopleFromSegment(ctx, 7, idsByCioID, customerio.WithSegmentIDType(customerio.IdentifierTypeCioID))
+				return client.RemovePeopleFromSegment(ctx, 7, idsByCioID, customerio.WithSegmentIDType(customerio.IdentifierTypeCioID))
 			default:
-				return cio.RemovePeopleFromSegment(ctx, 7, idsByID)
+				return client.RemovePeopleFromSegment(ctx, 7, idsByID)
 			}
 		})
 }
