@@ -1,13 +1,10 @@
 package customerio
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -155,48 +152,18 @@ func (c *CustomerIO) auth() string {
 }
 
 func (c *CustomerIO) request(ctx context.Context, method, url string, body any) error {
-	var req *http.Request
-	if body != nil {
-		j, err := json.Marshal(body)
-		if err != nil {
-			return err
-		}
-
-		req, err = http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(j))
-		if err != nil {
-			return err
-		}
-
-		req.Header.Add("Content-Type", "application/json")
-	} else {
-		var err error
-		req, err = http.NewRequestWithContext(ctx, method, url, nil)
-		if err != nil {
-			return err
-		}
-	}
-
-	req.Header.Add("User-Agent", c.UserAgent)
-	req.Header.Add("Authorization", fmt.Sprintf("Basic %v", c.auth()))
-
-	resp, err := c.Client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	responseBody, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	respBody, statusCode, err := doHTTP(ctx, c.Client, method, url, c.UserAgent, body, func(req *http.Request) {
+		req.Header.Set("Authorization", fmt.Sprintf("Basic %v", c.auth()))
+	})
 	if err != nil {
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
+	if statusCode != http.StatusOK {
 		return &CustomerIOError{
-			status: resp.StatusCode,
+			status: statusCode,
 			url:    url,
-			body:   responseBody,
+			body:   respBody,
 		}
 	}
 
