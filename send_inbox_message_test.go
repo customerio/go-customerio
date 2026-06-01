@@ -3,6 +3,8 @@ package customerio_test
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 	"time"
@@ -49,5 +51,29 @@ func TestSendInboxMessage(t *testing.T) {
 
 	if !reflect.DeepEqual(resp, expect) {
 		t.Errorf("Expect: %#v, Got: %#v", expect, resp)
+	}
+}
+
+func TestSendInboxMessageError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		w.WriteHeader(502)
+	}))
+	defer srv.Close()
+
+	api := customerio.NewAPIClient("myKey")
+	api.URL = srv.URL
+
+	resp, err := api.SendInboxMessage(context.Background(), &customerio.SendInboxMessageRequest{
+		TransactionalMessageID: "123456",
+		Identifiers: map[string]string{
+			"id": "customer_1",
+		},
+	})
+	if err == nil {
+		t.Errorf("Expected error, got: %#v", resp)
+	}
+
+	if _, ok := err.(*customerio.TransactionalError); !ok {
+		t.Errorf("Expected TransactionalError, got: %#v", err)
 	}
 }

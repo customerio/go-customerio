@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -19,22 +18,10 @@ import (
 	"github.com/customerio/go-customerio/v3"
 )
 
-var cio *customerio.CustomerIO
-
 type httpClientFunc func(*http.Request) (*http.Response, error)
 
 func (f httpClientFunc) Do(req *http.Request) (*http.Response, error) {
 	return f(req)
-}
-
-func TestMain(m *testing.M) {
-	srv := httptest.NewServer(http.HandlerFunc(handler))
-	defer srv.Close()
-
-	cio = customerio.NewCustomerIO("siteid", "apikey")
-	cio.URL = srv.URL
-
-	os.Exit(m.Run())
 }
 
 type testCase struct {
@@ -44,16 +31,120 @@ type testCase struct {
 	body   any
 }
 
-func runCases(t *testing.T, cases []testCase, do func(c testCase) error) {
+type requestRecord struct {
+	method string
+	path   string
+	body   map[string]any
+}
+
+// trackServer creates a per-test HTTP server and CustomerIO client.
+// The server records request details into the returned requestRecord
+// so tests can assert against them after making a client call.
+func trackServer(t *testing.T) (*customerio.CustomerIO, *requestRecord) {
+	t.Helper()
+	rec := &requestRecord{}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		b, err := io.ReadAll(req.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer func() { _ = req.Body.Close() }()
+
+		// Validate basic auth
+		s := strings.SplitN(req.Header.Get("Authorization"), " ", 2)
+		if len(s) != 2 || s[0] != "Basic" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		decoded, err := base64.URLEncoding.DecodeString(s[1])
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		pair := strings.SplitN(string(decoded), ":", 2)
+		if len(pair) != 2 || pair[0] != "siteid" || pair[1] != "apikey" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		if req.Method != "DELETE" && req.Header.Get("Content-Type") != "application/json" {
+			http.Error(w, "expected Content-Type application/json", http.StatusBadRequest)
+			return
+		}
+
+		rec.method = req.Method
+		rec.path = req.RequestURI
+		rec.body = nil
+
+		if len(b) > 0 {
+			dec := json.NewDecoder(bytes.NewReader(b))
+			dec.UseNumber()
+			if err := dec.Decode(&rec.body); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}))
+	t.Cleanup(srv.Close)
+
+	client := customerio.NewTrackClient("siteid", "apikey")
+	client.URL = srv.URL
+	return client, rec
+}
+
+// assertRequest verifies that the recorded request matches the expected
+// method, path, and body. The body parameter may be nil (for no-body
+// requests like DELETE), a map/struct (compared via JSON marshaling),
+// or a raw JSON string.
+func assertRequest(t *testing.T, rec *requestRecord, method, path string, body any) {
+	t.Helper()
+	if rec.method != method {
+		t.Errorf("expected method %s got %s", method, rec.method)
+	}
+	if rec.path != path {
+		t.Errorf("expected path %s got %s", path, rec.path)
+	}
+	if body == nil && rec.body == nil {
+		return
+	}
+
+	// If body is a raw JSON string, decode it so we can compare normalized JSON.
+	expected := body
+	if s, ok := body.(string); ok {
+		var parsed map[string]any
+		if err := json.Unmarshal([]byte(s), &parsed); err != nil {
+			t.Fatalf("failed to parse expected body string as JSON: %v", err)
+		}
+		expected = parsed
+	}
+
+	expectedJSON, err := json.Marshal(expected)
+	if err != nil {
+		t.Fatal(err)
+	}
+	gotJSON, err := json.Marshal(rec.body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(expectedJSON, gotJSON) {
+		t.Errorf("body mismatch\nexpected: %s\ngot:      %s", expectedJSON, gotJSON)
+	}
+}
+
+func runCases(t *testing.T, rec *requestRecord, cases []testCase, do func(c testCase) error) {
 	for i, c := range cases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			expect(c.method, c.path, c.body)
 			if err := do(c); err != nil {
-				t.Error(err.Error())
+				t.Fatal(err)
 			}
+			assertRequest(t, rec, c.method, c.path, c.body)
 		})
 	}
 }
+
 func checkParamError(t *testing.T, err error, param string) {
 	if err == nil {
 		t.Error("expected error")
@@ -69,20 +160,22 @@ func checkParamError(t *testing.T, err error, param string) {
 }
 
 func TestIdentify(t *testing.T) {
+	client, rec := trackServer(t)
+
 	attributes := map[string]any{
 		"a": "1",
 	}
-	err := cio.Identify("", attributes)
+	err := client.Identify("", attributes)
 	checkParamError(t, err, "customerID")
 
-	runCases(t,
+	runCases(t, rec,
 		[]testCase{
 			{"1", "PUT", "/api/v1/customers/1", attributes},
 			{"1 ", "PUT", "/api/v1/customers/1%20", attributes},
 			{"1/", "PUT", "/api/v1/customers/1%2F", attributes},
 		},
 		func(c testCase) error {
-			return cio.Identify(c.id, attributes)
+			return client.Identify(c.id, attributes)
 		})
 }
 
@@ -110,6 +203,8 @@ func TestBasicAuthUsesURLSafeBase64(t *testing.T) {
 }
 
 func TestTrack(t *testing.T) {
+	client, rec := trackServer(t)
+
 	data := map[string]any{
 		"a": "1",
 	}
@@ -120,23 +215,25 @@ func TestTrack(t *testing.T) {
 			"a": "1",
 		},
 	}
-	err := cio.Track("", "test", data)
+	err := client.Track("", "test", data)
 	checkParamError(t, err, "customerID")
-	err = cio.Track("1", "", data)
+	err = client.Track("1", "", data)
 	checkParamError(t, err, "eventName")
 
-	runCases(t,
+	runCases(t, rec,
 		[]testCase{
 			{"1", "POST", "/api/v1/customers/1/events", body},
 			{"1 ", "POST", "/api/v1/customers/1%20/events", body},
 			{"1/", "POST", "/api/v1/customers/1%2F/events", body},
 		},
 		func(c testCase) error {
-			return cio.Track(c.id, "test", data)
+			return client.Track(c.id, "test", data)
 		})
 }
 
 func TestTrackWithOptions(t *testing.T) {
+	client, rec := trackServer(t)
+
 	data := map[string]any{
 		"a": "1",
 	}
@@ -152,8 +249,7 @@ func TestTrackWithOptions(t *testing.T) {
 		},
 	}
 
-	expect("POST", "/api/v1/customers/1/events", body)
-	if err := cio.Track(
+	if err := client.Track(
 		"1",
 		"test",
 		data,
@@ -161,11 +257,14 @@ func TestTrackWithOptions(t *testing.T) {
 		customerio.WithEventTimestamp(timestamp),
 		customerio.WithEventType(customerio.TrackTypePage),
 	); err != nil {
-		t.Error(err.Error())
+		t.Fatal(err)
 	}
+	assertRequest(t, rec, "POST", "/api/v1/customers/1/events", body)
 }
 
 func TestTrackAnonymous(t *testing.T) {
+	client, rec := trackServer(t)
+
 	data := map[string]any{
 		"a": "1",
 	}
@@ -178,13 +277,15 @@ func TestTrackAnonymous(t *testing.T) {
 		},
 	}
 
-	expect("POST", "/api/v1/events", body)
-	if err := cio.TrackAnonymous("anon123", "test", data); err != nil {
-		t.Error(err.Error())
+	if err := client.TrackAnonymous("anon123", "test", data); err != nil {
+		t.Fatal(err)
 	}
+	assertRequest(t, rec, "POST", "/api/v1/events", body)
 }
 
 func TestTrackAnonymousAllowsEmptyAnonymousID(t *testing.T) {
+	client, rec := trackServer(t)
+
 	data := map[string]any{
 		"a": "1",
 	}
@@ -196,13 +297,15 @@ func TestTrackAnonymousAllowsEmptyAnonymousID(t *testing.T) {
 		},
 	}
 
-	expect("POST", "/api/v1/events", body)
-	if err := cio.TrackAnonymous("", "test", data); err != nil {
-		t.Error(err.Error())
+	if err := client.TrackAnonymous("", "test", data); err != nil {
+		t.Fatal(err)
 	}
+	assertRequest(t, rec, "POST", "/api/v1/events", body)
 }
 
 func TestTrackAnonymousWithOptions(t *testing.T) {
+	client, rec := trackServer(t)
+
 	data := map[string]any{
 		"a": "1",
 	}
@@ -219,8 +322,7 @@ func TestTrackAnonymousWithOptions(t *testing.T) {
 		},
 	}
 
-	expect("POST", "/api/v1/events", body)
-	if err := cio.TrackAnonymous(
+	if err := client.TrackAnonymous(
 		"anon123",
 		"test",
 		data,
@@ -228,21 +330,24 @@ func TestTrackAnonymousWithOptions(t *testing.T) {
 		customerio.WithEventTimestamp(timestamp),
 		customerio.WithEventType(customerio.TrackTypeScreen),
 	); err != nil {
-		t.Error(err.Error())
+		t.Fatal(err)
 	}
+	assertRequest(t, rec, "POST", "/api/v1/events", body)
 }
 
 func TestDelete(t *testing.T) {
-	err := cio.Delete("")
+	client, rec := trackServer(t)
+
+	err := client.Delete("")
 	checkParamError(t, err, "customerID")
-	runCases(t,
+	runCases(t, rec,
 		[]testCase{
 			{"1", "DELETE", "/api/v1/customers/1", nil},
 			{"1 ", "DELETE", "/api/v1/customers/1%20", nil},
 			{"1/", "DELETE", "/api/v1/customers/1%2F", nil},
 		},
 		func(c testCase) error {
-			return cio.Delete(c.id)
+			return client.Delete(c.id)
 		})
 }
 
@@ -346,41 +451,46 @@ func TestNewDeviceMarshalsToken(t *testing.T) {
 }
 
 func TestAddDevice(t *testing.T) {
-	err := cio.AddDevice("", "d1", "ios", nil)
+	client, rec := trackServer(t)
+
+	err := client.AddDevice("", "d1", "ios", nil)
 	checkParamError(t, err, "customerID")
-	err = cio.AddDevice("1", "", "ios", nil)
+	err = client.AddDevice("1", "", "ios", nil)
 	checkParamError(t, err, "deviceID")
-	err = cio.AddDevice("1", "d1", "", nil)
+	err = client.AddDevice("1", "d1", "", nil)
 	checkParamError(t, err, "platform")
 
 	body := map[string]map[string]any{
 		"device": {
-			"id":        "d1",
-			"platform":  "ios",
-			"last_used": 1606511962,
+			"id":         "d1",
+			"platform":   "ios",
+			"last_used":  "1606511962",
+			"attributes": map[string]any{},
 		},
 	}
-	runCases(t,
+	runCases(t, rec,
 		[]testCase{
 			{"1", "PUT", "/api/v1/customers/1/devices", body},
 			{"1 ", "PUT", "/api/v1/customers/1%20/devices", body},
 			{"1/", "PUT", "/api/v1/customers/1%2F/devices", body},
 		},
 		func(c testCase) error {
-			return cio.AddDevice(c.id, "d1", "ios", map[string]any{
+			return client.AddDevice(c.id, "d1", "ios", map[string]any{
 				"last_used": 1606511962,
 			})
 		})
 }
 
 func TestDeleteDevice(t *testing.T) {
-	err := cio.DeleteDevice("", "d1")
+	client, rec := trackServer(t)
+
+	err := client.DeleteDevice("", "d1")
 	checkParamError(t, err, "customerID")
 
-	err = cio.DeleteDevice("1", "")
+	err = client.DeleteDevice("1", "")
 	checkParamError(t, err, "deviceID")
 
-	runCases(t,
+	runCases(t, rec,
 		[]testCase{
 			{"1", "DELETE", "/api/v1/customers/1/devices/d1", nil},
 			{"1 ", "DELETE", "/api/v1/customers/1%20/devices/d1", nil},
@@ -391,97 +501,14 @@ func TestDeleteDevice(t *testing.T) {
 		},
 		func(c testCase) error {
 			if c.id[0] == '2' {
-				return cio.DeleteDevice("d1", c.id)
+				return client.DeleteDevice("d1", c.id)
 			} else {
-				return cio.DeleteDevice(c.id, "d1")
+				return client.DeleteDevice(c.id, "d1")
 			}
 		})
 }
 
-var (
-	expectedMethod string
-	expectedPath   string
-	expectedBody   any
-)
-
-func handler(w http.ResponseWriter, req *http.Request) {
-	b, err := io.ReadAll(req.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer func() {
-		_ = req.Body.Close()
-	}()
-
-	s := strings.SplitN(req.Header.Get("Authorization"), " ", 2)
-	if len(s) != 2 || s[0] != "Basic" {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	decoded, err := base64.URLEncoding.DecodeString(s[1])
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	pair := strings.SplitN(string(decoded), ":", 2)
-	if len(pair) != 2 {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	if pair[0] != "siteid" || pair[1] != "apikey" {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	if req.Method != "DELETE" && req.Header.Get("Content-Type") != "application/json" {
-		http.Error(w, "expected Content-Type application/json", http.StatusBadRequest)
-	}
-
-	var data map[string]any
-	if len(b) > 0 {
-		dec := json.NewDecoder(bytes.NewReader(b))
-		dec.UseNumber()
-		if err := dec.Decode(&data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-	validate := func(method, path string, body any) error {
-		if method != expectedMethod {
-			return fmt.Errorf("expected %s got %s", expectedMethod, method)
-		}
-		if path != expectedPath {
-			return fmt.Errorf("expected %s got %s", expectedPath, path)
-		}
-		expected, err := json.Marshal(body)
-		if err != nil {
-			return err
-		}
-		got, err := json.Marshal(data)
-		if err != nil {
-			return err
-		}
-		if !bytes.Equal(expected, got) {
-			return fmt.Errorf("expected %v got %v", expected, got)
-		}
-		return nil
-	}
-	if err := validate(req.Method, req.RequestURI, data); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-}
-
-func expect(method, path string, body any) {
-	expectedMethod = method
-	expectedPath = path
-	expectedBody = body
-}
-
-func TestHandlerRejectsMismatchedBasicAuth(t *testing.T) {
+func TestRejectsMismatchedBasicAuth(t *testing.T) {
 	for _, tc := range []struct {
 		name   string
 		siteID string
@@ -499,21 +526,46 @@ func TestHandlerRejectsMismatchedBasicAuth(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodPut, "/api/v1/customers/1", strings.NewReader(`{"a":"1"}`))
-			req.Header.Set("Authorization", "Basic "+base64.URLEncoding.EncodeToString([]byte(tc.siteID+":"+tc.apiKey)))
-			req.Header.Set("Content-Type", "application/json")
+			// Create a server with auth checking (same as trackServer's handler).
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				s := strings.SplitN(req.Header.Get("Authorization"), " ", 2)
+				if len(s) != 2 || s[0] != "Basic" {
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				decoded, err := base64.URLEncoding.DecodeString(s[1])
+				if err != nil {
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				pair := strings.SplitN(string(decoded), ":", 2)
+				if len(pair) != 2 || pair[0] != "siteid" || pair[1] != "apikey" {
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				w.WriteHeader(http.StatusOK)
+			}))
+			t.Cleanup(srv.Close)
 
-			rec := httptest.NewRecorder()
-			handler(rec, req)
+			client := customerio.NewTrackClient(tc.siteID, tc.apiKey)
+			client.URL = srv.URL
 
-			if rec.Code != http.StatusUnauthorized {
-				t.Errorf("expected status %d got %d", http.StatusUnauthorized, rec.Code)
+			err := client.Identify("1", map[string]any{"a": "1"})
+
+			var apiErr *customerio.CustomerIOError
+			if !errors.As(err, &apiErr) {
+				t.Fatalf("expected CustomerIOError, got %T (%v)", err, err)
+			}
+			if apiErr.StatusCode() != http.StatusUnauthorized {
+				t.Errorf("expected status %d got %d", http.StatusUnauthorized, apiErr.StatusCode())
 			}
 		})
 	}
 }
 
 func TestMergeCustomers(t *testing.T) {
+	client, rec := trackServer(t)
+
 	checkMergeError := func(t *testing.T, err error, prefix, contains string) {
 		t.Helper()
 		if err == nil {
@@ -524,7 +576,7 @@ func TestMergeCustomers(t *testing.T) {
 		}
 	}
 
-	err1 := cio.MergeCustomers(customerio.Identifier{
+	err1 := client.MergeCustomers(customerio.Identifier{
 		Type:  "",
 		Value: "id1",
 	}, customerio.Identifier{
@@ -533,7 +585,7 @@ func TestMergeCustomers(t *testing.T) {
 	})
 	checkMergeError(t, err1, "primary", "invalid id type")
 
-	err2 := cio.MergeCustomers(customerio.Identifier{
+	err2 := client.MergeCustomers(customerio.Identifier{
 		Type:  "id",
 		Value: "",
 	}, customerio.Identifier{
@@ -542,7 +594,7 @@ func TestMergeCustomers(t *testing.T) {
 	})
 	checkMergeError(t, err2, "primary", "invalid id")
 
-	err3 := cio.MergeCustomers(customerio.Identifier{
+	err3 := client.MergeCustomers(customerio.Identifier{
 		Type:  "email",
 		Value: "id1",
 	}, customerio.Identifier{
@@ -551,7 +603,7 @@ func TestMergeCustomers(t *testing.T) {
 	})
 	checkMergeError(t, err3, "secondary", "invalid id type")
 
-	err4 := cio.MergeCustomers(customerio.Identifier{
+	err4 := client.MergeCustomers(customerio.Identifier{
 		Type:  "cio_id",
 		Value: "id1",
 	}, customerio.Identifier{
@@ -560,7 +612,7 @@ func TestMergeCustomers(t *testing.T) {
 	})
 	checkMergeError(t, err4, "secondary", "invalid id")
 
-	runCases(t,
+	runCases(t, rec,
 		[]testCase{
 			{"1", "POST", "/api/v1/merge_customers", `{"primary":{"email":"cool.person@company.com"},"secondary":{"email":"cperson@gmail.com"}}`},
 			{"2", "POST", "/api/v1/merge_customers", `{"primary":{"id":"cool.person@company.com"},"secondary":{"cio_id":"person2"}}`},
@@ -569,7 +621,7 @@ func TestMergeCustomers(t *testing.T) {
 		func(c testCase) error {
 			switch c.id {
 			case "1":
-				return cio.MergeCustomers(customerio.Identifier{
+				return client.MergeCustomers(customerio.Identifier{
 					Type:  "email",
 					Value: "cool.person@company.com",
 				}, customerio.Identifier{
@@ -577,7 +629,7 @@ func TestMergeCustomers(t *testing.T) {
 					Value: "cperson@gmail.com",
 				})
 			case "2":
-				return cio.MergeCustomers(customerio.Identifier{
+				return client.MergeCustomers(customerio.Identifier{
 					Type:  "id",
 					Value: "cool.person@company.com",
 				}, customerio.Identifier{
@@ -585,7 +637,7 @@ func TestMergeCustomers(t *testing.T) {
 					Value: "person2",
 				})
 			default:
-				return cio.MergeCustomers(customerio.Identifier{
+				return client.MergeCustomers(customerio.Identifier{
 					Type:  customerio.IdentifierTypeCioID,
 					Value: "CIO123",
 				}, customerio.Identifier{
