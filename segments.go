@@ -2,7 +2,6 @@ package customerio
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 )
 
@@ -26,7 +25,7 @@ func (c *CustomerIO) segmentMembership(ctx context.Context, action string, segme
 		return ParamError{Param: "ids"}
 	}
 
-	u := fmt.Sprintf("%s/api/v1/segments/%d/%s", c.URL, segmentID, action)
+	u := c.URL + formatPath("/api/v1/segments/%d/%s", segmentID, action)
 
 	// url.Values handles encoding for any future option that carries an
 	// arbitrary string; current options (id_type) only emit URL-safe values.

@@ -35,7 +35,7 @@ func (c *APIClient) sendTransactional(ctx context.Context, typ TransactionalType
 		return nil, ErrInvalidTransactionalMessageType
 	}
 
-	body, statusCode, err := c.doRequest(ctx, "POST", fmt.Sprintf("/v1/send/%s", api), req)
+	body, statusCode, err := c.doRequest(ctx, "POST", formatPath("/v1/send/%s", api), req)
 	if err != nil {
 		return nil, err
 	}
