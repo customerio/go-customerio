@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -89,9 +88,7 @@ func (c *CustomerIO) IdentifyCtx(ctx context.Context, customerID string, attribu
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
-	return c.request(ctx, "PUT",
-		fmt.Sprintf("%s/api/v1/customers/%s", c.URL, url.PathEscape(customerID)),
-		attributes)
+	return c.request(ctx, "PUT", c.URL+formatPath("/api/v1/customers/%s", customerID), attributes)
 }
 
 // Identify identifies a customer and sets their attributes
@@ -107,9 +104,7 @@ func (c *CustomerIO) TrackCtx(ctx context.Context, customerID string, eventName 
 	if eventName == "" {
 		return ParamError{Param: "eventName"}
 	}
-	return c.request(ctx, "POST",
-		fmt.Sprintf("%s/api/v1/customers/%s/events", c.URL, url.PathEscape(customerID)),
-		trackPayload(eventName, data, opts...))
+	return c.request(ctx, "POST", c.URL+formatPath("/api/v1/customers/%s/events", customerID), trackPayload(eventName, data, opts...))
 }
 
 // Track sends a single event to Customer.io for the supplied user
@@ -129,7 +124,7 @@ func (c *CustomerIO) TrackAnonymousCtx(ctx context.Context, anonymousID, eventNa
 		payload["anonymous_id"] = anonymousID
 	}
 
-	return c.request(ctx, "POST", fmt.Sprintf("%s/api/v1/events", c.URL), payload)
+	return c.request(ctx, "POST", c.URL+"/api/v1/events", payload)
 }
 
 // TrackAnonymous sends a single event to Customer.io for the anonymous user
@@ -142,9 +137,7 @@ func (c *CustomerIO) DeleteCtx(ctx context.Context, customerID string) error {
 	if customerID == "" {
 		return ParamError{Param: "customerID"}
 	}
-	return c.request(ctx, "DELETE",
-		fmt.Sprintf("%s/api/v1/customers/%s", c.URL, url.PathEscape(customerID)),
-		nil)
+	return c.request(ctx, "DELETE", c.URL+formatPath("/api/v1/customers/%s", customerID), nil)
 }
 
 func (c *CustomerIO) auth() string {
@@ -212,12 +205,10 @@ func (c *CustomerIO) MergeCustomersCtx(ctx context.Context, primary Identifier, 
 		return fmt.Errorf("secondary: %w", err)
 	}
 
-	return c.request(ctx, "POST",
-		fmt.Sprintf("%s/api/v1/merge_customers", c.URL),
-		map[string]any{
-			"primary":   primary.kv(),
-			"secondary": secondary.kv(),
-		})
+	return c.request(ctx, "POST", c.URL+"/api/v1/merge_customers", map[string]any{
+		"primary":   primary.kv(),
+		"secondary": secondary.kv(),
+	})
 }
 
 // MergeCustomers sends a request to Customer.io to merge two customer profiles together.

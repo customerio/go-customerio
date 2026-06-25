@@ -3,7 +3,6 @@ package customerio
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -68,7 +67,7 @@ func (c *APIClient) TriggerBroadcast(ctx context.Context, broadcastID int, data 
 
 	payload := buildBroadcastPayload(broadcastInput{Data: data, Recipients: recipients, Options: opts})
 
-	requestPath := fmt.Sprintf("/v1/campaigns/%d/triggers", broadcastID)
+	requestPath := formatPath("/v1/campaigns/%d/triggers", broadcastID)
 	body, statusCode, err := c.doRequest(ctx, "POST", requestPath, payload)
 	if err != nil {
 		return nil, err
