@@ -16,6 +16,7 @@ type SendEmailRequest struct {
 	From                    string            `json:"from,omitempty"`
 	To                      string            `json:"to,omitempty"`
 	ReplyTo                 string            `json:"reply_to,omitempty"`
+	CC                      string            `json:"cc,omitempty"`
 	BCC                     string            `json:"bcc,omitempty"`
 	Subject                 string            `json:"subject,omitempty"`
 	Preheader               string            `json:"preheader,omitempty"`
