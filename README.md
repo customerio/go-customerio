@@ -386,6 +386,36 @@ if err != nil {
 fmt.Println(body)
 ```
 
+## WhatsApp
+Create a `customerio.SendWhatsAppRequest` instance, and then use `(c *customerio.APIClient).SendWhatsApp` to send your message. [Learn more about transactional messages and optional `SendWhatsApp` properties](https://customer.io/docs/transactional-api).
+
+```go
+client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customerio.RegionUS));
+
+// To   — the WhatsApp number (E.164) of your recipient.
+// From — the WhatsApp number (E.164) you're sending from. Optional if the
+//        referenced transactional_message_id already defines it.
+
+request := customerio.SendWhatsAppRequest{
+  TransactionalMessageID: "3",
+  To:   "+15551234567",
+  From: "+15559876543",
+  MessageData: map[string]any{
+    "name": "Person",
+  },
+  Identifiers: map[string]string{
+    "id": "example1",
+  },
+}
+
+body, err := client.SendWhatsApp(context.Background(), &request)
+if err != nil {
+  // handle error
+}
+
+fmt.Println(body)
+```
+
 ## Triggering API Broadcasts
 
 Use `(c *customerio.APIClient).TriggerBroadcast` to trigger a broadcast campaign. [Learn more about triggering a broadcast here](https://docs.customer.io/journeys/api-triggered-broadcasts/) via the App API.

@@ -17,6 +17,7 @@ const (
 	TransactionalTypeSMS          TransactionalType = 2
 	TransactionalTypeInboxMessage TransactionalType = 3
 	TransactionalTypeInApp        TransactionalType = 4
+	TransactionalTypeWhatsApp     TransactionalType = 5
 )
 
 var typeToApi = map[TransactionalType]string{
@@ -25,6 +26,7 @@ var typeToApi = map[TransactionalType]string{
 	TransactionalTypeSMS:          "sms",
 	TransactionalTypeInboxMessage: "inbox_message",
 	TransactionalTypeInApp:        "in_app",
+	TransactionalTypeWhatsApp:     "whatsapp",
 }
 
 var ErrInvalidTransactionalMessageType = errors.New("unknown transactional message type")
