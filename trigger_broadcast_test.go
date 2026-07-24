@@ -356,3 +356,51 @@ func TestTriggerBroadcastCompanionOptionsIsolation(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestGetBroadcastTriggerStatus(t *testing.T) {
+	api := customerio.NewAPIClient("myKey")
+	if _, err := api.GetBroadcastTriggerStatus(context.Background(), "", "9"); err == nil {
+		t.Fatal("expected error")
+	} else {
+		checkParamError(t, err, "broadcastID")
+	}
+	if _, err := api.GetBroadcastTriggerStatus(context.Background(), "1", ""); err == nil {
+		t.Fatal("expected error")
+	} else {
+		checkParamError(t, err, "triggerID")
+	}
+
+	api, rec := apiServer(t, 200, map[string]any{"id": 9, "broadcast_id": 1, "created_at": 100, "processed_at": 200})
+	got, err := api.GetBroadcastTriggerStatus(context.Background(), "1", "9")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertAPIRequest(t, rec, "GET", "/v1/campaigns/1/triggers/9")
+	if got.ID != 9 || got.ProcessedAt != 200 {
+		t.Errorf("unexpected response: %#v", got)
+	}
+}
+
+func TestGetBroadcastTriggerErrors(t *testing.T) {
+	api := customerio.NewAPIClient("myKey")
+	if _, err := api.GetBroadcastTriggerErrors(context.Background(), "", "9", customerio.PaginationOptions{}); err == nil {
+		t.Fatal("expected error")
+	} else {
+		checkParamError(t, err, "broadcastID")
+	}
+	if _, err := api.GetBroadcastTriggerErrors(context.Background(), "1", "", customerio.PaginationOptions{}); err == nil {
+		t.Fatal("expected error")
+	} else {
+		checkParamError(t, err, "triggerID")
+	}
+
+	api, rec := apiServer(t, 200, map[string]any{"errors": []string{"line 4: invalid email"}, "next": 10})
+	got, err := api.GetBroadcastTriggerErrors(context.Background(), "1", "9", customerio.PaginationOptions{Limit: 5})
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertAPIRequest(t, rec, "GET", "/v1/campaigns/1/triggers/9/errors?limit=5")
+	if len(got.Errors) != 1 || got.Next != 10 {
+		t.Errorf("unexpected response: %#v", got)
+	}
+}
