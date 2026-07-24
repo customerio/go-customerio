@@ -19,7 +19,6 @@ func TestSendWhatsApp(t *testing.T) {
 			"id": "customer_1",
 		},
 		To:      "+12345678900",
-		From:    "+18007654321",
 		Tracked: &[]bool{true}[0],
 		MessageData: map[string]any{
 			"token": "123456",

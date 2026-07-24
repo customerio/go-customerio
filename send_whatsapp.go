@@ -14,7 +14,6 @@ type SendWhatsAppRequest struct {
 	SendAt                  *int64            `json:"send_at,omitempty"`
 	Language                *string           `json:"language,omitempty"`
 
-	From    string `json:"from,omitempty"`
 	To      string `json:"to,omitempty"`
 	Tracked *bool  `json:"tracked,omitempty"`
 }
