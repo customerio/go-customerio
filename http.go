@@ -62,6 +62,36 @@ func doHTTP(ctx context.Context, client HTTPClient, method, url, userAgent strin
 	return respBody, resp.StatusCode, nil
 }
 
+// doMultipartHTTP is doHTTP's counterpart for multipart/form-data uploads
+// (currently only CreateAsset): body is sent as-is rather than
+// JSON-marshaled, and contentType (which must include the multipart
+// boundary, e.g. from multipart.Writer.FormDataContentType()) is set
+// verbatim rather than hardcoded to application/json.
+func doMultipartHTTP(ctx context.Context, client HTTPClient, method, url, userAgent, contentType string, body io.Reader, preflight func(*http.Request)) ([]byte, int, error) {
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return nil, 0, err
+	}
+	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("User-Agent", userAgent)
+	preflight(req)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	respBody, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return respBody, resp.StatusCode, nil
+}
+
 func newDefaultTransport() http.RoundTripper {
 	transport, ok := http.DefaultTransport.(*http.Transport)
 	if !ok {
