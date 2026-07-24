@@ -392,14 +392,11 @@ Create a `customerio.SendWhatsAppRequest` instance, and then use `(c *customerio
 ```go
 client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customerio.RegionUS));
 
-// To   — the WhatsApp number (E.164) of your recipient.
-// From — the WhatsApp number (E.164) you're sending from. Optional if the
-//        referenced transactional_message_id already defines it.
+// To — the WhatsApp number (E.164) of your recipient.
 
 request := customerio.SendWhatsAppRequest{
   TransactionalMessageID: "3",
-  To:   "+15551234567",
-  From: "+15559876543",
+  To: "+15551234567",
   MessageData: map[string]any{
     "name": "Person",
   },
