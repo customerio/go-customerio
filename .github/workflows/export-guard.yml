@@ -1,0 +1,58 @@
+# Lives in the PUBLIC repo. Make "Export guard" a required check on main.
+# Exported files only change through the export, which pushes straight to main.
+# A PR may touch only the paths this repo owns. PRs to exported files are read
+# as suggestions; the team makes the change in the private source.
+#
+# pull_request_target runs this file from main, so a PR can't edit the guard to
+# pass itself. It never checks out or runs PR code; it only lists file names.
+name: Export guard
+
+on:
+  pull_request_target:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  guard:
+    name: Export guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check changed paths
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Paths this repo owns: everything the private copy.bara.sky does not export.
+          # In a case pattern * also matches /, so anchor directory patterns with a prefix.
+          is_public_owned() {
+            case "$1" in
+              .github/*|CONTRIBUTING.md|CODE_OF_CONDUCT.md|SECURITY.md) return 0 ;;
+              *) return 1 ;;
+            esac
+          }
+
+          # A rename lists its old path too, so moving an exported file into .github/ is caught.
+          blocked=()
+          while IFS= read -r path; do
+            [[ -n "$path" ]] || continue
+            is_public_owned "$path" || blocked+=("$path")
+          done < <(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)')
+
+          if ((${#blocked[@]} == 0)); then
+            echo "Only public-owned paths changed."
+            exit 0
+          fi
+
+          {
+            echo "### These files are published from a private source repo"
+            echo "We don't merge PRs to these files. The team reads this as a suggestion and makes any change there. See CONTRIBUTING.md."
+            echo '```'
+            printf '%s\n' "${blocked[@]}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          printf '::error::Exported files changed in a PR: %s\n' "${blocked[*]}"
+          exit 1

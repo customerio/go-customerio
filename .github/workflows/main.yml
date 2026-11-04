@@ -10,8 +10,11 @@ on:
 permissions:
   contents: read
 
+# Exports from the private repo already passed this CI there, so each job skips
+# the export bot's pushes. The email must match BOT in the private copy.bara.sky.
 jobs:
   test:
+    if: github.event_name != 'push' || github.event.head_commit.author.email != 'opensource@customer.io'
     name: Go ${{ matrix.go }} test
     runs-on: ubuntu-latest
     strategy:
@@ -28,6 +31,7 @@ jobs:
       - run: go test -race ./...
 
   govulncheck:
+    if: github.event_name != 'push' || github.event.head_commit.author.email != 'opensource@customer.io'
     name: govulncheck
     runs-on: ubuntu-latest
     steps:
@@ -40,6 +44,7 @@ jobs:
       - run: govulncheck ./...
 
   lint:
+    if: github.event_name != 'push' || github.event.head_commit.author.email != 'opensource@customer.io'
     name: golangci-lint
     runs-on: ubuntu-latest
     steps:
@@ -50,4 +55,4 @@ jobs:
           cache: true
       - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
-          version: v2.11.3
+          version: v2.15.0
