@@ -140,6 +140,32 @@ func (c *CustomerIO) DeleteCtx(ctx context.Context, customerID string) error {
 	return c.request(ctx, "DELETE", c.URL+formatPath("/api/v1/customers/%s", customerID), nil)
 }
 
+// SuppressCtx suppresses a customer so Customer.io stops messaging them
+func (c *CustomerIO) SuppressCtx(ctx context.Context, customerID string) error {
+	if customerID == "" {
+		return ParamError{Param: "customerID"}
+	}
+	return c.request(ctx, "POST", c.URL+formatPath("/api/v1/customers/%s/suppress", customerID), map[string]any{})
+}
+
+// Suppress suppresses a customer so Customer.io stops messaging them
+func (c *CustomerIO) Suppress(customerID string) error {
+	return c.SuppressCtx(context.Background(), customerID)
+}
+
+// UnsuppressCtx removes a suppression from a customer
+func (c *CustomerIO) UnsuppressCtx(ctx context.Context, customerID string) error {
+	if customerID == "" {
+		return ParamError{Param: "customerID"}
+	}
+	return c.request(ctx, "POST", c.URL+formatPath("/api/v1/customers/%s/unsuppress", customerID), map[string]any{})
+}
+
+// Unsuppress removes a suppression from a customer
+func (c *CustomerIO) Unsuppress(customerID string) error {
+	return c.UnsuppressCtx(context.Background(), customerID)
+}
+
 func (c *CustomerIO) auth() string {
 	return base64.URLEncoding.EncodeToString(fmt.Appendf(nil, "%v:%v", c.siteID, c.apiKey))
 }

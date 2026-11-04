@@ -351,6 +351,38 @@ func TestDelete(t *testing.T) {
 		})
 }
 
+func TestSuppress(t *testing.T) {
+	client, rec := trackServer(t)
+
+	err := client.Suppress("")
+	checkParamError(t, err, "customerID")
+	runCases(t, rec,
+		[]testCase{
+			{"1", "POST", "/api/v1/customers/1/suppress", map[string]any{}},
+			{"1 ", "POST", "/api/v1/customers/1%20/suppress", map[string]any{}},
+			{"1/", "POST", "/api/v1/customers/1%2F/suppress", map[string]any{}},
+		},
+		func(c testCase) error {
+			return client.Suppress(c.id)
+		})
+}
+
+func TestUnsuppress(t *testing.T) {
+	client, rec := trackServer(t)
+
+	err := client.Unsuppress("")
+	checkParamError(t, err, "customerID")
+	runCases(t, rec,
+		[]testCase{
+			{"1", "POST", "/api/v1/customers/1/unsuppress", map[string]any{}},
+			{"1 ", "POST", "/api/v1/customers/1%20/unsuppress", map[string]any{}},
+			{"1/", "POST", "/api/v1/customers/1%2F/unsuppress", map[string]any{}},
+		},
+		func(c testCase) error {
+			return client.Unsuppress(c.id)
+		})
+}
+
 func TestDeleteCtxUsesRequestContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()

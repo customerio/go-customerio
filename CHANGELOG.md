@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- `Suppress` and `Unsuppress` for the Track API suppress and unsuppress endpoints.
+
 ### Changed
 - `Device` now exposes a `Token` field for transactional push custom-device payloads to match the `token` JSON field.
 
