@@ -53,6 +53,13 @@ jobs:
         with:
           go-version: stable
           cache: true
+      # mise.toml is exported from the private repo, so both lint with the same version.
+      - name: Read the golangci-lint version
+        id: lint-version
+        run: |
+          v=$(sed -n 's/^golangci-lint = "\(.*\)"/\1/p' mise.toml)
+          [ "$v" = latest ] || v="v$v"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
       - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
-          version: v2.15.0
+          version: ${{ steps.lint-version.outputs.version }}
