@@ -1,0 +1,55 @@
+name: Release
+
+# Each export from the private repo lands on main. semantic-release reads the
+# conventional commit subjects since the last tag, tags the next v3 version,
+# writes CHANGELOG.md, and creates the GitHub release. feat is a minor, fix and
+# perf are a patch, and other types make no release. See .releaserc.json.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print the next version and notes without releasing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      # The App token must be the one checkout persists, since the release commit
+      # pushes past main's protection through the App's bypass.
+      - name: Generate App installation token
+        id: generate_token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          client-id: ${{ secrets.CIO_APP_CLIENT_ID }}
+          private-key: ${{ secrets.CIO_APP_SECRET }}
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Release with semantic-release
+        uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90 # v6.0.0
+        with:
+          # Pinned to match the mobile SDKs. Bump deliberately.
+          semantic_version: 25.0.5
+          dry_run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          extra_plugins: |
+            conventional-changelog-conventionalcommits@8
+            @semantic-release/github@12.0.9
+            @semantic-release/exec@7.1.0
+            @semantic-release/changelog@6.0.3
+            @semantic-release/git@10.0.1
+        env:
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
