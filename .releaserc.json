@@ -1,0 +1,28 @@
+{
+  "tagFormat": "v${version}",
+  "branches": ["main"],
+  "plugins": [
+    ["@semantic-release/commit-analyzer", {
+      "preset": "conventionalcommits"
+    }],
+    ["@semantic-release/release-notes-generator", {
+      "preset": "conventionalcommits"
+    }],
+    ["@semantic-release/exec", {
+      "verifyReleaseCmd": "if [ \"${nextRelease.type}\" = major ]; then echo 'A breaking change needs a new /v4 module path. Release it by hand.'; exit 1; fi"
+    }],
+    ["@semantic-release/changelog", {
+      "changelogFile": "CHANGELOG.md",
+      "changelogTitle": "# Changelog"
+    }],
+    ["@semantic-release/git", {
+      "assets": ["CHANGELOG.md"],
+      "message": "chore: prepare for v${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+    }],
+    ["@semantic-release/github", {
+      "labels": false,
+      "successComment": false,
+      "failTitle": false
+    }]
+  ]
+}
