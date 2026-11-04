@@ -538,9 +538,4 @@ if err := track.TrackCtx(ctx, "5", "purchase", map[string]any{
 
 ## Contributing
 
-1. Fork it
-2. Clone your fork (`git clone git@github.com:MY_USERNAME/go-customerio.git && cd go-customerio`)
-3. Create your feature branch (`git checkout -b my-new-feature`)
-4. Commit your changes (`git commit -am 'feat: Added some feature'`)
-5. Push to the branch (`git push origin my-new-feature`)
-6. Create new Pull Request
+Issues are welcome. This repository is published from a private one, so we read pull requests as suggestions and make the change ourselves.
