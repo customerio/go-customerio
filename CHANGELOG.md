@@ -1,5 +1,15 @@
 # Changelog
 
+## [3.13.0](https://github.com/customerio/go-customerio/compare/v3.12.0...v3.13.0) (2026-11-04)
+
+### Features
+
+* add Suppress and Unsuppress ([1ad3056](https://github.com/customerio/go-customerio/commit/1ad30569680d70b18254fcae93110a4cf5890e64))
+
+### Bug Fixes
+
+* trim whitespace from API keys ([e4010d0](https://github.com/customerio/go-customerio/commit/e4010d049f97cd149629140abbcc6847454f098a))
+
 ## [v3.12.0]
 ### Changed
 - `Device` now exposes a `Token` field for transactional push custom-device payloads to match the `token` JSON field.
