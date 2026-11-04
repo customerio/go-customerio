@@ -121,3 +121,63 @@ func buildBroadcastPayload(in broadcastInput) broadcastPayload {
 
 	return p
 }
+
+// BroadcastTriggerStatus reports one broadcast trigger's processing state.
+type BroadcastTriggerStatus struct {
+	ID          int   `json:"id"`
+	BroadcastID int   `json:"broadcast_id,omitempty"`
+	CreatedAt   int64 `json:"created_at,omitempty"`
+	ProcessedAt int64 `json:"processed_at,omitempty"`
+}
+
+// GetBroadcastTriggerStatus returns one broadcast trigger's processing
+// state. Despite the "broadcast" naming, this addresses
+// /v1/campaigns/{broadcastID}/triggers/{triggerID} — the App API files
+// broadcast triggers under the campaigns resource; GetBroadcastTriggers
+// (broadcasts.go) is the analogous list endpoint under /v1/broadcasts/{id}/triggers.
+// See https://docs.customer.io/api/app/#operation/getBroadcastTriggerStatus
+func (c *APIClient) GetBroadcastTriggerStatus(ctx context.Context, broadcastID, triggerID string) (*BroadcastTriggerStatus, error) {
+	if broadcastID == "" {
+		return nil, ParamError{Param: "broadcastID"}
+	}
+	if triggerID == "" {
+		return nil, ParamError{Param: "triggerID"}
+	}
+
+	requestPath := formatPath("/v1/campaigns/%s/triggers/%s", broadcastID, triggerID)
+
+	var resp BroadcastTriggerStatus
+	if err := c.doJSON(ctx, "GET", requestPath, nil, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
+
+// BroadcastTriggerErrorsResponse is the decoded shape of
+// GET /v1/campaigns/{broadcastID}/triggers/{triggerID}/errors. Unlike most
+// other paginated App API responses, Next here is a numeric offset, not an
+// opaque string cursor.
+type BroadcastTriggerErrorsResponse struct {
+	Errors []string `json:"errors"`
+	Next   int      `json:"next,omitempty"`
+}
+
+// GetBroadcastTriggerErrors returns the per-recipient errors from one
+// broadcast trigger (e.g. "line 4: invalid email").
+// See https://docs.customer.io/api/app/#operation/getBroadcastTriggerErrors
+func (c *APIClient) GetBroadcastTriggerErrors(ctx context.Context, broadcastID, triggerID string, opts PaginationOptions) (*BroadcastTriggerErrorsResponse, error) {
+	if broadcastID == "" {
+		return nil, ParamError{Param: "broadcastID"}
+	}
+	if triggerID == "" {
+		return nil, ParamError{Param: "triggerID"}
+	}
+
+	requestPath := formatPath("/v1/campaigns/%s/triggers/%s/errors", broadcastID, triggerID) + opts.apply(newQuery()).String()
+
+	var resp BroadcastTriggerErrorsResponse
+	if err := c.doJSON(ctx, "GET", requestPath, nil, &resp); err != nil {
+		return nil, err
+	}
+	return &resp, nil
+}
