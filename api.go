@@ -3,6 +3,7 @@ package customerio
 import (
 	"context"
 	"net/http"
+	"strings"
 )
 
 type HTTPClient interface {
@@ -24,7 +25,7 @@ type APIClient struct {
 // using an App API Key from https://fly.customer.io/settings/api_credentials?keyType=app
 func NewAPIClient(key string, opts ...Option) *APIClient {
 	client := &APIClient{
-		Key:       key,
+		Key:       strings.TrimSpace(key),
 		Client:    newDefaultHTTPClient(),
 		URL:       "https://api.customer.io",
 		UserAgent: DefaultUserAgent,

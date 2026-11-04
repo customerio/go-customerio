@@ -202,6 +202,31 @@ func TestBasicAuthUsesURLSafeBase64(t *testing.T) {
 	}
 }
 
+func TestTrackClientTrimsKeys(t *testing.T) {
+	expectedAuth := "Basic " + base64.URLEncoding.EncodeToString([]byte("site:key"))
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if got := req.Header.Get("Authorization"); got != expectedAuth {
+			t.Errorf("expected Authorization %q got %q", expectedAuth, got)
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	client := customerio.NewTrackClient(" site\n", "key\n")
+	client.URL = srv.URL
+
+	if err := client.Identify("1", map[string]any{"a": "1"}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAPIClientTrimsKey(t *testing.T) {
+	if got := customerio.NewAPIClient("  myKey\n").Key; got != "myKey" {
+		t.Errorf("expected Key %q got %q", "myKey", got)
+	}
+}
+
 func TestTrack(t *testing.T) {
 	client, rec := trackServer(t)
 

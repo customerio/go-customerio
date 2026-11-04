@@ -58,9 +58,10 @@ func (e ParamError) Error() string { return e.Param + ": missing" }
 // NewTrackClient prepares a client for use with the Customer.io track API, see: https://customer.io/docs/api/#apitrackintroduction
 // using a Tracking Site ID and API Key pair from https://fly.customer.io/settings/api_credentials
 func NewTrackClient(siteID, apiKey string, opts ...Option) *CustomerIO {
+	// Keys read from secret files often end in a newline, which breaks the auth header.
 	c := &CustomerIO{
-		siteID:    siteID,
-		apiKey:    apiKey,
+		siteID:    strings.TrimSpace(siteID),
+		apiKey:    strings.TrimSpace(apiKey),
 		URL:       "https://track.customer.io",
 		UserAgent: DefaultUserAgent,
 		Client:    newDefaultHTTPClient(),
