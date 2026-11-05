@@ -5,7 +5,12 @@ name: Release
 # writes CHANGELOG.md, and creates the GitHub release. feat is a minor, fix and
 # perf are a patch, and other types make no release. See .releaserc.json.
 on:
-  push:
+  # Runs after CI passes on main, so a commit that breaks CI never releases.
+  # Must match the name in main.yml. The release commit has [skip ci], so it
+  # starts no CI run and no second release.
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -23,6 +28,9 @@ concurrency:
 
 jobs:
   release:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     steps:
       # The App token must be the one checkout persists, since the release commit
@@ -39,7 +47,22 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token }}
 
+      # Release only the commit CI just passed. If main has moved on, that newer
+      # commit's own CI run releases it.
+      - name: Check main is the commit CI passed
+        id: current
+        env:
+          CI_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ -n "$CI_SHA" ] && [ "$(git rev-parse HEAD)" != "$CI_SHA" ]; then
+            echo "Main moved past $CI_SHA, so its own CI run will release it."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Release with semantic-release
+        if: steps.current.outputs.release == 'true'
         uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90 # v6.0.0
         with:
           # Pinned to match the mobile SDKs. Bump deliberately.
