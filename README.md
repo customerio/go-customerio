@@ -536,6 +536,10 @@ if err := track.TrackCtx(ctx, "5", "purchase", map[string]any{
 }
 ```
 
+## Support
+
+For help or to report a bug, [contact Customer.io Support](https://fly.customer.io/?support=true). We don't track issues in this repository.
+
 ## Contributing
 
-Issues are welcome. This repository is published from a private one, so we read pull requests as suggestions and make the change ourselves.
+This repository is published from a private one, so we read pull requests as suggestions and make the change ourselves.
