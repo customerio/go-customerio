@@ -76,7 +76,7 @@ jobs:
             {
               "text": "Go SDK ${{ steps.target.outputs.version }} is missing from the Go proxy",
               "username": "Go SDK release bot",
-              "channel": "#mobile-deployments",
+              "channel": "#server-sdk-deployments",
               "blocks": [
                 {
                   "type": "section",

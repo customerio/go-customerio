@@ -97,7 +97,7 @@ jobs:
             {
               "text": "Go SDK v${{ steps.semantic-release.outputs.new_release_version }} released",
               "username": "Go SDK release bot",
-              "channel": "#mobile-deployments",
+              "channel": "#server-sdk-deployments",
               "blocks": [
                 {
                   "type": "section",
@@ -129,7 +129,7 @@ jobs:
             {
               "text": "Go SDK release failure",
               "username": "Go SDK release bot",
-              "channel": "#mobile-deployments",
+              "channel": "#server-sdk-deployments",
               "blocks": [
                 {
                   "type": "section",
