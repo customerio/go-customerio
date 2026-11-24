@@ -28,10 +28,15 @@ concurrency:
 
 jobs:
   release:
+    timeout-minutes: 30
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
+    env:
+      # Secrets can't be read in a step's if, so the steps test this copy. When the
+      # secret isn't set, the Slack steps are skipped and the release is unaffected.
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_NOTIFY_SERVER_SDK_RELEASES_WEBHOOK_URL }}
     steps:
       # The App token must be the one checkout persists, since the release commit
       # pushes past main's protection through the App's bypass.
@@ -62,6 +67,7 @@ jobs:
           fi
 
       - name: Release with semantic-release
+        id: semantic-release
         if: steps.current.outputs.release == 'true'
         uses: cycjimmy/semantic-release-action@b12c8f6015dc215fe37bc154d4ad456dd3833c90 # v6.0.0
         with:
@@ -76,3 +82,68 @@ jobs:
             @semantic-release/git@10.0.1
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+
+      # Dry runs also report a next version, so they are left out.
+      - name: Notify team of release
+        if: >-
+          env.SLACK_WEBHOOK_URL != '' &&
+          steps.semantic-release.outputs.new_release_published == 'true' &&
+          !(github.event_name == 'workflow_dispatch' && inputs.dry_run)
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v2.0.0-rc.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "Go SDK v${{ steps.semantic-release.outputs.new_release_version }} released",
+              "username": "Go SDK release bot",
+              "channel": "#server-sdk-deployments",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Go* SDK v${{ steps.semantic-release.outputs.new_release_version }} released"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<https://github.com/${{ github.repository }}/releases/tag/v${{ steps.semantic-release.outputs.new_release_version }}|View the release>"
+                  }
+                }
+              ]
+            }
+
+      - name: Notify team of failure
+        if: >-
+          failure() &&
+          env.SLACK_WEBHOOK_URL != '' &&
+          !(github.event_name == 'workflow_dispatch' && inputs.dry_run)
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v2.0.0-rc.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "Go SDK release failure",
+              "username": "Go SDK release bot",
+              "channel": "#server-sdk-deployments",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Go* SDK release :warning: failure :warning:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "View the <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs> to see why."
+                  }
+                }
+              ]
+            }

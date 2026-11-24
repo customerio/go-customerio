@@ -1,0 +1,96 @@
+name: Registry check
+
+# After a release tag is pushed, confirms the Go module proxy serves the new
+# version, because that is where `go get` looks. Alerts Slack if it is still
+# missing after about 50 minutes. Run it by hand with a version to test.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to look for, such as v3.13.0 (use a made-up one to simulate a miss)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  proxy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      # Secrets can't be read in a step's if, so the steps test this copy. When the
+      # secret isn't set, the alert is skipped and only the job fails.
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_NOTIFY_SERVER_SDK_RELEASES_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Resolve version and proxy URL
+        id: target
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${INPUT_VERSION:-$TAG}"
+          case "$version" in v*) ;; *) version="v$version" ;; esac
+          if ! printf '%s' "$version" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "Not a version: $version"
+            exit 1
+          fi
+          # The module path ends in /vN for v2 and up, so read it rather than guess.
+          module="$(awk '$1 == "module" { print $2; exit }' go.mod)"
+          # The proxy writes each capital letter as ! and the lowercase letter.
+          escaped="$(printf '%s' "$module" | perl -pe 's/([A-Z])/!\l$1/g')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "url=https://proxy.golang.org/$escaped/@v/$version.info" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for the Go proxy
+        id: poll
+        env:
+          URL: ${{ steps.target.outputs.url }}
+          INTERVAL_SECONDS: "300"
+          MAX_ATTEMPTS: "11"
+        run: |
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            code="$(curl -s -o /dev/null -m 30 -w '%{http_code}' "$URL" || true)"
+            echo "Attempt $attempt of $MAX_ATTEMPTS: HTTP $code from $URL"
+            if [ "$code" = 200 ]; then
+              exit 0
+            fi
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              sleep "$INTERVAL_SECONDS"
+            fi
+          done
+          echo "The Go proxy still does not have this version."
+          exit 1
+
+      - name: Alert that the version is missing
+        if: failure() && steps.poll.outcome == 'failure' && env.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v2.0.0-rc.3
+        with:
+          webhook: ${{ env.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "Go SDK ${{ steps.target.outputs.version }} is missing from the Go proxy",
+              "username": "Go SDK release bot",
+              "channel": "#server-sdk-deployments",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Go* SDK ${{ steps.target.outputs.version }} is still missing from the Go proxy :warning:"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Checked <${{ steps.target.outputs.url }}|${{ steps.target.outputs.url }}> for about 50 minutes. View the <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|run logs>."
+                  }
+                }
+              ]
+            }
