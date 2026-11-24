@@ -36,7 +36,7 @@ jobs:
     env:
       # Secrets can't be read in a step's if, so the steps test this copy. When the
       # secret isn't set, the Slack steps are skipped and the release is unaffected.
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_NOTIFY_SERVER_SDK_RELEASES_WEBHOOK_URL }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_NOTIFY_RELEASES_WEBHOOK_URL }}
     steps:
       # The App token must be the one checkout persists, since the release commit
       # pushes past main's protection through the App's bypass.
@@ -97,7 +97,7 @@ jobs:
             {
               "text": "Go SDK v${{ steps.semantic-release.outputs.new_release_version }} released",
               "username": "Go SDK release bot",
-              "channel": "#server-sdk-deployments",
+              "channel": "#mobile-deployments",
               "blocks": [
                 {
                   "type": "section",
@@ -129,7 +129,7 @@ jobs:
             {
               "text": "Go SDK release failure",
               "username": "Go SDK release bot",
-              "channel": "#server-sdk-deployments",
+              "channel": "#mobile-deployments",
               "blocks": [
                 {
                   "type": "section",
