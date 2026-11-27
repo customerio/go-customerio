@@ -518,6 +518,44 @@ if err := track.RemovePeopleFromSegment(7,
 }
 ```
 
+## Importing data from a CSV
+
+Use `(c *customerio.APIClient).CreateImport` to start a CSV import via the App API, and `GetImport` to read its result. The file must be at a public URL. `Type` is one of `ImportTypePeople`, `ImportTypeEvent`, `ImportTypeObject`, `ImportTypeRelationship` or `ImportTypeDevice`.
+
+This example adds push tokens to people who already exist:
+
+```go
+client := customerio.NewAPIClient("<extapikey>", customerio.WithRegion(customerio.RegionUS))
+
+imp, err := client.CreateImport(context.Background(), &customerio.CreateImportRequest{
+  Name:        "Device tokens",
+  DataFileURL: "https://example.com/devices.csv",
+  Type:        customerio.ImportTypeDevice,
+  Identifier:  "id", // or "email"
+})
+if err != nil {
+  // handle error
+}
+
+// The import runs in the background. Read it again to follow its state.
+imp, err = client.GetImport(context.Background(), imp.ID)
+if err != nil {
+  // handle error
+}
+fmt.Println(imp.State, imp.ErrorDownloadURL)
+```
+
+A device file needs these columns:
+
+- `id` or `email`, matching `Identifier`.
+- `token`, the device token.
+- `platform`, either `ios` or `android`.
+- `last_used` (optional), a unix timestamp in seconds.
+
+Any other column is saved as a device attribute.
+
+A device import only adds devices to people who already exist. Rows for unknown people are skipped, and so are tokens repeated for another person. The file at `ErrorDownloadURL` lists the skipped rows with the reason for each. It can be set even when the import succeeds.
+
 ## Context Support
 There are additional API methods that support passing a context that satisfies the `context.Context` interface to allow better control over dispatched requests. For example with sending an event:
 ```go
